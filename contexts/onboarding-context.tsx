@@ -1,0 +1,180 @@
+import { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
+import type { ReactNode } from 'react';
+
+type ReminderWindow = 'morning' | 'afternoon' | 'evening' | 'off';
+type EngagementPreference = 'quick' | 'deep' | 'mixed' | null;
+type PushPermission = 'unknown' | 'enabled' | 'declined';
+
+type AccountSelection = 'email' | 'google' | 'apple' | 'guest' | null;
+
+type EraOption =
+  | 'ancient'
+  | 'medieval'
+  | 'renaissance'
+  | 'early-modern'
+  | 'nineteenth'
+  | 'twentieth'
+  | 'twenty-first'
+  | 'prehistory'
+  | 'all';
+
+type ThemeOption =
+  | 'wars'
+  | 'science'
+  | 'art'
+  | 'politics'
+  | 'social'
+  | 'biographies'
+  | 'daily-life'
+  | 'mysteries'
+  | 'exploration'
+  | 'entertainment'
+  | 'surprise';
+
+type OnboardingState = {
+  stepIndex: number;
+  accountSelection: AccountSelection;
+  emailAddress: string;
+  timezone: string;
+  reminderWindow: ReminderWindow;
+  reminderEnabled: boolean;
+  eras: EraOption[];
+  themes: ThemeOption[];
+  regionPreference: string | null;
+  engagementPreference: EngagementPreference;
+  newsletterOptIn: boolean;
+  pushPermission: PushPermission;
+  heroPreviewSeen: boolean;
+};
+
+type OnboardingAction =
+  | { type: 'SET_STEP'; payload: number }
+  | { type: 'NEXT_STEP'; max: number }
+  | { type: 'PREV_STEP' }
+  | { type: 'UPDATE'; payload: Partial<OnboardingState> }
+  | { type: 'RESET'; initialState: OnboardingState };
+
+const detectTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (error) {
+    console.warn('Unable to detect timezone automatically:', error);
+    return 'UTC';
+  }
+};
+
+const initialState: OnboardingState = {
+  stepIndex: 0,
+  accountSelection: null,
+  emailAddress: '',
+  timezone: detectTimezone(),
+  reminderWindow: 'morning',
+  reminderEnabled: true,
+  eras: [],
+  themes: [],
+  regionPreference: null,
+  engagementPreference: null,
+  newsletterOptIn: false,
+  pushPermission: 'unknown',
+  heroPreviewSeen: false,
+};
+
+const OnboardingContext = createContext<OnboardingContextValue | null>(null);
+
+type OnboardingContextValue = {
+  state: OnboardingState;
+  totalSteps: number;
+  goToStep: (step: number) => void;
+  goNext: () => void;
+  goBack: () => void;
+  updateState: (data: Partial<OnboardingState>) => void;
+  reset: () => void;
+};
+
+const reducer = (state: OnboardingState, action: OnboardingAction): OnboardingState => {
+  switch (action.type) {
+    case 'SET_STEP': {
+      return { ...state, stepIndex: action.payload };
+    }
+    case 'NEXT_STEP': {
+      return { ...state, stepIndex: Math.min(state.stepIndex + 1, action.max) };
+    }
+    case 'PREV_STEP': {
+      return { ...state, stepIndex: Math.max(state.stepIndex - 1, 0) };
+    }
+    case 'UPDATE': {
+      return { ...state, ...action.payload };
+    }
+    case 'RESET': {
+      return { ...action.initialState };
+    }
+    default:
+      return state;
+  }
+};
+
+type OnboardingProviderProps = {
+  children: ReactNode;
+  totalSteps: number;
+};
+
+export const OnboardingProvider = ({ children, totalSteps }: OnboardingProviderProps) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const goToStep = useCallback(
+    (step: number) => {
+      dispatch({ type: 'SET_STEP', payload: Math.max(0, Math.min(step, totalSteps - 1)) });
+    },
+    [totalSteps]
+  );
+
+  const goNext = useCallback(() => {
+    dispatch({ type: 'NEXT_STEP', max: totalSteps - 1 });
+  }, [totalSteps]);
+
+  const goBack = useCallback(() => {
+    dispatch({ type: 'PREV_STEP' });
+  }, []);
+
+  const updateState = useCallback((data: Partial<OnboardingState>) => {
+    dispatch({ type: 'UPDATE', payload: data });
+  }, []);
+
+  const reset = useCallback(() => {
+    dispatch({ type: 'RESET', initialState });
+  }, []);
+
+  const value = useMemo<OnboardingContextValue>(() => {
+    return {
+      state,
+      totalSteps,
+      goToStep,
+      goNext,
+      goBack,
+      updateState,
+      reset,
+    };
+  }, [state, totalSteps, goToStep, goNext, goBack, updateState, reset]);
+
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
+};
+
+export const useOnboardingContext = () => {
+  const context = useContext(OnboardingContext);
+
+  if (!context) {
+    throw new Error('useOnboardingContext must be used within an OnboardingProvider');
+  }
+
+  return context;
+};
+
+export type {
+  EngagementPreference,
+  EraOption,
+  OnboardingState,
+  ThemeOption,
+  ReminderWindow,
+  AccountSelection,
+  PushPermission,
+};
