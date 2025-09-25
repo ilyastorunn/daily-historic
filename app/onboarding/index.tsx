@@ -6,36 +6,24 @@ import {
   OnboardingProvider,
   useOnboardingContext,
 } from '@/contexts/onboarding-context';
-import { styles } from './styles';
-import type { StepDefinition } from './types';
+import { styles } from '@/components/onboarding/styles';
+import type { StepDefinition } from '@/components/onboarding/types';
 import {
   StepAccount,
   StepEras,
   StepEngagement,
-  StepFirstTour,
-  StepPersonalizing,
   StepRegion,
   StepReminderPermission,
   StepThemes,
   StepTimezone,
   StepWelcome,
-} from './steps';
+} from '@/components/onboarding/steps';
 
 const steps: StepDefinition[] = [
   {
     key: 'welcome',
     title: 'Welcome',
     Component: StepWelcome,
-  },
-  {
-    key: 'account',
-    title: 'Account',
-    Component: StepAccount,
-  },
-  {
-    key: 'timezone',
-    title: 'Reminder Timing',
-    Component: StepTimezone,
   },
   {
     key: 'eras',
@@ -63,14 +51,14 @@ const steps: StepDefinition[] = [
     Component: StepReminderPermission,
   },
   {
-    key: 'personalizing',
-    title: 'Personalizing',
-    Component: StepPersonalizing,
+    key: 'timezone',
+    title: 'Reminder Timing',
+    Component: StepTimezone,
   },
   {
-    key: 'ftue',
-    title: 'First Tour',
-    Component: StepFirstTour,
+    key: 'account',
+    title: 'Account',
+    Component: StepAccount,
   },
 ];
 
