@@ -1,5 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
+import { Image } from 'expo-image';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 
@@ -8,65 +16,127 @@ import { styles } from '../styles';
 
 type PreviewCard = {
   id: string;
-  title: string;
-  date: string;
-  summary: string;
-  category: string;
+  heading: string;
+  subheading: string;
+  image: number;
 };
 
 const previewCards: PreviewCard[] = [
   {
-    id: 'moon-landing',
-    date: '20 July 1969',
-    title: 'Apollo 11 Touches Down',
-    summary: 'Neil Armstrong sets foot on the Moon, ushering in a new era of exploration.',
-    category: 'Science & Discovery',
+    id: 'lightbulb-1880',
+    heading: 'On This Day: January 27, 1880',
+    subheading: 'Thomas Edison invented Lightbulb.',
+    image: require('@/assets/images/onboarding-edison.png'),
   },
   {
-    id: 'printing-press',
-    date: '23 February 1455',
-    title: 'Gutenberg Prints the First Bible',
-    summary: 'Mass printing sparks knowledge revolutions across Europe and beyond.',
-    category: 'Inventions',
+    id: 'moon-landing-1969',
+    heading: 'On This Day: July 20, 1969',
+    subheading: 'Neil Armstrong and Buzz Aldrin walked on the Moon.',
+    image: require('@/assets/images/onboarding-edison.png'),
   },
   {
-    id: 'civil-rights',
-    date: '28 August 1963',
-    title: '“I Have a Dream” Speech',
-    summary: 'Dr. Martin Luther King Jr. inspires millions during the March on Washington.',
-    category: 'Civil Rights',
+    id: 'printing-press-1455',
+    heading: 'On This Day: February 23, 1455',
+    subheading: 'Johannes Gutenberg completed the Gutenberg Bible.',
+    image: require('@/assets/images/onboarding-edison.png'),
   },
 ];
 
 const StepPreview = ({ onNext }: StepComponentProps) => {
-  const scrollRef = useRef<ScrollView>(null);
   const { updateState } = useOnboardingContext();
-  const [cardWidth, setCardWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     updateState({ heroPreviewSeen: true });
   }, [updateState]);
 
-  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!cardWidth) {
+  const handleMomentumScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!containerWidth) {
+        return;
+      }
+
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / containerWidth);
+      setActiveIndex(Math.min(Math.max(index, 0), previewCards.length - 1));
+    },
+    [containerWidth]
+  );
+
+  const handleContainerLayout = useCallback((width: number) => {
+    if (containerWidth !== width) {
+      setContainerWidth(width);
+    }
+  }, [containerWidth]);
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!containerWidth) {
+        return;
+      }
+
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / containerWidth);
+      if (index !== activeIndex) {
+        setActiveIndex(Math.min(Math.max(index, 0), previewCards.length - 1));
+      }
+    },
+    [activeIndex, containerWidth]
+  );
+
+  const cardHeight = useMemo(() => {
+    if (!containerWidth) {
       return;
     }
 
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / cardWidth);
-    setActiveIndex(Math.min(Math.max(index, 0), previewCards.length - 1));
-  };
-
-  const handleLayout = (width: number) => {
-    if (cardWidth !== width) {
-      setCardWidth(width);
-    }
-  };
+    return Math.round(containerWidth * 1.1);
+  }, [containerWidth]);
 
   const handleSkip = () => {
     onNext();
   };
+
+  const renderCard = useCallback(
+    ({ item, index }: { item: PreviewCard; index: number }) => {
+      const cardStyle = [
+        styles.carouselCard,
+        containerWidth ? { width: containerWidth, height: cardHeight } : null,
+        index !== previewCards.length - 1 ? styles.carouselCardSpacing : null,
+      ];
+
+      return (
+        <View style={cardStyle}>
+          <Image
+            source={item.image}
+            style={styles.previewCardImage}
+            contentFit="cover"
+            transition={200}
+          />
+
+          <View style={styles.previewCardOverlay}>
+            <Image
+              source={item.image}
+              style={styles.previewCardOverlayBlur}
+              contentFit="cover"
+              blurRadius={45}
+            />
+            <Image
+              source={require('@/assets/images/onboarding-overlay-gradient.png')}
+              style={styles.previewCardOverlayGradient}
+              contentFit="stretch"
+            />
+
+            <View style={styles.previewCardTextGroup}>
+              <Text style={styles.previewCardHeading}>{item.heading}</Text>
+              <Text style={styles.previewCardSubheading}>{item.subheading}</Text>
+            </View>
+          </View>
+        </View>
+      );
+    },
+    [cardHeight, containerWidth]
+  );
 
   return (
     <View style={styles.carouselWrapper}>
@@ -75,29 +145,24 @@ const StepPreview = ({ onNext }: StepComponentProps) => {
         Swipe through a few highlights while we line up the perfect selections for you.
       </Text>
 
-      <ScrollView
-        ref={scrollRef}
+      <FlatList
+        data={previewCards}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCard}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToAlignment="center"
+        snapToInterval={containerWidth || undefined}
+        disableIntervalMomentum
         onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        bounces={false}
         contentContainerStyle={styles.carouselScroll}
-      >
-        {previewCards.map((card) => (
-          <View
-            key={card.id}
-            style={[styles.carouselCard, cardWidth ? { width: cardWidth } : null]}
-            onLayout={(event) => handleLayout(event.nativeEvent.layout.width)}
-          >
-            <View style={styles.cardImagePlaceholder}>
-              <Text style={styles.cardImageLabel}>{card.category}</Text>
-            </View>
-            <Text style={styles.cardMeta}>{card.date}</Text>
-            <Text style={styles.cardTitle}>{card.title}</Text>
-            <Text style={styles.sectionCopy}>{card.summary}</Text>
-          </View>
-        ))}
-      </ScrollView>
+        onLayout={(event) => handleContainerLayout(event.nativeEvent.layout.width)}
+      />
 
       <View style={styles.paginationDots}>
         {previewCards.map((card, index) => (
