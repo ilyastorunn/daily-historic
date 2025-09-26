@@ -1,6 +1,6 @@
 import { Platform, StyleSheet } from 'react-native';
 
-import { lightTheme, spacing as spacingScale, radius as radiusScale } from '@/theme';
+import { lightTheme, radius as radiusScale, spacing as spacingScale } from '@/theme';
 
 const theme = lightTheme;
 const { colors } = theme;
@@ -351,6 +351,16 @@ const styles = StyleSheet.create({
   previewCardImage: {
     ...StyleSheet.absoluteFillObject,
   },
+  previewCardBlurBackdrop: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '30%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderBottomLeftRadius: radiusScale.xl,
+    borderBottomRightRadius: radiusScale.xl,
+  },
   previewCardOverlay: {
     position: 'absolute',
     left: 0,
@@ -358,36 +368,37 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: spacingScale.xl,
     paddingBottom: spacingScale.xl,
-    paddingTop: spacingScale.lg,
-    minHeight: 172,
-    borderTopLeftRadius: radiusScale.xl,
-    borderTopRightRadius: radiusScale.xl,
-    overflow: 'hidden',
-  },
-  previewCardOverlayBlur: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.8,
-    transform: [{ scale: 1.04 }],
-  },
-  previewCardOverlayGradient: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.95,
+    paddingTop: spacingScale.xl,
+    height: '40%',
+    justifyContent: 'flex-end',
+    borderBottomLeftRadius: radiusScale.xl,
+    borderBottomRightRadius: radiusScale.xl,
+    backgroundColor: 'transparent',
   },
   previewCardTextGroup: {
     gap: spacingScale.xs,
+    zIndex: 1,
   },
   previewCardHeading: {
     color: colors.surface,
     fontFamily: sansFamily,
-    fontSize: 16,
+    fontSize: 14,
     letterSpacing: 0.2,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   previewCardSubheading: {
     color: colors.surface,
     fontFamily: serifFamily,
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 20,
+    lineHeight: 26,
     letterSpacing: -0.2,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   paginationDots: {
     flexDirection: 'row',

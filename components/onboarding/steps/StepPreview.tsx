@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -7,12 +8,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 
-import type { StepComponentProps } from '../types';
 import { styles } from '../styles';
+import type { StepComponentProps } from '../types';
 
 type PreviewCard = {
   id: string;
@@ -23,22 +23,22 @@ type PreviewCard = {
 
 const previewCards: PreviewCard[] = [
   {
-    id: 'lightbulb-1880',
-    heading: 'On This Day: January 27, 1880',
-    subheading: 'Thomas Edison invented Lightbulb.',
-    image: require('@/assets/images/onboarding-edison.png'),
-  },
-  {
     id: 'moon-landing-1969',
     heading: 'On This Day: July 20, 1969',
-    subheading: 'Neil Armstrong and Buzz Aldrin walked on the Moon.',
-    image: require('@/assets/images/onboarding-edison.png'),
+    subheading: 'Neil Armstrong walked on the Moon.',
+    image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
   },
   {
-    id: 'printing-press-1455',
-    heading: 'On This Day: February 23, 1455',
-    subheading: 'Johannes Gutenberg completed the Gutenberg Bible.',
-    image: require('@/assets/images/onboarding-edison.png'),
+    id: 'empire-destruction-1836',
+    heading: 'On This Day: 1836',
+    subheading: 'The Course of Empire painted by Thomas Cole.',
+    image: require('@/pics/Cole_Thomas_The_Course_of_Empire_Destruction_1836.jpg'),
+  },
+  {
+    id: 'caesar-death-44bc',
+    heading: 'On This Day: March 15, 44 BC',
+    subheading: 'Julius Caesar was assassinated in Rome.',
+    image: require('@/pics/Vincenzo_Camuccini_-_La_morte_di_Cesare.jpg'),
   },
 ];
 
@@ -113,20 +113,11 @@ const StepPreview = ({ onNext }: StepComponentProps) => {
             contentFit="cover"
             transition={200}
           />
+          
+          {/* Blur backdrop for text readability */}
+          <View style={styles.previewCardBlurBackdrop} />
 
           <View style={styles.previewCardOverlay}>
-            <Image
-              source={item.image}
-              style={styles.previewCardOverlayBlur}
-              contentFit="cover"
-              blurRadius={45}
-            />
-            <Image
-              source={require('@/assets/images/onboarding-overlay-gradient.png')}
-              style={styles.previewCardOverlayGradient}
-              contentFit="stretch"
-            />
-
             <View style={styles.previewCardTextGroup}>
               <Text style={styles.previewCardHeading}>{item.heading}</Text>
               <Text style={styles.previewCardSubheading}>{item.subheading}</Text>
