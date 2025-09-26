@@ -5,7 +5,7 @@ import { useOnboardingContext } from '@/contexts/onboarding-context';
 import type { StepComponentProps } from '../types';
 import { styles } from '../styles';
 
-const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
+const StepNotificationPermission = ({ onNext, onBack }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
 
   const handleEnable = () => {
@@ -60,12 +60,19 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [styles.inlineGhostButton, pressed && styles.inlineGhostButtonPressed]}
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressedButton]}
           onPress={handleSkip}
         >
-          <Text style={[styles.inlineGhostButtonText, styles.inlineGhostButtonTextActive]}>Maybe later</Text>
+          <Text style={styles.secondaryButtonText}>Maybe later</Text>
         </Pressable>
       </View>
+
+      <Pressable
+        onPress={onBack}
+        style={({ pressed }) => [styles.inlineBackLink, pressed && styles.inlineGhostButtonPressed]}
+      >
+        <Text style={styles.inlineBackLinkText}>← Back</Text>
+      </Pressable>
     </ScrollView>
   );
 };

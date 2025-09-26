@@ -223,6 +223,17 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     fontFamily: sansFamily,
   },
+  inlineBackLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacingScale.xs,
+    marginTop: spacingScale.sm,
+  },
+  inlineBackLinkText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontFamily: sansFamily,
+  },
   errorText: {
     fontSize: 12,
     color: '#dc2626',
@@ -590,6 +601,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacingScale.md,
+  },
+  socialButtonSubtle: {
+    backgroundColor: colors.surfaceSubtle,
   },
   socialButtonSelected: {
     borderColor: accentColor,

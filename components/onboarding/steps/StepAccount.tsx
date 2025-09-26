@@ -19,31 +19,41 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
   const [email, setEmail] = useState(state.emailAddress);
   const [password, setPassword] = useState(state.accountPassword);
   const [confirmPassword, setConfirmPassword] = useState(state.accountPasswordConfirm);
-  const [username, setUsername] = useState(state.username);
+  const [showEmailForm, setShowEmailForm] = useState(state.accountSelection === 'email');
 
   const selectSocial = (selection: AccountSelection) => {
+    setShowEmailForm(false);
     updateState({ accountSelection: selection, termsAccepted: true });
+    onNext();
+  };
+
+  const handleChooseEmail = () => {
+    setShowEmailForm(true);
+    updateState({ accountSelection: 'email' });
+  };
+
+  const handleSkipAccount = () => {
+    setShowEmailForm(false);
+    updateState({ accountSelection: null, termsAccepted: false });
     onNext();
   };
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
+    setShowEmailForm(true);
     updateState({ emailAddress: value.trim(), accountSelection: 'email' });
   };
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
+    setShowEmailForm(true);
     updateState({ accountPassword: value, accountSelection: 'email' });
   };
 
   const handleConfirmPassword = (value: string) => {
     setConfirmPassword(value);
+    setShowEmailForm(true);
     updateState({ accountPasswordConfirm: value, accountSelection: 'email' });
-  };
-
-  const handleUsernameChange = (value: string) => {
-    setUsername(value);
-    updateState({ username: value.trim(), accountSelection: 'email' });
   };
 
   const toggleTerms = () => {
@@ -77,84 +87,79 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
         Link your preferences across devices and keep your daily streak glowing.
       </Text>
 
-      <View style={styles.formCard}>
-        <TextInput
-          placeholder="you@example.com"
-          value={email}
-          onChangeText={handleEmailChange}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={styles.input}
-        />
-        {!emailValid && email.length > 0 && (
-          <Text style={styles.errorText}>Enter a valid email address.</Text>
-        )}
+      {showEmailForm && (
+        <View style={styles.formCard}>
+          <TextInput
+            placeholder="you@example.com"
+            value={email}
+            onChangeText={handleEmailChange}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={styles.input}
+          />
+          {!emailValid && email.length > 0 && (
+            <Text style={styles.errorText}>Enter a valid email address.</Text>
+          )}
 
-        <TextInput
-          placeholder="Create password (min 8 characters)"
-          value={password}
-          onChangeText={handlePasswordChange}
-          secureTextEntry
-          style={styles.input}
-        />
-        {!passwordLongEnough && password.length > 0 && (
-          <Text style={styles.errorText}>Password must be at least 8 characters.</Text>
-        )}
+          <TextInput
+            placeholder="Create password (min 8 characters)"
+            value={password}
+            onChangeText={handlePasswordChange}
+            secureTextEntry
+            style={styles.input}
+          />
+          {!passwordLongEnough && password.length > 0 && (
+            <Text style={styles.errorText}>Password must be at least 8 characters.</Text>
+          )}
 
-        <TextInput
-          placeholder="Confirm password"
-          value={confirmPassword}
-          onChangeText={handleConfirmPassword}
-          secureTextEntry
-          style={styles.input}
-        />
-        {!passwordsMatch && confirmPassword.length > 0 && (
-          <Text style={styles.errorText}>Passwords need to match.</Text>
-        )}
+          <TextInput
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChangeText={handleConfirmPassword}
+            secureTextEntry
+            style={styles.input}
+          />
+          {!passwordsMatch && confirmPassword.length > 0 && (
+            <Text style={styles.errorText}>Passwords need to match.</Text>
+          )}
 
-        <TextInput
-          placeholder="Username (optional)"
-          value={username}
-          onChangeText={handleUsernameChange}
-          style={styles.input}
-        />
+          <Pressable onPress={toggleTerms} style={styles.checkboxRow}>
+            <View style={[styles.checkbox, state.termsAccepted && styles.checkboxChecked]} />
+            <Text style={styles.checkboxLabel}>
+              I agree to the Terms of Service and Privacy Policy
+            </Text>
+          </Pressable>
 
-        <Pressable onPress={toggleTerms} style={styles.checkboxRow}>
-          <View style={[styles.checkbox, state.termsAccepted && styles.checkboxChecked]} />
-          <Text style={styles.checkboxLabel}>
-            I agree to the Terms of Service and Privacy Policy
-          </Text>
-        </Pressable>
-
-        <Pressable
-          disabled={emailSubmitDisabled}
-          onPress={handleEmailSubmit}
-          style={({ pressed }) => [
-            styles.primaryButton,
-            emailSubmitDisabled && styles.primaryButtonDisabled,
-            pressed && !emailSubmitDisabled && styles.primaryButtonPressed,
-          ]}
-        >
-          <Text
-            style={[
-              styles.primaryButtonText,
-              emailSubmitDisabled && styles.primaryButtonTextDisabled,
+          <Pressable
+            disabled={emailSubmitDisabled}
+            onPress={handleEmailSubmit}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              emailSubmitDisabled && styles.primaryButtonDisabled,
+              pressed && !emailSubmitDisabled && styles.primaryButtonPressed,
             ]}
           >
-            Create Account
-          </Text>
-        </Pressable>
+            <Text
+              style={[
+                styles.primaryButtonText,
+                emailSubmitDisabled && styles.primaryButtonTextDisabled,
+              ]}
+            >
+              Create Account
+            </Text>
+          </Pressable>
 
-        <Text style={styles.helperText}>We value your privacy. No spam, ever.</Text>
-      </View>
-
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerLabel}>OR</Text>
-        <View style={styles.dividerLine} />
-      </View>
+          <Text style={styles.helperText}>We value your privacy. No spam, ever.</Text>
+        </View>
+      )}
 
       <View style={styles.stackGap}>
+        <OptionRow
+          label="Continue with Email"
+          iconName="mail-outline"
+          onPress={handleChooseEmail}
+          selected={showEmailForm}
+        />
         <OptionRow
           label="Continue with Apple"
           iconName="logo-apple"
@@ -172,6 +177,12 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
           iconName="logo-facebook"
           onPress={() => selectSocial('meta')}
           selected={state.accountSelection === 'meta'}
+        />
+        <OptionRow
+          label="Continue without Sign Up"
+          iconName="arrow-forward-circle-outline"
+          onPress={handleSkipAccount}
+          variant="subtle"
         />
       </View>
 

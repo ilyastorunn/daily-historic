@@ -50,7 +50,6 @@ const steps: StepDefinition[] = [
     key: 'notification-permission',
     title: 'Notifications',
     Component: StepNotificationPermission,
-    shouldDisableNext: (state) => state.pushPermission === 'unknown',
   },
   {
     key: 'notification-time',
@@ -82,7 +81,7 @@ const steps: StepDefinition[] = [
 ];
 
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
-  const { state, goNext, goBack, totalSteps } = useOnboardingContext();
+  const { state, goNext, goBack, goToStep, totalSteps } = useOnboardingContext();
 
   const isFirstStep = state.stepIndex === 0;
 
@@ -142,8 +141,19 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
       return;
     }
 
+    if (currentVisibleIndex > 0) {
+      const targetKey = visibleSteps[currentVisibleIndex - 1]?.key;
+      const targetIndex = steps.findIndex((definition) => definition.key === targetKey);
+      if (targetIndex >= 0) {
+        goToStep(targetIndex);
+        return;
+      }
+    }
+
     goBack();
   };
+
+  const shouldShowFooter = !isFirstStep && currentStepDef.key !== 'notification-permission';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -160,7 +170,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
         />
       </View>
 
-      {!isFirstStep && (
+      {shouldShowFooter && (
         <View style={styles.footer}>
           <Pressable
             onPress={handleBack}

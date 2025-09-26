@@ -30,7 +30,6 @@ type OnboardingState = {
   stepIndex: number;
   accountSelection: AccountSelection;
   emailAddress: string;
-  username: string;
   accountPassword: string;
   accountPasswordConfirm: string;
   termsAccepted: boolean;
@@ -65,7 +64,6 @@ const initialState: OnboardingState = {
   stepIndex: 0,
   accountSelection: null,
   emailAddress: '',
-  username: '',
   accountPassword: '',
   accountPasswordConfirm: '',
   termsAccepted: false,

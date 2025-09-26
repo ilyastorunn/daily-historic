@@ -12,13 +12,15 @@ type OptionRowProps = {
   selected?: boolean;
   iconName?: IconName;
   onPress: () => void;
+  variant?: 'default' | 'subtle';
 };
 
-const OptionRow = ({ label, subcopy, selected, iconName, onPress }: OptionRowProps) => (
+const OptionRow = ({ label, subcopy, selected, iconName, onPress, variant = 'default' }: OptionRowProps) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [
       styles.socialButton,
+      variant === 'subtle' && styles.socialButtonSubtle,
       selected && styles.socialButtonSelected,
       pressed && styles.socialButtonPressed,
     ]}
