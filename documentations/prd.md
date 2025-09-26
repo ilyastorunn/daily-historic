@@ -34,22 +34,31 @@
 - **Morgan the Enthusiast (45)**: Passionate about history, willing to explore deeper dives and curated collections. Interested in saving and annotating events.
 
 **Key Journeys**
-1. **First-time**: Landing page → Sign up → Personalized onboarding quiz → Welcome tour → First dashboard view.
+1. **First-time**: Welcome screen → Content preview carousel → Category/Era preferences → Notification enable/time (optional) → Account creation → Dashboard primer.
 2. **Returning daily**: Login → Dashboard recap → Interact with featured events → Save/share → Maintain streak.
 3. **Exploratory**: Use calendar/search → Deep dive into themed collections → Manage bookmarks/notes.
 
 ## 4. Feature Requirements
 
 ### 4.1 Onboarding & Personalization Setup
-- Sign up via email and OAuth (Google, Apple planned).
-- Time zone detection/selection to schedule daily updates accurately.
-- Preference quiz capturing interest categories (e.g., Science, Arts, Politics), historical eras, preferred formats (text, audio snippets, visuals).
-- Optional questions: location, language preference, reminder time window.
-- Guided tour explaining dashboard, personalization, and saving features.
-- Consent capture for email notifications and future push notifications.
+- Seven-step onboarding flow optimized for sub-2-minute completion:
+  1. **Welcome** – Hero illustration, value proposition, primary `Get Started`, secondary `Log In`, privacy link.
+  2. **Preview Carousel** – Auto-advancing but swipeable sample history cards with pagination dots and `Continue` / `Skip preview` actions.
+  3. **Category Selection** – Iconic chips with search; require at least two selections before `Continue` activates, `Skip` defaults to a general-interest mix.
+  4. **Era Selection (Optional)** – Multiselect chips with `Skip` to include all eras by default.
+  5. **Notification Prompt** – Benefit-driven copy, `Enable Notifications`, `Maybe Later`; triggers native permission flow with graceful denial handling.
+  6. **Notification Time Picker** – Shown only after opt-in; default 09:00 local, `Save Time` and `Skip for now` options.
+  7. **Account Creation** – Social sign-in (Apple, Google, Meta), email/password with confirmation, terms/privacy acknowledgement, inline validation, `Log In` fallback.
+- Persistent progress indicator updates dynamically (6 visible steps when time picker skipped); store forward/back navigation state without data loss.
+- Instrument screen-level analytics (views, swipes, skip rates, completion time) for funnel tracking and experimentation.
+- Provide contextual help on each screen (FAQ modal) and ensure returning users can log in from Steps 1 and 7, including password reset path.
+- Automatic time zone detection captured post sign-up with manual override prompt on first dashboard visit; defaults to device locale if detection fails.
+- Persist selected categories, eras, notification preferences, and reminder time immediately to personalization services; apply broad defaults when optional steps are skipped.
 - **Acceptance Criteria**
-  - Users cannot access dashboard until minimal profile (email, time zone, category selection) is complete.
-  - Personalization engine receives structured preferences immediately.
+  - Users cannot reach the main feed until Step 7 completes or they successfully log in.
+  - Optional steps (eras, notifications, time) can be skipped without blocking completion and still produce valid preference payloads.
+  - Progress indicator, CTA enablement, and stored selections remain consistent when navigating backward or relaunching mid-flow.
+  - Notification permissions log success/deny states and defer future prompts in accordance with platform guidelines.
 
 ### 4.2 Daily Dashboard
 - Prominent “Today in History” header with current date and change-date control (calendar modal limited to past dates).

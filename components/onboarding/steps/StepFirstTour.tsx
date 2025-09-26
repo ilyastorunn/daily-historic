@@ -20,7 +20,7 @@ const StepFirstTour = (_: StepComponentProps) => {
         <View style={styles.bulletList}>
           <Text style={styles.bulletItem}>• Hero event curated for your favorite eras</Text>
           <Text style={styles.bulletItem}>• Personalized timeline with your themes</Text>
-          <Text style={styles.bulletItem}>• {state.reminderEnabled ? 'Daily reminder scheduled' : 'Reminder paused for now'}</Text>
+          <Text style={styles.bulletItem}>• {state.notificationEnabled ? 'Daily reminder scheduled' : 'Reminder paused for now'}</Text>
         </View>
       </View>
 

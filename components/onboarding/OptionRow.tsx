@@ -1,26 +1,43 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ComponentProps } from 'react';
 
-import { styles } from './styles';
+import { colors, styles } from './styles';
+
+type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type OptionRowProps = {
   label: string;
   subcopy?: string;
   selected?: boolean;
+  iconName?: IconName;
   onPress: () => void;
 };
 
-const OptionRow = ({ label, subcopy, selected, onPress }: OptionRowProps) => (
+const OptionRow = ({ label, subcopy, selected, iconName, onPress }: OptionRowProps) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [
-      styles.card,
-      selected && styles.cardSelected,
-      pressed && styles.cardPressed,
+      styles.socialButton,
+      selected && styles.socialButtonSelected,
+      pressed && styles.socialButtonPressed,
     ]}
   >
-    <Text style={styles.cardTitle}>{label}</Text>
-    {subcopy && <Text style={styles.helperText}>{subcopy}</Text>}
-    {selected && <Text style={styles.cardHint}>Selected</Text>}
+    {iconName ? (
+      <View style={[styles.socialButtonIcon, selected && styles.socialButtonIconSelected]}>
+        <Ionicons
+          name={iconName}
+          size={20}
+          color={selected ? colors.surface : colors.textPrimary}
+        />
+      </View>
+    ) : null}
+
+    <View style={styles.socialButtonContent}>
+      <Text style={styles.socialButtonText}>{label}</Text>
+      {subcopy ? <Text style={styles.socialButtonSubcopy}>{subcopy}</Text> : null}
+      {selected && !subcopy ? <Text style={styles.socialButtonSubcopy}>Selected</Text> : null}
+    </View>
   </Pressable>
 );
 

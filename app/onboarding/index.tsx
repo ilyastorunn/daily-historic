@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Pressable, SafeAreaView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -10,12 +10,11 @@ import { styles } from '@/components/onboarding/styles';
 import type { StepDefinition } from '@/components/onboarding/types';
 import {
   StepAccount,
+  StepCategories,
   StepEras,
-  StepEngagement,
-  StepRegion,
-  StepReminderPermission,
-  StepThemes,
-  StepTimezone,
+  StepNotificationPermission,
+  StepNotificationTime,
+  StepPreview,
   StepWelcome,
 } from '@/components/onboarding/steps';
 
@@ -24,6 +23,23 @@ const steps: StepDefinition[] = [
     key: 'welcome',
     title: 'Welcome',
     Component: StepWelcome,
+    nextLabel: 'Get Started',
+  },
+  {
+    key: 'preview',
+    title: 'Preview',
+    Component: StepPreview,
+  },
+  {
+    key: 'categories',
+    title: 'Categories',
+    Component: StepCategories,
+    shouldDisableNext: (state) => {
+      const selections = state.categories.includes('surprise')
+        ? 2
+        : state.categories.length;
+      return selections < 2;
+    },
   },
   {
     key: 'eras',
@@ -31,51 +47,88 @@ const steps: StepDefinition[] = [
     Component: StepEras,
   },
   {
-    key: 'themes',
-    title: 'Themes',
-    Component: StepThemes,
+    key: 'notification-permission',
+    title: 'Notifications',
+    Component: StepNotificationPermission,
+    shouldDisableNext: (state) => state.pushPermission === 'unknown',
   },
   {
-    key: 'region',
-    title: 'Regional Focus',
-    Component: StepRegion,
-  },
-  {
-    key: 'engagement',
-    title: 'Engagement',
-    Component: StepEngagement,
-  },
-  {
-    key: 'reminder-permission',
-    title: 'Reminder Permission',
-    Component: StepReminderPermission,
-  },
-  {
-    key: 'timezone',
+    key: 'notification-time',
     title: 'Reminder Timing',
-    Component: StepTimezone,
+    Component: StepNotificationTime,
+    nextLabel: 'Save Time',
+    shouldDisableNext: (state) => state.pushPermission === 'enabled' && !state.notificationTime,
   },
   {
     key: 'account',
     title: 'Account',
     Component: StepAccount,
+    nextLabel: 'Create Account',
+    shouldDisableNext: (state) => {
+      if (!state.accountSelection) {
+        return true;
+      }
+
+      if (state.accountSelection === 'email') {
+        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.emailAddress.trim());
+        const passwordValid = state.accountPassword.length >= 8;
+        const passwordsMatch = state.accountPassword === state.accountPasswordConfirm;
+        return !(emailValid && passwordValid && passwordsMatch && state.termsAccepted);
+      }
+
+      return false;
+    },
   },
 ];
 
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   const { state, goNext, goBack, totalSteps } = useOnboardingContext();
-  const [completed, setCompleted] = useState(false);
+
+  const isFirstStep = state.stepIndex === 0;
 
   useEffect(() => {
-    if (state.stepIndex === totalSteps - 1) {
-      setCompleted(true);
+    const current = steps[state.stepIndex];
+    if (current?.key === 'notification-time' && state.pushPermission !== 'enabled') {
+      goNext();
     }
-  }, [state.stepIndex, totalSteps]);
+  }, [goNext, state.pushPermission, state.stepIndex]);
 
   const currentStepDef = useMemo(() => steps[state.stepIndex], [state.stepIndex]);
   const StepComponent = currentStepDef.Component;
 
+  const visibleSteps = useMemo(() => {
+    return steps.filter((definition) =>
+      definition.key === 'notification-time' ? state.pushPermission === 'enabled' : true
+    );
+  }, [state.pushPermission]);
+
+  const currentVisibleIndex = useMemo(() => {
+    return visibleSteps.findIndex((definition) => definition.key === currentStepDef.key);
+  }, [currentStepDef.key, visibleSteps]);
+
+  const displayedStepNumber = currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : state.stepIndex + 1;
+  const displayedStepTotal = visibleSteps.length;
+
+  const isLastVisibleStep = currentVisibleIndex === visibleSteps.length - 1;
+
+  const nextLabel = useMemo(() => {
+    const label = currentStepDef.nextLabel;
+    if (typeof label === 'function') {
+      return label(state);
+    }
+    if (label) {
+      return label;
+    }
+    return isLastVisibleStep ? 'Finish Setup' : 'Continue';
+  }, [currentStepDef.nextLabel, isLastVisibleStep, state]);
+
+  const isNextDisabled = currentStepDef.shouldDisableNext?.(state) ?? false;
+
   const handleNext = () => {
+    if (isNextDisabled) {
+      return;
+    }
+
     if (state.stepIndex === totalSteps - 1) {
       onComplete();
       return;
@@ -85,7 +138,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   };
 
   const handleBack = () => {
-    if (state.stepIndex === 0) {
+    if (isFirstStep) {
       return;
     }
 
@@ -95,53 +148,59 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.progressText}>{`Step ${state.stepIndex + 1} of ${totalSteps}`}</Text>
-        <ProgressBar progress={(state.stepIndex + 1) / totalSteps} />
+        <Text style={styles.progressText}>{`Step ${displayedStepNumber} of ${displayedStepTotal}`}</Text>
+        <ProgressBar current={displayedStepNumber} total={displayedStepTotal} />
       </View>
 
       <View style={styles.contentWrapper}>
         <StepComponent
           onNext={handleNext}
           onBack={handleBack}
-          isLast={state.stepIndex === totalSteps - 1}
+          isLast={isLastVisibleStep}
         />
       </View>
 
-      <View style={styles.footer}>
-        <Pressable
-          onPress={handleBack}
-          disabled={state.stepIndex === 0}
-          style={({ pressed }) => [
-            styles.secondaryButton,
-            state.stepIndex === 0 && styles.disabledButton,
-            pressed && state.stepIndex !== 0 && styles.pressedButton,
-          ]}
-        >
-          <Text
-            style={[
-              styles.secondaryButtonText,
-              state.stepIndex === 0 && styles.disabledButtonText,
+      {!isFirstStep && (
+        <View style={styles.footer}>
+          <Pressable
+            onPress={handleBack}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.pressedButton,
             ]}
           >
-            Back
-          </Text>
-        </Pressable>
+            <Text style={styles.secondaryButtonText}>Back</Text>
+          </Pressable>
 
-        <Pressable
-          onPress={handleNext}
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
-        >
-          <Text style={styles.primaryButtonText}>{completed ? 'Enter Dashboard' : 'Continue'}</Text>
-        </Pressable>
-      </View>
+          <Pressable
+            onPress={handleNext}
+            disabled={isNextDisabled}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              isNextDisabled && styles.primaryButtonDisabled,
+              pressed && !isNextDisabled && styles.primaryButtonPressed,
+            ]}
+          >
+            <Text
+              style={[
+                styles.primaryButtonText,
+                isNextDisabled && styles.primaryButtonTextDisabled,
+              ]}
+            >
+              {nextLabel}
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
-const ProgressBar = ({ progress }: { progress: number }) => {
+const ProgressBar = ({ current, total }: { current: number; total: number }) => {
+  const progress = total <= 0 ? 0 : Math.min(current / total, 1);
   return (
     <View style={styles.progressBarTrack}>
-      <View style={[styles.progressBarFill, { width: `${Math.min(progress, 1) * 100}%` }]} />
+      <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
     </View>
   );
 };

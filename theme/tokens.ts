@@ -90,9 +90,9 @@ const palette: Palette = {
   slate100: '#e2e8f0',
   slate50: '#f8fafc',
   white: '#ffffff',
-  indigo500: '#2563eb',
-  indigo200: '#bfdbfe',
-  indigo100: '#e0ecff',
+  indigo500: '#7f56d9',
+  indigo200: '#d9c3ff',
+  indigo100: '#f2ebff',
   borderSoft: '#cbd5f5',
 };
 

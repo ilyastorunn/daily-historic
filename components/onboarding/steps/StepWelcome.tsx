@@ -1,38 +1,62 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 
+import HeroCollage from '../HeroCollage';
 import type { StepComponentProps } from '../types';
 import { styles } from '../styles';
 
-const StepWelcome = (_: StepComponentProps) => {
+const StepWelcome = ({ onNext }: StepComponentProps) => {
   const { updateState } = useOnboardingContext();
+  const router = useRouter();
 
-  const handleHeroPreview = () => {
+  const handleBegin = () => {
+    updateState({ heroPreviewSeen: true });
+    onNext();
+  };
+
+  const handlePreview = () => {
     updateState({ heroPreviewSeen: true });
   };
 
+  const handleLogin = () => {
+    router.replace('/(tabs)');
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.stepScroll}>
-      <View style={styles.heroCard}>
-        <Text style={styles.heroTitle}>Welcome to Your History Journey</Text>
-        <Text style={styles.heroSubtitle}>
-          Discover a cinematic timeline tailored to what inspires you. Let’s set up your daily ritual.
+    <ScrollView contentContainerStyle={styles.welcomeScroll}>
+      <View style={styles.heroMasthead}>
+        <HeroCollage />
+        <Text style={styles.heroGreeting}>Welcome, Time Voyager!</Text>
+        <Text style={styles.heroBody}>
+          Chrono curates one luminous moment from history every day. Let’s tune the timeline so it fits your curiosity.
         </Text>
+      </View>
+
+      <View style={styles.heroActions}>
         <Pressable
-          style={({ pressed }) => [styles.ghostButton, pressed && styles.ghostButtonPressed]}
-          onPress={handleHeroPreview}
+          style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
+          onPress={handleBegin}
         >
-          <Text style={styles.ghostButtonText}>See today’s highlight</Text>
+          <Text style={styles.primaryButtonText}>Start Your Journey</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressedButton]}
+          onPress={handlePreview}
+        >
+          <Text style={styles.secondaryButtonText}>Preview Today’s Highlight</Text>
         </Pressable>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>What to expect</Text>
-        <Text style={styles.sectionCopy}>
-          You’ll pick the eras, themes, and reminders that matter to you. We’ll craft a daily feed that feels fresh yet familiar.
-        </Text>
-      </View>
+      <Pressable onPress={handleLogin}>
+        <Text style={styles.ghostLink}>Already have a pass? Sign in</Text>
+      </Pressable>
+
+      <Text style={styles.heroFootnote}>
+        Curated stories, gentle reminders, nothing spammy. You can tweak everything later in settings.
+      </Text>
     </ScrollView>
   );
 };

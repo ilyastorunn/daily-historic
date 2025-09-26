@@ -6,39 +6,37 @@ import type { StepComponentProps } from '../types';
 import { styles } from '../styles';
 
 const options: { value: EraOption; label: string }[] = [
-  { value: 'ancient', label: 'Ancient' },
-  { value: 'medieval', label: 'Medieval' },
-  { value: 'renaissance', label: 'Renaissance' },
-  { value: 'early-modern', label: '17th–18th' },
-  { value: 'nineteenth', label: '19th Century' },
-  { value: 'twentieth', label: '1900s' },
-  { value: 'twenty-first', label: '21st Century' },
   { value: 'prehistory', label: 'Prehistory' },
-  { value: 'all', label: 'I’m open to everything' },
+  { value: 'ancient', label: 'Ancient Worlds' },
+  { value: 'medieval', label: 'Medieval' },
+  { value: 'early-modern', label: 'Early Modern' },
+  { value: 'nineteenth', label: '19th Century' },
+  { value: 'twentieth', label: '20th Century' },
+  { value: 'contemporary', label: 'Contemporary' },
 ];
 
-const StepEras = (_: StepComponentProps) => {
+const StepEras = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const eras = state.eras;
 
   const toggleOption = (option: EraOption) => {
-    if (option === 'all') {
-      updateState({ eras: ['all'] });
-      return;
-    }
-
     const next = eras.includes(option)
       ? eras.filter((item) => item !== option)
-      : [...eras.filter((item) => item !== 'all'), option];
+      : [...eras, option];
 
     updateState({ eras: next });
   };
 
+  const handleSkip = () => {
+    updateState({ eras: [] });
+    onNext();
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.stepScroll}>
-      <Text style={styles.stepTitle}>Which eras captivate you?</Text>
+      <Text style={styles.stepTitle}>Focus by era (optional)</Text>
       <Text style={styles.sectionCopy}>
-        Pick as many as you like. We’ll weave daily stories from these periods.
+        Choose any periods you want to see more often, or skip to explore the full timeline.
       </Text>
 
       <View style={styles.chipRowWrap}>
@@ -67,7 +65,13 @@ const StepEras = (_: StepComponentProps) => {
           );
         })}
       </View>
-      <Text style={styles.helperText}>Select at least one to keep your feed focused.</Text>
+
+      <Pressable
+        onPress={handleSkip}
+        style={({ pressed }) => [styles.inlineGhostButton, pressed && styles.inlineGhostButtonPressed]}
+      >
+        <Text style={styles.inlineGhostButtonText}>Skip this step</Text>
+      </Pressable>
     </ScrollView>
   );
 };

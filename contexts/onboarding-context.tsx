@@ -1,48 +1,44 @@
 import { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
 import type { ReactNode } from 'react';
 
-type ReminderWindow = 'morning' | 'afternoon' | 'evening' | 'off';
-type EngagementPreference = 'quick' | 'deep' | 'mixed' | null;
 type PushPermission = 'unknown' | 'enabled' | 'declined';
 
-type AccountSelection = 'email' | 'google' | 'apple' | 'guest' | null;
+type AccountSelection = 'email' | 'google' | 'apple' | 'meta' | null;
 
 type EraOption =
+  | 'prehistory'
   | 'ancient'
   | 'medieval'
-  | 'renaissance'
   | 'early-modern'
   | 'nineteenth'
   | 'twentieth'
-  | 'twenty-first'
-  | 'prehistory'
-  | 'all';
+  | 'contemporary';
 
-type ThemeOption =
-  | 'wars'
-  | 'science'
-  | 'art'
+type CategoryOption =
+  | 'world-wars'
+  | 'ancient-civilizations'
+  | 'science-discovery'
+  | 'art-culture'
   | 'politics'
-  | 'social'
-  | 'biographies'
-  | 'daily-life'
-  | 'mysteries'
+  | 'inventions'
+  | 'natural-disasters'
+  | 'civil-rights'
   | 'exploration'
-  | 'entertainment'
   | 'surprise';
 
 type OnboardingState = {
   stepIndex: number;
   accountSelection: AccountSelection;
   emailAddress: string;
+  username: string;
+  accountPassword: string;
+  accountPasswordConfirm: string;
+  termsAccepted: boolean;
   timezone: string;
-  reminderWindow: ReminderWindow;
-  reminderEnabled: boolean;
+  notificationEnabled: boolean;
+  notificationTime: string;
   eras: EraOption[];
-  themes: ThemeOption[];
-  regionPreference: string | null;
-  engagementPreference: EngagementPreference;
-  newsletterOptIn: boolean;
+  categories: CategoryOption[];
   pushPermission: PushPermission;
   heroPreviewSeen: boolean;
 };
@@ -63,18 +59,21 @@ const detectTimezone = () => {
   }
 };
 
+const INITIAL_NOTIFICATION_TIME = '09:00';
+
 const initialState: OnboardingState = {
   stepIndex: 0,
   accountSelection: null,
   emailAddress: '',
+  username: '',
+  accountPassword: '',
+  accountPasswordConfirm: '',
+  termsAccepted: false,
   timezone: detectTimezone(),
-  reminderWindow: 'morning',
-  reminderEnabled: true,
+  notificationEnabled: true,
+  notificationTime: INITIAL_NOTIFICATION_TIME,
   eras: [],
-  themes: [],
-  regionPreference: null,
-  engagementPreference: null,
-  newsletterOptIn: false,
+  categories: [],
   pushPermission: 'unknown',
   heroPreviewSeen: false,
 };
@@ -170,11 +169,9 @@ export const useOnboardingContext = () => {
 };
 
 export type {
-  EngagementPreference,
   EraOption,
+  CategoryOption,
   OnboardingState,
-  ThemeOption,
-  ReminderWindow,
   AccountSelection,
   PushPermission,
 };

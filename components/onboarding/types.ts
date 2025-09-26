@@ -1,16 +1,15 @@
 import type { JSX } from 'react';
 
+import type { OnboardingState } from '@/contexts/onboarding-context';
+
 type StepKey =
   | 'welcome'
-  | 'account'
-  | 'timezone'
+  | 'preview'
+  | 'categories'
   | 'eras'
-  | 'themes'
-  | 'region'
-  | 'engagement'
-  | 'reminder-permission'
-  | 'personalizing'
-  | 'ftue';
+  | 'notification-permission'
+  | 'notification-time'
+  | 'account';
 
 type StepComponentProps = {
   onNext: () => void;
@@ -24,6 +23,8 @@ type StepDefinition = {
   key: StepKey;
   title: string;
   Component: StepRenderer;
+  nextLabel?: string | ((state: OnboardingState) => string);
+  shouldDisableNext?: (state: OnboardingState) => boolean;
 };
 
 export type { StepComponentProps, StepDefinition, StepRenderer, StepKey };

@@ -1,10 +1,12 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { lightTheme, spacing as spacingScale, radius as radiusScale } from '@/theme';
 
 const theme = lightTheme;
 const { colors } = theme;
 const accentColor = colors.accentPrimary;
+const serifFamily = Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' });
+const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -19,8 +21,10 @@ const styles = StyleSheet.create({
   },
   progressText: {
     color: colors.textInverse,
-    fontSize: 14,
-    letterSpacing: 0.4,
+    fontSize: 13,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    fontFamily: sansFamily,
   },
   progressBarTrack: {
     height: 6,
@@ -41,6 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.screen,
     paddingHorizontal: spacingScale.xl,
     paddingTop: spacingScale.xl,
+    paddingBottom: spacingScale.xxl,
   },
   footer: {
     flexDirection: 'row',
@@ -58,35 +63,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: accentColor,
     paddingVertical: spacingScale.lg,
-    borderRadius: radiusScale.md,
+    borderRadius: radiusScale.pill,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 18,
+    elevation: 4,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: colors.borderSubtle,
+    shadowOpacity: 0,
   },
   primaryButtonPressed: {
-    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   primaryButtonText: {
     color: colors.surface,
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 17,
+    letterSpacing: 0.2,
+    fontFamily: sansFamily,
+  },
+  primaryButtonTextDisabled: {
+    color: colors.textSecondary,
   },
   secondaryButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacingScale.lg,
-    borderRadius: radiusScale.md,
+    borderRadius: radiusScale.pill,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     backgroundColor: colors.surface,
   },
   pressedButton: {
-    opacity: 0.8,
+    opacity: 0.9,
   },
   secondaryButtonText: {
     color: accentColor,
-    fontWeight: '500',
+    fontWeight: '600',
+    fontFamily: sansFamily,
   },
   disabledButton: {
-    opacity: 0.4,
+    opacity: 0.5,
   },
   disabledButtonText: {
     color: colors.textTertiary,
@@ -95,24 +115,46 @@ const styles = StyleSheet.create({
     paddingBottom: spacingScale.xxl,
     gap: spacingScale.xl,
   },
-  heroCard: {
-    backgroundColor: colors.heroBackground,
-    padding: spacingScale.xl,
-    borderRadius: radiusScale.xl,
-    gap: spacingScale.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.heroBorder,
+  welcomeScroll: {
+    paddingBottom: spacingScale.xxl,
+    gap: spacingScale.xxl,
   },
-  heroTitle: {
-    color: colors.textInverse,
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: '600',
+  heroMasthead: {
+    alignItems: 'center',
+    gap: spacingScale.lg,
+    paddingTop: spacingScale.md,
   },
-  heroSubtitle: {
-    color: colors.accentMuted,
+  heroGreeting: {
+    textAlign: 'center',
+    color: colors.textPrimary,
+    fontSize: 30,
+    lineHeight: 36,
+    fontFamily: serifFamily,
+    letterSpacing: -0.6,
+  },
+  heroBody: {
+    textAlign: 'center',
+    color: colors.textSecondary,
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 24,
+    fontFamily: sansFamily,
+  },
+  heroActions: {
+    width: '100%',
+    gap: spacingScale.md,
+  },
+  heroFootnote: {
+    textAlign: 'center',
+    color: colors.textTertiary,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: sansFamily,
+  },
+  ghostLink: {
+    color: accentColor,
+    fontWeight: '600',
+    textAlign: 'center',
+    fontFamily: sansFamily,
   },
   section: {
     gap: spacingScale.sm,
@@ -121,24 +163,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.textPrimary,
+    fontFamily: sansFamily,
   },
   sectionCopy: {
     fontSize: 15,
     lineHeight: 22,
     color: colors.textSecondary,
+    fontFamily: sansFamily,
   },
   stepTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 26,
+    lineHeight: 32,
     color: colors.textPrimary,
+    fontFamily: serifFamily,
+    letterSpacing: -0.4,
   },
   stackGap: {
     gap: spacingScale.md,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radiusScale.card,
-    padding: spacingScale.card,
+    borderRadius: radiusScale.lg,
+    padding: spacingScale.xl,
     gap: spacingScale.sm,
     shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 10 },
@@ -158,14 +204,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     fontWeight: '600',
+    fontFamily: sansFamily,
   },
   cardHint: {
     fontSize: 13,
     color: accentColor,
+    fontFamily: sansFamily,
+  },
+  cardMeta: {
+    fontSize: 13,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontFamily: sansFamily,
   },
   helperText: {
     fontSize: 13,
     color: colors.textTertiary,
+    fontFamily: sansFamily,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#dc2626',
+    fontFamily: sansFamily,
   },
   input: {
     borderWidth: 1,
@@ -176,6 +237,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     backgroundColor: colors.surface,
+    fontFamily: sansFamily,
+  },
+  inlineButtonsRow: {
+    flexDirection: 'row',
+    gap: spacingScale.md,
   },
   inlinePrimaryButton: {
     alignSelf: 'flex-start',
@@ -188,6 +254,7 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontSize: 15,
     fontWeight: '600',
+    fontFamily: sansFamily,
   },
   optionChip: {
     paddingHorizontal: spacingScale.card,
@@ -212,6 +279,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 15,
     fontWeight: '500',
+    fontFamily: sansFamily,
   },
   optionChipTextActive: {
     color: accentColor,
@@ -233,11 +301,7 @@ const styles = StyleSheet.create({
   ghostButtonText: {
     color: accentColor,
     fontWeight: '600',
-  },
-  inlineButtonsRow: {
-    flexDirection: 'row',
-    gap: spacingScale.md,
-    marginTop: spacingScale.md,
+    fontFamily: sansFamily,
   },
   inlineGhostButton: {
     alignSelf: 'flex-start',
@@ -258,9 +322,81 @@ const styles = StyleSheet.create({
   inlineGhostButtonText: {
     color: colors.textSecondary,
     fontWeight: '500',
+    fontFamily: sansFamily,
   },
   inlineGhostButtonTextActive: {
     color: accentColor,
+  },
+  carouselWrapper: {
+    gap: spacingScale.lg,
+    paddingBottom: spacingScale.xxl,
+  },
+  carouselScroll: {
+    gap: spacingScale.md,
+  },
+  carouselCard: {
+    width: '100%',
+    backgroundColor: colors.surface,
+    borderRadius: radiusScale.card,
+    padding: spacingScale.xl,
+    gap: spacingScale.sm,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  cardImagePlaceholder: {
+    height: 160,
+    borderRadius: radiusScale.lg,
+    backgroundColor: colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacingScale.sm,
+  },
+  cardImageLabel: {
+    color: colors.textPrimary,
+    fontWeight: '600',
+    fontSize: 16,
+    fontFamily: sansFamily,
+  },
+  paginationDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacingScale.sm,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.progressTrack,
+  },
+  paginationDotActive: {
+    backgroundColor: accentColor,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacingScale.sm,
+    marginTop: spacingScale.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: radiusScale.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
+  },
+  checkboxChecked: {
+    borderColor: accentColor,
+    backgroundColor: colors.accentSoft,
+  },
+  checkboxLabel: {
+    flex: 1,
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontFamily: sansFamily,
   },
   loadingState: {
     flex: 1,
@@ -276,6 +412,179 @@ const styles = StyleSheet.create({
   bulletItem: {
     color: colors.textSecondary,
     fontSize: 14,
+    fontFamily: sansFamily,
+  },
+  timeOptionGroup: {
+    gap: spacingScale.md,
+  },
+  timeOption: {
+    borderRadius: radiusScale.card,
+    paddingVertical: spacingScale.lg,
+    paddingHorizontal: spacingScale.xl,
+    backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    alignItems: 'center',
+  },
+  timeOptionActive: {
+    backgroundColor: colors.accentSoft,
+    borderColor: accentColor,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  timeOptionLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    fontFamily: sansFamily,
+  },
+  timeOptionHint: {
+    marginTop: spacingScale.xs,
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontFamily: sansFamily,
+  },
+  timeCustomCard: {
+    marginTop: spacingScale.md,
+    gap: spacingScale.sm,
+  },
+  permissionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radiusScale.lg,
+    padding: spacingScale.xl,
+    gap: spacingScale.md,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  permissionTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontFamily: sansFamily,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  permissionHint: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontFamily: sansFamily,
+  },
+  permissionActions: {
+    flexDirection: 'row',
+    gap: spacingScale.md,
+  },
+  permissionAction: {
+    flex: 1,
+    borderRadius: radiusScale.md,
+    paddingVertical: spacingScale.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  permissionActionPrimary: {
+    borderColor: accentColor,
+    backgroundColor: colors.accentSoft,
+  },
+  permissionActionSecondary: {
+    backgroundColor: colors.surface,
+  },
+  permissionActionLabel: {
+    fontWeight: '600',
+    color: colors.textPrimary,
+    fontFamily: sansFamily,
+  },
+  formCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radiusScale.lg,
+    padding: spacingScale.xl,
+    gap: spacingScale.md,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 2,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacingScale.md,
+    marginTop: spacingScale.xl,
+    marginBottom: spacingScale.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.borderSubtle,
+  },
+  dividerLabel: {
+    color: colors.textTertiary,
+    fontWeight: '600',
+    fontFamily: sansFamily,
+    letterSpacing: 0.6,
+  },
+  legalText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    fontFamily: sansFamily,
+  },
+  legalLink: {
+    color: accentColor,
+    fontWeight: '600',
+  },
+  socialButton: {
+    borderRadius: radiusScale.pill,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
+    paddingVertical: spacingScale.lg,
+    paddingHorizontal: spacingScale.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacingScale.md,
+  },
+  socialButtonSelected: {
+    borderColor: accentColor,
+    backgroundColor: colors.accentSoft,
+  },
+  socialButtonPressed: {
+    transform: [{ scale: 0.98 }],
+  },
+  socialButtonText: {
+    color: colors.textPrimary,
+    fontWeight: '600',
+    fontFamily: sansFamily,
+    textAlign: 'center',
+  },
+  socialButtonIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialButtonIconSelected: {
+    backgroundColor: colors.accentMuted,
+  },
+  socialButtonContent: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  socialButtonSubcopy: {
+    marginTop: spacingScale.xs,
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontFamily: sansFamily,
+    textAlign: 'center',
   },
 });
 
