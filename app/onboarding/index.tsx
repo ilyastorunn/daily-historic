@@ -35,6 +35,9 @@ const steps: StepDefinition[] = [
     title: 'Categories',
     Component: StepCategories,
     shouldDisableNext: (state) => {
+      if (state.categoriesSkipped) {
+        return false;
+      }
       const hasSelection = state.categories.includes('surprise') || state.categories.length >= 1;
       return !hasSelection;
     },

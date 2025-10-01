@@ -23,7 +23,7 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
 
   const toggleCategory = (value: CategoryOption) => {
     if (value === 'surprise') {
-      updateState({ categories: ['surprise'] });
+      updateState({ categories: ['surprise'], categoriesSkipped: false });
       return;
     }
 
@@ -31,7 +31,7 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
       ? state.categories.filter((item) => item !== value)
       : [...state.categories.filter((item) => item !== 'surprise'), value];
 
-    updateState({ categories: next });
+    updateState({ categories: next, categoriesSkipped: false });
   };
 
   return (
@@ -71,7 +71,7 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
       </Text>
       <Pressable
         onPress={() => {
-          updateState({ categories: ['surprise'] });
+          updateState({ categories: [], categoriesSkipped: true });
           onNext();
         }}
         style={({ pressed }) => [styles.inlineGhostButton, pressed && styles.inlineGhostButtonPressed]}

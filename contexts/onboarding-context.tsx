@@ -38,6 +38,7 @@ type OnboardingState = {
   notificationTime: string;
   eras: EraOption[];
   categories: CategoryOption[];
+  categoriesSkipped: boolean;
   pushPermission: PushPermission;
   heroPreviewSeen: boolean;
 };
@@ -72,6 +73,7 @@ const initialState: OnboardingState = {
   notificationTime: INITIAL_NOTIFICATION_TIME,
   eras: [],
   categories: [],
+  categoriesSkipped: false,
   pushPermission: 'unknown',
   heroPreviewSeen: false,
 };
