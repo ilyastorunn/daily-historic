@@ -1,9 +1,5 @@
 import { useEffect } from 'react';
-import {
-  Pressable,
-  Text,
-  View,
-} from 'react-native';
+import { Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 
@@ -45,22 +41,14 @@ const StepPreview = ({ onNext }: StepComponentProps) => {
     updateState({ heroPreviewSeen: true });
   }, [updateState]);
 
-  const handleSkip = () => {
-    onNext();
-  };
-
   return (
-    <View style={styles.carouselWrapper}>
+    <View style={[styles.stackGap, styles.carouselWrapper]}>
       <Text style={styles.stepTitle}>Here’s what a Chrono moment looks like</Text>
       <Text style={styles.sectionCopy}>
         Swipe through a few highlights while we line up the perfect selections for you.
       </Text>
 
       <SmoothCarousel cards={previewCards} />
-
-      <Pressable onPress={handleSkip} style={styles.inlineGhostButton}>
-        <Text style={styles.inlineGhostButtonText}>Skip preview</Text>
-      </Pressable>
     </View>
   );
 };

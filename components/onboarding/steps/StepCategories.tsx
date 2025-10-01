@@ -38,7 +38,7 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
     <ScrollView contentContainerStyle={styles.stepScroll}>
       <Text style={styles.stepTitle}>What interests you?</Text>
       <Text style={styles.sectionCopy}>
-        Pick at least two categories so Chrono can tailor your daily digest. Choose “Surprise me” for a balanced mix.
+        Pick one or more categories so Chrono can tailor your daily digest. Choose “Surprise me” for a balanced mix.
       </Text>
       <View style={styles.chipRowWrap}>
         {categoryOptions.map((option) => {

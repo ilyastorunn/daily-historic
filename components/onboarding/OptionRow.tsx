@@ -11,11 +11,22 @@ type OptionRowProps = {
   subcopy?: string;
   selected?: boolean;
   iconName?: IconName;
+  iconColor?: string;
+  iconSelectedColor?: string;
   onPress: () => void;
   variant?: 'default' | 'subtle';
 };
 
-const OptionRow = ({ label, subcopy, selected, iconName, onPress, variant = 'default' }: OptionRowProps) => (
+const OptionRow = ({
+  label,
+  subcopy,
+  selected,
+  iconName,
+  iconColor,
+  iconSelectedColor,
+  onPress,
+  variant = 'default',
+}: OptionRowProps) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [
@@ -30,7 +41,11 @@ const OptionRow = ({ label, subcopy, selected, iconName, onPress, variant = 'def
         <Ionicons
           name={iconName}
           size={20}
-          color={selected ? colors.surface : colors.textPrimary}
+          color={
+            selected
+              ? iconSelectedColor ?? iconColor ?? colors.surface
+              : iconColor ?? colors.textPrimary
+          }
         />
       </View>
     ) : null}

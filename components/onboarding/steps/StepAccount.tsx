@@ -9,7 +9,7 @@ import {
 
 import OptionRow from '../OptionRow';
 import type { StepComponentProps } from '../types';
-import { styles } from '../styles';
+import { colors, styles } from '../styles';
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
@@ -157,24 +157,32 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
         <OptionRow
           label="Continue with Email"
           iconName="mail-outline"
+          iconColor={colors.accentPrimary}
+          iconSelectedColor={colors.accentPrimary}
           onPress={handleChooseEmail}
           selected={showEmailForm}
         />
         <OptionRow
           label="Continue with Apple"
           iconName="logo-apple"
+          iconColor="#000000"
+          iconSelectedColor="#000000"
           onPress={() => selectSocial('apple')}
           selected={state.accountSelection === 'apple'}
         />
         <OptionRow
           label="Continue with Google"
           iconName="logo-google"
+          iconColor="#4285F4"
+          iconSelectedColor="#4285F4"
           onPress={() => selectSocial('google')}
           selected={state.accountSelection === 'google'}
         />
         <OptionRow
           label="Continue with Meta"
           iconName="logo-facebook"
+          iconColor="#1877F2"
+          iconSelectedColor="#1877F2"
           onPress={() => selectSocial('meta')}
           selected={state.accountSelection === 'meta'}
         />

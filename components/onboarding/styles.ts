@@ -15,8 +15,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacingScale.xl,
-    paddingTop: spacingScale.xl,
-    paddingBottom: spacingScale.md,
+    paddingTop: spacingScale.lg,
+    paddingBottom: spacingScale.sm,
     backgroundColor: colors.headerBackground,
   },
   progressText: {
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radiusScale.xl,
     backgroundColor: colors.screen,
     paddingHorizontal: spacingScale.xl,
-    paddingTop: spacingScale.xl,
+    paddingTop: spacingScale.lg,
     paddingBottom: spacingScale.xxl,
   },
   footer: {
@@ -342,6 +342,16 @@ const styles = StyleSheet.create({
     gap: spacingScale.lg,
     paddingBottom: spacingScale.xxl,
   },
+  carouselPagerContainer: {
+    width: '100%',
+    paddingHorizontal: spacingScale.xl,
+  },
+  carouselPager: {
+    width: '100%',
+  },
+  carouselPage: {
+    flex: 1,
+  },
   carouselScroll: {
     paddingBottom: spacingScale.sm,
   },
@@ -355,6 +365,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 22,
     elevation: 4,
+    width: '100%',
   },
   carouselCardSpacing: {
     marginRight: spacingScale.md,
@@ -505,13 +516,16 @@ const styles = StyleSheet.create({
   permissionCard: {
     backgroundColor: colors.surface,
     borderRadius: radiusScale.lg,
-    padding: spacingScale.xl,
-    gap: spacingScale.md,
     shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 24,
     elevation: 4,
+    overflow: 'hidden',
+  },
+  permissionImage: {
+    width: '100%',
+    aspectRatio: 796 / 536,
   },
   permissionTitle: {
     fontSize: 18,

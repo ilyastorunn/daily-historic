@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
@@ -30,21 +31,11 @@ const StepNotificationPermission = ({ onNext, onBack }: StepComponentProps) => {
       </Text>
 
       <View style={styles.permissionCard}>
-        <Text style={styles.permissionTitle}>
-          {"\"Chrono\" would like to send you notifications"}
-        </Text>
-        <Text style={styles.permissionHint}>
-          Alerts may include daily highlights and streak reminders.
-        </Text>
-
-        <View style={styles.permissionActions}>
-          <View style={[styles.permissionAction, styles.permissionActionSecondary]}>
-            <Text style={styles.permissionActionLabel}>Not Now</Text>
-          </View>
-          <View style={[styles.permissionAction, styles.permissionActionPrimary]}>
-            <Text style={styles.permissionActionLabel}>Allow</Text>
-          </View>
-        </View>
+        <Image
+          source={require('@/pics/notification-img.png')}
+          style={styles.permissionImage}
+          contentFit="cover"
+        />
       </View>
 
       <Text style={styles.helperText}>
