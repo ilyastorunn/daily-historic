@@ -3,6 +3,7 @@
 # Local environment + Firebase secrets
 .env
 GoogleService-Info.plist
+google-services.json
 
 # dependencies
 node_modules/

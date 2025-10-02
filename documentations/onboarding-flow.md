@@ -2,81 +2,91 @@
 
 ## Overview
 - **Flow Name**: "Your History Journey Begins"
-- **Goal**: Capture essential preferences (account, time zone, interests) and establish a daily reminder so users experience a personalized history feed on day one.
-- **Principles**: Show value early, keep momentum, minimize token fatigue, and ensure the notification promise is clear.
+- **Goal**: Capture core content preferences, notification intent, and basic account choice so the user lands in a personalized feed on first launch.
+- **Principles**: Show value quickly, keep completion light, and reuse captured signals to personalize reminders and feed content.
+- **Implementation Notes**: Anonymous Firebase users are created on first app launch. When onboarding finishes we write a `Users/{uid}` document in Firestore and mark `onboardingCompleted: true`, preventing the flow from showing again.
 
-## Step-by-Step Flow
+## Step-by-Step Flow (current build)
 
-### 1. Spark & Value (Welcome)
-- **Screen Title**: "Welcome to [App Name]!"
-- **Visual**: Immersive collage tile with subtle motion blur and accent glow.
-- **Copy**: "Discover history, every day." Subheadline: "Uncover fascinating events tailored just for you."
-- **CTA**: Primary footer `Continue`; secondary hero chip `See today’s highlight` toggles preview state.
+### 1. Welcome
+- **Screen Title**: "Welcome"
+- **Purpose**: Set the tone for the experience and explain the value.
+- **UI**: Hero image + intro copy. Primary CTA `Get Started` advances to Step 2.
 
-### 2. Quick Account Stub
-- **Purpose**: Secure email/OAuth early to store preferences and sync progress.
-- **Copy**: "Create your free account to sync favorites and keep daily streaks."
-- **Options**: `Continue with Google`, `Continue with Apple`, carded email capture (`Save email`), and `Continue without account (limited)`.
-- **Behavior**: OAuth/guest choices advance immediately; email validates basic format before continuing.
+### 2. Preview
+- **Purpose**: Highlight the type of daily content that will be delivered.
+- **Behavior**: Users swipe through sample cards; footer CTA continues.
 
-### 3. Time Zone & Reminder Intent
-- **Screen Title**: "When should we visit?"
-- **Elements**:
-  - Auto-detected time zone (editable text field).
-  - Reminder window chips (`Morning`, `Afternoon`, `Evening`, `Off`) with live status copy.
-  - Reminder toggle is implied: selecting `Off` disables daily reminders.
-- **Validation**: `Save preferences` CTA writes values, then footer continue is available.
+### 3. Categories
+- **Prompt**: "What kinds of stories interest you?"
+- **Options**: Multi-select historical themes (e.g., world wars, science discovery, art & culture, surprise).
+- **Validation logic**: User must select at least one theme unless they toggle `Continue without picking` (`categoriesSkipped`). Selecting `Surprise` qualifies as a valid choice by itself.
 
-### 4. Interests — Historical Eras
-- **Prompt**: "Which eras captivate you most?"
-- **UI**: Multi-select chips (Ancient, Medieval, Renaissance, 17th–18th, 19th Century, 1900s, 21st Century, Prehistory) plus `I’m open to everything`.
-- **Logic**: Selecting `I’m open to everything` clears other chips; messaging encourages at least one pick.
+### 4. Eras
+- **Prompt**: "Pick the eras you want more of"
+- **UI**: Multi-select chips for historical eras. No minimum selection requirement.
 
-### 5. Interests — Themes & Story Types
-- **Prompt**: "What kinds of stories keep you intrigued?"
-- **Chips**: `Wars & Revolutions`, `Science & Innovation`, `Art & Culture`, `Politics & Leaders`, `Social Movements`, `Biographies`, `Daily Life & Society`, `Mysteries`, `Exploration`, `Entertainment & Sport`, `Surprise me`.
-- **Logic**: Selecting `Surprise me` clears other chips; copy nudges toward ≥3 selections.
+### 5. Notification Permission
+- **Purpose**: Explain the benefit of reminders before triggering the system prompt.
+- **Outcomes**: `pushPermission` recorded as `enabled` or `declined`.
+- **Logic**: If a user declines, the dedicated reminder time step is skipped automatically.
 
-### 6. Regional Focus (Optional)
-- **Prompt**: "Should we spotlight a region?"
-- **Controls**: Text field for freeform region/country plus chips for `No preference` and `Surprise me`.
-- **Persistence**: Clearing input reverts to `No preference`; chips sync with text field state.
+### 6. Reminder Time *(conditional)*
+- **Shown only when**: `pushPermission === 'enabled'`.
+- **Prompt**: "Choose when to receive your daily story"
+- **Validation**: A reminder time must be selected before continuing.
 
-### 7. Engagement Preference Summary
-- **Purpose**: Reinforce commitment and capture format preference.
-- **Cards**: `Quick reads (1 min)`, `In-depth dives`, `Mix it up` (single select).
-- **Extras**: Inline ghost button toggles weekly recap email; confirmation copy reflects selection.
+### 7. Account Choice
+- **Purpose**: Let the user link an account or continue as a guest.
+- **Options**: Email sign-up (with validation for email format, password length/match, terms acceptance) and social placeholders (Apple, Google, Meta). "Continue without Sign Up" advances as an anonymous user.
+- **Behavior**: Social options immediately advance and record the chosen method; email form persists selections in context for use in future auth work but we currently finalize onboarding regardless of sign-in success.
 
-### 8. Reminder Permission & Push Prompt
-- **Screen Title**: "Stay on top of history."
-- **Copy**: Reinforces reminder window selection and streak value.
-- **CTAs**: `Enable notifications` + `Maybe later`; state captured as `enabled` or `declined` for future re-asks.
+### Completion
+- When the final step is confirmed we call `completeOnboarding` which saves:
+  - Categories, eras, notification settings, timezone (auto-detected), account selection, and whether categories were skipped.
+  - Metadata: `onboardingCompleted: true`, timestamps, and preview state.
+- On success the app replaces the stack with `/(tabs)`. Failures are logged but the user proceeds to the main experience.
 
-### 9. Personalization Loading State
-- **Screen Title**: "Curating your history feed..."
-- **Animation**: Timeline progressing, gears turning.
-- **Copy**: "Training your time machine with eras and themes you love."
-- **Behavior**: Shown only while personalization API resolves; display progress bar if >1.5s.
+## Data & Persistence
+- **Auth**: `UserProvider` signs in anonymously on launch via Firebase Auth.
+- **Firestore**: User preferences stored in `Users/{uid}` with a normalized shape:
+  ```ts
+  interface UserProfile {
+    uid: string;
+    name?: string;
+    age?: string;
+    gender?: string;
+    displayName?: string;
+    accountSelection: 'email' | 'google' | 'apple' | 'meta' | 'anonymous' | null;
+    emailAddress?: string;
+    timezone: string;
+    categories: CategoryOption[];
+    categoriesSkipped: boolean;
+    eras: EraOption[];
+    notificationEnabled: boolean;
+    notificationTime?: string;
+    pushPermission: PushPermission;
+    heroPreviewSeen: boolean;
+    additionalNotes?: string;
+    onboardingCompleted: boolean;
+    createdAt?: FirebaseFirestoreTypes.Timestamp;
+    updatedAt?: FirebaseFirestoreTypes.Timestamp;
+  }
+  ```
+  We merge updates so re-running the flow can augment existing data without overwriting.
+- **Context Layer**: `useUserContext` exposes `initializing`, `onboardingCompleted`, and the `completeOnboarding` handler to both the index route (for routing decisions) and onboarding flow.
+- **Routing**: The index route waits for initialization, then redirects to onboarding or the main tab navigator based on `onboardingCompleted`.
 
-### 10. First Experience Tour
-- **Screen Title**: "You’re set for today"
-- **Content**: Card summarizing what to expect (hero event, personalized timeline, reminder status) with bullet list and helper text.
-- **CTA**: Footer `Enter Dashboard` advances to main tabs; future release can add contextual tooltips.
+## UX Guidelines
+- **Progress Indicator**: Header shows `Step X of Y` with a dynamic progress bar. The reminder time step is omitted from the count when notifications are declined.
+- **Skip Logic**:
+  - Notification-time step skipped when reminders are declined.
+  - Categories may be bypassed via the "skip" affordance but we still capture that intent.
+  - Account creation is optional; skipping keeps the anonymous Firebase user active.
+- **Accessibility**: Maintain WCAG AA color contrast, ensure chip groups and buttons are accessible to screen readers, and provide haptic feedback on major selections.
+- **Analytics (planned)**: Instrument `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_flow_completed`, `onboarding_notification_permission`, and `onboarding_account_choice` events using the context data once analytics wiring lands.
 
-## Additional Guidelines
-- **Progress Indicator**: Persistent header counter (`Step X of 10`) with animated progress bar.
-- **Skip Logic**: Only optional on region and account creation; if account skipped, prompt after first save/share attempt post-onboarding.
-- **Visual Consistency**: Maintain warm color palette, subtle gradients, and micro-animations for chip selections.
-- **Micro-interactions**: Provide haptic feedback (mobile) and animated chips when selections made.
-- **Analytics Instrumentation**: `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_account_choice`, `push_permission_result`, `onboarding_flow_completed`.
-- **A/B Testing Opportunities**:
-  - Placement of account creation (Step 2 vs. post-interest).
-  - Reminder opt-in default state.
-  - Teaser preview vs. straight flow.
-- **Content Prep**: Preload hero teaser event aligned with most popular selections to show instant personalization.
-- **Accessibility**: WCAG AA contrast, support VoiceOver/TalkBack, ensure all CTAs reachable with switch control.
-
-## Next Actions
-1. Build Figma prototype with revised step order and progress indicator.
-2. Conduct 5 usability sessions focusing on comprehension and drop-off.
-3. Implement analytics events and baseline funnel dashboards prior to beta.
+## Future Enhancements
+1. Hook up real social/Email authentication once backend endpoints are ready.
+2. Add a confirmation toast/state change when Firestore writes succeed or fail.
+3. Expand analytics coverage and build funnel dashboards for drop-off monitoring.

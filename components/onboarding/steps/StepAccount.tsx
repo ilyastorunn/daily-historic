@@ -21,7 +21,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
   const [confirmPassword, setConfirmPassword] = useState(state.accountPasswordConfirm);
   const [showEmailForm, setShowEmailForm] = useState(state.accountSelection === 'email');
 
-  const selectSocial = (selection: AccountSelection) => {
+  const selectSocial = (selection: Exclude<AccountSelection, null>) => {
     setShowEmailForm(false);
     updateState({ accountSelection: selection, termsAccepted: true });
     onNext();
@@ -34,7 +34,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
 
   const handleSkipAccount = () => {
     setShowEmailForm(false);
-    updateState({ accountSelection: null, termsAccepted: false });
+    updateState({ accountSelection: 'anonymous', termsAccepted: false });
     onNext();
   };
 

@@ -1,11 +1,12 @@
 import { useEffect, useMemo } from 'react';
-import { Pressable, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import {
   OnboardingProvider,
   useOnboardingContext,
 } from '@/contexts/onboarding-context';
+import { useUserContext, type OnboardingCompletionData } from '@/contexts/user-context';
 import { styles } from '@/components/onboarding/styles';
 import type { StepDefinition } from '@/components/onboarding/types';
 import {
@@ -83,6 +84,7 @@ const steps: StepDefinition[] = [
 
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   const { state, goNext, goBack, goToStep, totalSteps } = useOnboardingContext();
+  const { completeOnboarding } = useUserContext();
 
   const isFirstStep = state.stepIndex === 0;
 
@@ -130,7 +132,27 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
     }
 
     if (state.stepIndex === totalSteps - 1) {
-      onComplete();
+      const onboardingData: OnboardingCompletionData = {
+        accountSelection: state.accountSelection,
+        categories: state.categories,
+        categoriesSkipped: state.categoriesSkipped,
+        emailAddress: state.emailAddress ? state.emailAddress : undefined,
+        eras: state.eras,
+        heroPreviewSeen: state.heroPreviewSeen,
+        notificationEnabled: state.notificationEnabled,
+        notificationTime:
+          state.pushPermission === 'enabled' && state.notificationTime
+            ? state.notificationTime
+            : undefined,
+        pushPermission: state.pushPermission,
+        timezone: state.timezone,
+      };
+
+      void completeOnboarding(onboardingData)
+        .then(onComplete)
+        .catch((error) => {
+          console.error('Failed to complete onboarding', error);
+        });
       return;
     }
 
@@ -216,12 +238,33 @@ const ProgressBar = ({ current, total }: { current: number; total: number }) => 
   );
 };
 
+const loadingStyle = {
+  flex: 1,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+};
+
 const OnboardingScreen = () => {
   const router = useRouter();
+  const { initializing, onboardingCompleted } = useUserContext();
+
+  useEffect(() => {
+    if (!initializing && onboardingCompleted) {
+      router.replace('/(tabs)');
+    }
+  }, [initializing, onboardingCompleted, router]);
 
   const handleComplete = () => {
     router.replace('/(tabs)');
   };
+
+  if (initializing) {
+    return (
+      <SafeAreaView style={loadingStyle}>
+        <ActivityIndicator size="large" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <OnboardingProvider totalSteps={steps.length}>

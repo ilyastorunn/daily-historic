@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 type PushPermission = 'unknown' | 'enabled' | 'declined';
 
-type AccountSelection = 'email' | 'google' | 'apple' | 'meta' | null;
+type AccountSelection = 'email' | 'google' | 'apple' | 'meta' | 'anonymous' | null;
 
 type EraOption =
   | 'prehistory'
