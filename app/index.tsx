@@ -14,7 +14,7 @@ export default function Index() {
   const { initializing, onboardingCompleted } = useUserContext();
 
   const redirectHref = useMemo(() => {
-    return onboardingCompleted ? '/(tabs)' : '/onboarding';
+    return onboardingCompleted ? '/dashboard' : '/onboarding';
   }, [onboardingCompleted]);
 
   if (initializing) {

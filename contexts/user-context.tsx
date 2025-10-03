@@ -27,6 +27,7 @@ type UserContextValue = {
   onboardingCompleted: boolean;
   error: Error | null;
   completeOnboarding: (data: OnboardingCompletionData) => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -139,6 +140,16 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     [authUser, profile]
   );
 
+  const signOut = useCallback(async () => {
+    try {
+      await firebaseAuth.signOut();
+      setError(null);
+    } catch (signOutError) {
+      console.error('Failed to sign out', signOutError);
+      setError(signOutError instanceof Error ? signOutError : new Error('Failed to sign out'));
+    }
+  }, []);
+
   const onboardingCompleted = profile?.onboardingCompleted ?? false;
   const initializing = authInitializing || profileLoading;
 
@@ -150,8 +161,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       onboardingCompleted,
       error,
       completeOnboarding,
+      signOut,
     }),
-    [authUser, profile, initializing, onboardingCompleted, error, completeOnboarding]
+    [authUser, profile, initializing, onboardingCompleted, error, completeOnboarding, signOut]
   );
 
   return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
