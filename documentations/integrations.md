@@ -6,24 +6,54 @@
   `User-Agent` (e.g. `DailyHistoricApp/0.1 (contact@yourdomain.com)`).
 - Pick a datastore (Firestore, PostgreSQL, or a JSON cache during prototyping)
   and define schemas for `event`, `person`, `mediaAsset`, and `dailyDigest`.
+  - ✅ Chosen datastore: **Firestore** with collections `contentEvents`,
+    `contentPayloadCache`, `dailyDigests`.
 - Add environment variables for external APIs: `WIKIMEDIA_API_TOKEN`,
   `OPENROUTER_API_KEY` (optional), `GOOGLE_GENAI_KEY` (optional).
+
+
+### Firestore Schema Snapshot
+- `contentEvents/{eventId}`: normalized event record (summary, year, related pages,
+  categories, era tags, source metadata, timestamps).
+- `contentPayloadCache/{dateKey}`: raw Wikimedia payload and fetch timestamp for
+  recovery/rewind.
+- `dailyDigests/{dateKey}`: ordered list of `eventId` references curated for the
+  app client.
+- All write paths assume Firebase Admin credentials supplied via
+  `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT_JSON`.
 
 ## 2. Fetch Daily Events (Wikimedia On This Day)
 1. Build a thin client for
    `https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/{month}/{day}`.
    Required headers: `User-Agent`; optional `Authorization: Bearer {token}` if you
    enable higher limits.
+   - ✅ Implemented in `scripts/ingest/wikimedia-client.ts` (`fetchOnThisDaySelected`).
+   - Set `DAILY_HISTORIC_USER_AGENT` or pass `--userAgent` when running the script.
 2. Parse the JSON response. Each `event` includes `text`, `year`, `pages`.
 3. Persist a normalized record with keys such as `eventId` (hash of the English
    title + date), `year`, `summary`, `relatedPageIds`, `rawSource`.
+   - Normalization helper: `normalizeEvent` inside `scripts/ingest/wikimedia-client.ts`
+     builds a deterministic 32-char hash and extracts related page metadata.
 4. Cache the raw payload so you can recover from downstream errors without
    refetching.
+   - CLI runner (`scripts/ingest/run.ts`) writes cache documents to Firestore
+     using `contentPayloadCache/{cacheKey}`.
+
+
+### CLI Ingestion Runner
+- Command: `npm run ingest -- --dry-run` (safe preview) or omit `--dry-run` to persist.
+- Env vars: `DAILY_HISTORIC_USER_AGENT`, `WIKIMEDIA_API_TOKEN` (optional),
+  `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT_JSON`,
+  `FIREBASE_PROJECT_ID` (optional override), `WIKIDATA_CONCURRENCY` (optional, default 4),
+  `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`, `MEDIA_SEARCH_LIMIT`.
+- Output collections: `contentEvents`, `contentPayloadCache`, `dailyDigests`.
+- Digest doc id format: `digest:onthisday:selected:MM-DD` with ISO date metadata.
 
 ## 3. Enrich Events with Wikidata
 1. For each `page` in the event payload, use `page.wikibase_item` to hit the
    Wikidata entity endpoint:
    `https://www.wikidata.org/wiki/Special:EntityData/{itemId}.json`.
+   - ✅ API client lives at `scripts/ingest/wikidata-client.ts` and fetches each entity with the shared user agent.
 2. Extract facts you need:
    - `claims.P585` (point in time) for exact date.
    - `claims.P710` (participants) to gather linked entities.
@@ -33,18 +63,33 @@
    `description`, `wikidataId`.
 4. Store enriched data alongside the base event so the mobile app never calls
    Wikidata directly.
+   - Enrichment handler `scripts/ingest/enrichment.ts` populates exact dates, participant summaries, and supporting entity IDs before persisting.
+
+
+### Event Enrichment Pipeline
+- CLI now fetches Wikidata entities for each related page, then resolves participant entities and exact dates before Firestore writes.
+- Shared in-memory cache + configurable 4-way concurrency keeps Wikidata lookups under ~15s per run and avoids duplicate requests.
+- Enriched payload is merged with classification output so mobile clients receive `categories`, `era`, `tags`, and participant metadata in a single document.
 
 ## 4. Category and Era Classification
 1. Define a static lookup table that maps keywords, Wikidata properties, or
    categories to your app’s era/category taxonomy.
+   - ✅ Implemented baseline in `scripts/ingest/classification.ts` combining keyword rules with `instance of`/`subclass of` matches.
 2. Run lightweight heuristics first (e.g. if the event’s instance of is
    `Q198` → wars) before falling back to an LLM.
+   - CLI enrichment now auto-assigns categories, era, and tags; LLM fallback can refine later if needed.
 3. If a manual override is needed, keep a YAML/JSON overrides file checked into
    the repo so you can patch misclassified items quickly.
+
+### Media Fallback Pipeline
+- During enrichment, `ensureMediaForEvent` checks existing thumbnails and calls the Commons title search API with the page’s normalized title.
+- Default minimum size is 800x600 (override via `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`). Results include license/attribution metadata for downstream display.
+- When Commons fails, events keep their original Wikimedia thumbnails so the app can apply local fallbacks.
 
 ## 5. Media Selection (Wikimedia Commons)
 1. Check whether the `event.pages[].thumbnail` or `originalimage` fields already
    provide a suitable asset. Validate size/aspect ratio and license data.
+   - ✅ Automated via `ensureMediaForEvent` in `scripts/ingest/media.ts`.
 2. If missing, query Commons Search:
    `https://api.wikimedia.org/core/v1/commons/search/title?q={query}&limit=10`.
    Use the event title or participant names as the query string.
