@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import {
   OnboardingProvider,
@@ -178,10 +179,27 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 
   const shouldShowFooter = !isFirstStep && currentStepDef.key !== 'notification-permission';
 
+  const showBackButton = !isFirstStep;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.progressText}>{`Step ${displayedStepNumber} of ${displayedStepTotal}`}</Text>
+        <View style={styles.headerTop}>
+          {showBackButton ? (
+            <Pressable
+              accessibilityLabel="Go back"
+              onPress={handleBack}
+              style={({ pressed }) => [
+                styles.headerBackButton,
+                pressed && styles.headerBackButtonPressed,
+              ]}
+            >
+              <Ionicons name="arrow-back" style={styles.headerBackIcon} />
+            </Pressable>
+          ) : (
+            <View style={styles.headerBackPlaceholder} />
+          )}
+        </View>
         <ProgressBar current={displayedStepNumber} total={displayedStepTotal} />
       </View>
 
@@ -195,16 +213,6 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 
       {shouldShowFooter && (
         <View style={styles.footer}>
-          <Pressable
-            onPress={handleBack}
-            style={({ pressed }) => [
-              styles.secondaryButton,
-              pressed && styles.pressedButton,
-            ]}
-          >
-            <Text style={styles.secondaryButtonText}>Back</Text>
-          </Pressable>
-
           <Pressable
             onPress={handleNext}
             disabled={isNextDisabled}

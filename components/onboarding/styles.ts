@@ -14,24 +14,41 @@ const styles = StyleSheet.create({
     backgroundColor: colors.appBackground,
   },
   header: {
-    paddingHorizontal: spacingScale.xl,
-    paddingTop: spacingScale.lg,
-    paddingBottom: spacingScale.sm,
+    paddingHorizontal: spacingScale.lg,
+    paddingTop: spacingScale.sm,
+    paddingBottom: spacingScale.md,
     backgroundColor: colors.headerBackground,
+    gap: spacingScale.xs,
   },
-  progressText: {
+  headerTop: {
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerBackButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radiusScale.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerBackButtonPressed: {
+    opacity: 0.75,
+  },
+  headerBackPlaceholder: {
+    width: 36,
+    height: 36,
+  },
+  headerBackIcon: {
+    fontSize: 20,
     color: colors.textInverse,
-    fontSize: 13,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    fontFamily: sansFamily,
   },
   progressBarTrack: {
     height: 6,
     width: '100%',
     backgroundColor: colors.progressTrack,
     borderRadius: radiusScale.pill,
-    marginTop: spacingScale.md,
+    marginTop: spacingScale.xs,
   },
   progressBarFill: {
     height: '100%',

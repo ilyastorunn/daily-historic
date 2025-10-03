@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { Alert, Button, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useUserContext } from '@/contexts/user-context';
 import type {
   AccountSelection,
   CategoryOption,
   EraOption,
   PushPermission,
 } from '@/contexts/onboarding-context';
+import { useUserContext } from '@/contexts/user-context';
 
 const eraLabels: Record<EraOption, string> = {
   prehistory: 'Prehistory',
