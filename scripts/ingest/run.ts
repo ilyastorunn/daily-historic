@@ -5,6 +5,7 @@ import { exit } from 'node:process';
 import { bootstrapFirestore } from './firestore-admin';
 import { buildCacheKey, fetchOnThisDaySelected, normalizeEvent } from './wikimedia-client';
 import { enrichEvents } from './enrichment';
+import { assertValidPayload } from './validation';
 import type { CachedPayload, DailyDigestRecord, HistoricalEventRecord } from './types';
 
 interface CliOptions {
@@ -166,6 +167,7 @@ const main = async () => {
       mediaMinWidth: Number.parseInt(process.env.MEDIA_MIN_WIDTH ?? '', 10) || undefined,
       mediaMinHeight: Number.parseInt(process.env.MEDIA_MIN_HEIGHT ?? '', 10) || undefined,
       mediaLimit: Number.parseInt(process.env.MEDIA_SEARCH_LIMIT ?? '', 10) || undefined,
+      overridePath: process.env.INGEST_OVERRIDES_PATH,
     });
 
     const payload: CachedPayload = {
@@ -184,6 +186,8 @@ const main = async () => {
       createdAt: capturedAt,
       updatedAt: capturedAt,
     };
+
+    assertValidPayload(enrichedEvents, digest);
 
     if (options.dryRun) {
       console.log('[dry-run] Would persist payload cache entry:', payload.key);

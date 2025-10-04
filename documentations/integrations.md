@@ -42,10 +42,11 @@
 
 ### CLI Ingestion Runner
 - Command: `npm run ingest -- --dry-run` (safe preview) or omit `--dry-run` to persist.
+- Built-in Zod validation blocks writes when event or digest payloads fail schema checks.
 - Env vars: `DAILY_HISTORIC_USER_AGENT`, `WIKIMEDIA_API_TOKEN` (optional),
   `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT_JSON`,
   `FIREBASE_PROJECT_ID` (optional override), `WIKIDATA_CONCURRENCY` (optional, default 4),
-  `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`, `MEDIA_SEARCH_LIMIT`.
+  `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`, `MEDIA_SEARCH_LIMIT`, `INGEST_OVERRIDES_PATH`.
 - Output collections: `contentEvents`, `contentPayloadCache`, `dailyDigests`.
 - Digest doc id format: `digest:onthisday:selected:MM-DD` with ISO date metadata.
 
@@ -70,6 +71,11 @@
 - CLI now fetches Wikidata entities for each related page, then resolves participant entities and exact dates before Firestore writes.
 - Shared in-memory cache + configurable 4-way concurrency keeps Wikidata lookups under ~15s per run and avoids duplicate requests.
 - Enriched payload is merged with classification output so mobile clients receive `categories`, `era`, `tags`, and participant metadata in a single document.
+
+### Manual Overrides
+- Optional override file: copy `overrides/events.example.json` to `overrides/events.json` (git-ignored) and edit entries keyed by `eventId`.
+- Fields support category/era/tag overrides, custom media metadata, or `suppress: true` to drop an event from digests.
+- Configure a different path with `INGEST_OVERRIDES_PATH` or let the CLI load the default location automatically.
 
 ## 4. Category and Era Classification
 1. Define a static lookup table that maps keywords, Wikidata properties, or

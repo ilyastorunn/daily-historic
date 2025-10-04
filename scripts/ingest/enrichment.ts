@@ -1,5 +1,6 @@
 import { classifyEvent } from './classification';
 import { ensureMediaForEvent } from './media';
+import { applyMediaOverride, loadOverrides } from './overrides';
 import { fetchWikidataEntities, type WikidataClientOptions } from './wikidata-client';
 import type {
   EventEnrichment,
@@ -15,6 +16,7 @@ export interface EventEnrichmentOptions extends WikidataClientOptions {
   mediaMinWidth?: number;
   mediaMinHeight?: number;
   mediaLimit?: number;
+  overridePath?: string;
 }
 
 const collectPageEntityIds = (pages: RelatedPageSummary[]): string[] => {
@@ -85,12 +87,15 @@ export const enrichEvents = async (
     mediaMinWidth = 800,
     mediaMinHeight = 600,
     mediaLimit = 5,
+    overridePath,
     ...wikidataOptions
   } = options;
 
   if (!enableEnrichment || events.length === 0) {
     return events;
   }
+
+  const overrides = await loadOverrides(overridePath);
 
   const pageEntityIds = new Set<string>();
   for (const event of events) {
@@ -108,7 +113,7 @@ export const enrichEvents = async (
 
   const participantMap = await fetchWikidataEntities(Array.from(participantIds), wikidataOptions);
 
-  return Promise.all(
+  const enrichedEvents = await Promise.all(
     events.map(async (event) => {
       const primaryEntityId = event.relatedPages.find((page) => page.wikidataId)?.wikidataId;
       const primaryEntity = primaryEntityId ? entityMap[primaryEntityId] : undefined;
@@ -135,19 +140,38 @@ export const enrichEvents = async (
         limit: mediaLimit,
       });
 
+      const override = overrides.events?.[event.eventId];
+      if (override?.suppress) {
+        return null;
+      }
+
+      const overrideMedia = override?.selectedMedia
+        ? applyMediaOverride(override.selectedMedia, `override:${event.eventId}`)
+        : undefined;
+
+      const mediaForPages = overrideMedia ?? selectedMedia;
+
       const relatedPages = event.relatedPages.map((page) => ({
         ...page,
-        selectedMedia: page.selectedMedia ?? selectedMedia,
+        selectedMedia: page.selectedMedia ?? mediaForPages,
       }));
+
+      const categories = override?.categories ?? classification.categories;
+      const era = override && Object.prototype.hasOwnProperty.call(override, 'era')
+        ? override.era
+        : classification.era ?? event.era;
+      const tags = override?.tags ?? classification.tags;
 
       return {
         ...event,
-        categories: classification.categories,
-        era: classification.era ?? event.era,
-        tags: classification.tags,
+        categories,
+        era,
+        tags,
         enrichment: enrichment ?? event.enrichment,
         relatedPages,
       };
     })
   );
+
+  return enrichedEvents.filter((value): value is HistoricalEventRecord => value !== null);
 };

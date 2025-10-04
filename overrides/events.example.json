@@ -1,0 +1,20 @@
+{
+  "events": {
+    "_sample-event-id": {
+      "categories": ["art-culture"],
+      "era": "twentieth",
+      "tags": ["override"],
+      "selectedMedia": {
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg",
+        "width": 1200,
+        "height": 900,
+        "license": "CC-BY-4.0",
+        "attribution": "Example Author",
+        "altText": "Sample override illustration",
+        "provider": "custom",
+        "assetType": "original"
+      },
+      "suppress": false
+    }
+  }
+}

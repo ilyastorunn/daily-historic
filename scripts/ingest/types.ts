@@ -60,7 +60,7 @@ export interface MediaAssetSummary {
   sourceUrl: string;
   width: number;
   height: number;
-  provider: 'wikimedia';
+  provider: 'wikimedia' | 'custom';
   attribution?: string;
   license?: string;
   altText?: string;
@@ -82,7 +82,7 @@ export interface RelatedPageSummary {
 }
 
 export interface EventSourceRef {
-  provider: 'wikimedia';
+  provider: 'wikimedia' | 'custom';
   feed: 'onthisday';
   rawType: string;
   capturedAt: string;
