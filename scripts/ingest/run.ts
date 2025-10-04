@@ -160,13 +160,29 @@ const main = async () => {
     );
 
     const wikidataConcurrency = Number.parseInt(process.env.WIKIDATA_CONCURRENCY ?? '', 10);
+    const wikidataRetryAttempts = Number.parseInt(process.env.WIKIDATA_RETRY_ATTEMPTS ?? '', 10);
+    const wikidataRetryBaseDelay = Number.parseInt(process.env.WIKIDATA_RETRY_BASE_DELAY_MS ?? '', 10);
+    const mediaMinWidth = Number.parseInt(process.env.MEDIA_MIN_WIDTH ?? '', 10) || undefined;
+    const mediaMinHeight = Number.parseInt(process.env.MEDIA_MIN_HEIGHT ?? '', 10) || undefined;
+    const mediaLimit = Number.parseInt(process.env.MEDIA_SEARCH_LIMIT ?? '', 10) || undefined;
+    const mediaCacheTtlMs = Number.parseInt(process.env.MEDIA_CACHE_TTL_MS ?? '', 10) || undefined;
+    const mediaRetryAttempts = Number.parseInt(process.env.MEDIA_RETRY_ATTEMPTS ?? '', 10) || undefined;
+    const mediaRetryBaseDelayMs = Number.parseInt(process.env.MEDIA_RETRY_BASE_DELAY_MS ?? '', 10) || undefined;
+    const mediaDisableCache = ['true', '1', 'yes'].includes((process.env.MEDIA_DISABLE_CACHE ?? '').toLowerCase());
+
     const enrichedEvents = await enrichEvents(normalized, {
       userAgent,
       concurrency: Number.isNaN(wikidataConcurrency) ? undefined : Math.max(1, wikidataConcurrency),
+      retryAttempts: Number.isNaN(wikidataRetryAttempts) ? undefined : Math.max(1, wikidataRetryAttempts),
+      retryBaseDelayMs: Number.isNaN(wikidataRetryBaseDelay) ? undefined : Math.max(100, wikidataRetryBaseDelay),
       mediaUserAgent: process.env.DAILY_HISTORIC_USER_AGENT ?? userAgent,
-      mediaMinWidth: Number.parseInt(process.env.MEDIA_MIN_WIDTH ?? '', 10) || undefined,
-      mediaMinHeight: Number.parseInt(process.env.MEDIA_MIN_HEIGHT ?? '', 10) || undefined,
-      mediaLimit: Number.parseInt(process.env.MEDIA_SEARCH_LIMIT ?? '', 10) || undefined,
+      mediaMinWidth,
+      mediaMinHeight,
+      mediaLimit,
+      mediaCacheTtlMs,
+      mediaDisableCache,
+      mediaRetryAttempts,
+      mediaRetryBaseDelayMs,
       overridePath: process.env.INGEST_OVERRIDES_PATH,
     });
 

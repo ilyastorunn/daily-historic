@@ -1,3 +1,4 @@
+import { fetchWithRetry } from './http-utils';
 import type { WikidataEntitySummary } from './types';
 
 const WIKIDATA_ENTITY_ENDPOINT = 'https://www.wikidata.org/wiki/Special:EntityData';
@@ -7,6 +8,8 @@ export interface WikidataClientOptions {
   language?: string;
   baseUrl?: string;
   concurrency?: number;
+  retryAttempts?: number;
+  retryBaseDelayMs?: number;
 }
 
 interface RawWikidataResponse {
@@ -129,7 +132,7 @@ const fetchSingleEntity = async (
   id: string,
   options: WikidataClientOptions
 ): Promise<WikidataEntitySummary | undefined> => {
-  const { userAgent, language = 'en', baseUrl } = options;
+  const { userAgent, language = 'en', baseUrl, retryAttempts, retryBaseDelayMs } = options;
   const cacheKey = buildCacheKey(id, language, baseUrl);
 
   if (entityCache.has(cacheKey)) {
@@ -142,13 +145,20 @@ const fetchSingleEntity = async (
 
   const endpoint = `${baseUrl ?? WIKIDATA_ENTITY_ENDPOINT}/${encodeURIComponent(id)}.json`;
 
-  const response = await fetch(endpoint, {
-    headers: {
-      'User-Agent': userAgent,
-      Accept: 'application/json',
+  const response = await fetchWithRetry(
+    endpoint,
+    {
+      headers: {
+        'User-Agent': userAgent,
+        Accept: 'application/json',
+      },
+      redirect: 'follow',
     },
-    redirect: 'follow',
-  });
+    {
+      attempts: retryAttempts,
+      baseDelayMs: retryBaseDelayMs,
+    }
+  );
 
   if (!response.ok) {
     const text = await response.text();

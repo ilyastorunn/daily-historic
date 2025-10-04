@@ -1,40 +1,70 @@
 import { readFile } from 'node:fs/promises';
 
+import { z, type ZodIssue } from 'zod';
+
 import type { MediaAssetSummary } from './types';
 
-export interface MediaOverride {
-  sourceUrl: string;
-  width?: number;
-  height?: number;
-  license?: string;
-  attribution?: string;
-  altText?: string;
-  provider?: 'wikimedia' | 'custom';
-  assetType?: 'thumbnail' | 'original';
-}
+const mediaOverrideSchema = z.object({
+  sourceUrl: z.string().url(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  license: z.string().optional(),
+  attribution: z.string().optional(),
+  altText: z.string().optional(),
+  provider: z.enum(['wikimedia', 'custom']).optional(),
+  assetType: z.enum(['thumbnail', 'original']).optional(),
+});
 
-export interface EventOverride {
-  categories?: string[];
-  era?: string;
-  tags?: string[];
-  selectedMedia?: MediaOverride;
-  suppress?: boolean;
-}
+const eventOverrideSchema = z.object({
+  categories: z.array(z.string().min(1)).optional(),
+  era: z.string().min(1).optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  selectedMedia: mediaOverrideSchema.optional(),
+  suppress: z.boolean().optional(),
+});
 
-export interface OverrideConfig {
-  events?: Record<string, EventOverride>;
-}
+export const overridesSchema = z.object({
+  events: z.record(eventOverrideSchema).optional(),
+});
 
-const DEFAULT_OVERRIDE_PATH = 'overrides/events.json';
+export type MediaOverride = z.infer<typeof mediaOverrideSchema>;
+export type EventOverride = z.infer<typeof eventOverrideSchema>;
+export type OverrideConfig = z.infer<typeof overridesSchema>;
+
+
+export const DEFAULT_OVERRIDE_PATH = 'overrides/events.json';
+
+export const formatOverrideIssues = (issues: ZodIssue[]): string[] => {
+  return issues.map((issue) => {
+    const path = issue.path.length ? issue.path.join('.') : 'root';
+    return `${path}: ${issue.message}`;
+  });
+};
+
+export const validateOverrideData = (data: unknown) => {
+  return overridesSchema.safeParse(data);
+};
 
 export const loadOverrides = async (path?: string): Promise<OverrideConfig> => {
   const filePath = path ?? process.env.INGEST_OVERRIDES_PATH ?? DEFAULT_OVERRIDE_PATH;
 
   try {
     const data = await readFile(filePath, 'utf-8');
-    const parsed = JSON.parse(data) as OverrideConfig;
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(data);
+    } catch (jsonError) {
+      throw new Error(`Override file ${filePath} contains invalid JSON: ${(jsonError as Error).message}`);
+    }
+
+    const result = validateOverrideData(parsedJson);
+    if (!result.success) {
+      const detail = formatOverrideIssues(result.error.issues).join('; ');
+      throw new Error(`Override file ${filePath} is invalid: ${detail}`);
+    }
+
     return {
-      events: parsed.events ?? {},
+      events: result.data.events ?? {},
     };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {

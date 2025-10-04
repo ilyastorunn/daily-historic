@@ -1,3 +1,4 @@
+import { fetchWithRetry } from './http-utils';
 import type { MediaAssetSummary, RelatedPageSummary } from './types';
 
 const COMMONS_SEARCH_ENDPOINT = 'https://api.wikimedia.org/core/v1/commons/search/title';
@@ -7,6 +8,10 @@ export interface CommonsSearchOptions {
   limit?: number;
   minWidth?: number;
   minHeight?: number;
+  cacheTtlMs?: number;
+  disableCache?: boolean;
+  retryAttempts?: number;
+  retryBaseDelayMs?: number;
 }
 
 interface CommonsSearchResponse {
@@ -35,6 +40,8 @@ interface CommonsMediaPage {
     description?: string[];
   };
 }
+
+const commonsCache = new Map<string, { asset: MediaAssetSummary | null; expiresAt: number }>();
 
 const pickBestAsset = (
   page: CommonsMediaPage,
@@ -68,7 +75,16 @@ export const searchCommonsMedia = async (
   query: string,
   options: CommonsSearchOptions
 ): Promise<MediaAssetSummary | undefined> => {
-  const { userAgent, limit = 5, minWidth = 800, minHeight = 600 } = options;
+  const {
+    userAgent,
+    limit = 5,
+    minWidth = 800,
+    minHeight = 600,
+    cacheTtlMs = 5 * 60 * 1000,
+    disableCache = false,
+    retryAttempts,
+    retryBaseDelayMs,
+  } = options;
 
   if (!query.trim()) {
     return undefined;
@@ -76,16 +92,36 @@ export const searchCommonsMedia = async (
 
   const endpoint = `${COMMONS_SEARCH_ENDPOINT}?q=${encodeURIComponent(query)}&limit=${limit}`;
 
-  const response = await fetch(endpoint, {
-    headers: {
-      'User-Agent': userAgent,
-      Accept: 'application/json',
+  const cacheKey = `${endpoint}|${minWidth}|${minHeight}`;
+  const now = Date.now();
+
+  if (!disableCache && cacheTtlMs > 0) {
+    const cached = commonsCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.asset ?? undefined;
+    }
+  }
+
+  const response = await fetchWithRetry(
+    endpoint,
+    {
+      headers: {
+        'User-Agent': userAgent,
+        Accept: 'application/json',
+      },
     },
-  });
+    {
+      attempts: retryAttempts,
+      baseDelayMs: retryBaseDelayMs,
+    }
+  );
 
   if (!response.ok) {
     const text = await response.text();
     console.warn(`Commons search failed for query "${query}": ${response.status} ${response.statusText} -> ${text}`);
+    if (!disableCache && cacheTtlMs > 0) {
+      commonsCache.set(cacheKey, { asset: null, expiresAt: now + cacheTtlMs });
+    }
     return undefined;
   }
 
@@ -95,8 +131,15 @@ export const searchCommonsMedia = async (
   for (const page of pages) {
     const asset = pickBestAsset(page, minWidth, minHeight);
     if (asset) {
+      if (!disableCache && cacheTtlMs > 0) {
+        commonsCache.set(cacheKey, { asset, expiresAt: now + cacheTtlMs });
+      }
       return asset;
     }
+  }
+
+  if (!disableCache && cacheTtlMs > 0) {
+    commonsCache.set(cacheKey, { asset: null, expiresAt: now + cacheTtlMs });
   }
 
   return undefined;
@@ -118,7 +161,17 @@ export const ensureMediaForEvent = async (
   pages: RelatedPageSummary[],
   options: MediaSelectionOptions
 ): Promise<MediaAssetSummary | undefined> => {
-  const { enableCommonsFallback = true, minWidth = 800, minHeight = 600, userAgent } = options;
+  const {
+    enableCommonsFallback = true,
+    minWidth = 800,
+    minHeight = 600,
+    userAgent,
+    limit,
+    cacheTtlMs,
+    disableCache,
+    retryAttempts,
+    retryBaseDelayMs,
+  } = options;
 
   const thumbnails = pages.flatMap((page) => page.thumbnails);
   if (hasSufficientAsset(thumbnails, minWidth, minHeight)) {
@@ -145,7 +198,11 @@ export const ensureMediaForEvent = async (
       userAgent,
       minWidth,
       minHeight,
-      limit: options.limit,
+      limit,
+      cacheTtlMs,
+      disableCache,
+      retryAttempts,
+      retryBaseDelayMs,
     });
 
     if (result) {

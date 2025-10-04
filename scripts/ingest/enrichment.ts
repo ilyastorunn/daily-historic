@@ -16,6 +16,10 @@ export interface EventEnrichmentOptions extends WikidataClientOptions {
   mediaMinWidth?: number;
   mediaMinHeight?: number;
   mediaLimit?: number;
+  mediaCacheTtlMs?: number;
+  mediaDisableCache?: boolean;
+  mediaRetryAttempts?: number;
+  mediaRetryBaseDelayMs?: number;
   overridePath?: string;
 }
 
@@ -87,6 +91,10 @@ export const enrichEvents = async (
     mediaMinWidth = 800,
     mediaMinHeight = 600,
     mediaLimit = 5,
+    mediaCacheTtlMs,
+    mediaDisableCache = false,
+    mediaRetryAttempts,
+    mediaRetryBaseDelayMs,
     overridePath,
     ...wikidataOptions
   } = options;
@@ -138,6 +146,10 @@ export const enrichEvents = async (
         minWidth: mediaMinWidth,
         minHeight: mediaMinHeight,
         limit: mediaLimit,
+        cacheTtlMs: mediaCacheTtlMs,
+        disableCache: mediaDisableCache,
+        retryAttempts: mediaRetryAttempts,
+        retryBaseDelayMs: mediaRetryBaseDelayMs,
       });
 
       const override = overrides.events?.[event.eventId];

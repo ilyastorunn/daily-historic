@@ -43,10 +43,13 @@
 ### CLI Ingestion Runner
 - Command: `npm run ingest -- --dry-run` (safe preview) or omit `--dry-run` to persist.
 - Built-in Zod validation blocks writes when event or digest payloads fail schema checks.
-- Env vars: `DAILY_HISTORIC_USER_AGENT`, `WIKIMEDIA_API_TOKEN` (optional),
-  `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT_JSON`,
-  `FIREBASE_PROJECT_ID` (optional override), `WIKIDATA_CONCURRENCY` (optional, default 4),
-  `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`, `MEDIA_SEARCH_LIMIT`, `INGEST_OVERRIDES_PATH`.
+- Env vars:
+  - `DAILY_HISTORIC_USER_AGENT`, `WIKIMEDIA_API_TOKEN` (optional)
+  - `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT_JSON`, `FIREBASE_PROJECT_ID` (optional override)
+  - `WIKIDATA_CONCURRENCY`, `WIKIDATA_RETRY_ATTEMPTS`, `WIKIDATA_RETRY_BASE_DELAY_MS`
+  - `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`, `MEDIA_SEARCH_LIMIT`, `MEDIA_CACHE_TTL_MS`,
+    `MEDIA_DISABLE_CACHE`, `MEDIA_RETRY_ATTEMPTS`, `MEDIA_RETRY_BASE_DELAY_MS`
+  - `INGEST_OVERRIDES_PATH`
 - Output collections: `contentEvents`, `contentPayloadCache`, `dailyDigests`.
 - Digest doc id format: `digest:onthisday:selected:MM-DD` with ISO date metadata.
 
@@ -69,13 +72,14 @@
 
 ### Event Enrichment Pipeline
 - CLI now fetches Wikidata entities for each related page, then resolves participant entities and exact dates before Firestore writes.
-- Shared in-memory cache + configurable 4-way concurrency keeps Wikidata lookups under ~15s per run and avoids duplicate requests.
+- Shared in-memory cache + configurable concurrency keeps Wikidata lookups under ~15s per run; retries/backoff guard against transient API failures.
 - Enriched payload is merged with classification output so mobile clients receive `categories`, `era`, `tags`, and participant metadata in a single document.
 
 ### Manual Overrides
 - Optional override file: copy `overrides/events.example.json` to `overrides/events.json` (git-ignored) and edit entries keyed by `eventId`.
 - Fields support category/era/tag overrides, custom media metadata, or `suppress: true` to drop an event from digests.
 - Configure a different path with `INGEST_OVERRIDES_PATH` or let the CLI load the default location automatically.
+- Validate changes locally with `npm run validate:overrides [path]` before running ingestion.
 
 ## 4. Category and Era Classification
 1. Define a static lookup table that maps keywords, Wikidata properties, or
@@ -90,6 +94,7 @@
 ### Media Fallback Pipeline
 - During enrichment, `ensureMediaForEvent` checks existing thumbnails and calls the Commons title search API with the page’s normalized title.
 - Default minimum size is 800x600 (override via `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`). Results include license/attribution metadata for downstream display.
+- Commons responses are memoized for the current run (override `MEDIA_CACHE_TTL_MS` / `MEDIA_DISABLE_CACHE`) and fetched with retry/backoff (`MEDIA_RETRY_*`).
 - When Commons fails, events keep their original Wikimedia thumbnails so the app can apply local fallbacks.
 
 ## 5. Media Selection (Wikimedia Commons)
@@ -146,9 +151,8 @@
 - Validate every record with automated schema checks (e.g. Zod) and flag
   missing fields before publish.
 - Add unit tests around category heuristics so new rules do not break existing
-  mappings.
-- Log API failures with retry/backoff and fallback to cached data so the daily
-  digest never misses a day.
+  mappings. Run `npm run test:ingest` to execute ingestion-specific Vitest cases.
+- Log API failures with retry/backoff and fallback to cached data so the daily digest never misses a day.
 - Keep a lightweight admin UI or spreadsheet to track which events were
   approved, edited, or suppressed.
 

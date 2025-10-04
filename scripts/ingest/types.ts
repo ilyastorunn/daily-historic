@@ -82,7 +82,7 @@ export interface RelatedPageSummary {
 }
 
 export interface EventSourceRef {
-  provider: 'wikimedia' | 'custom';
+  provider: 'wikimedia';
   feed: 'onthisday';
   rawType: string;
   capturedAt: string;
