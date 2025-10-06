@@ -1,0 +1,87 @@
+name: Daily Ingestion
+
+on:
+  schedule:
+    - cron: '5 0 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Run without writing to Firestore'
+        type: boolean
+        default: false
+      month:
+        description: 'Override month (1-12, optional)'
+        required: false
+      day:
+        description: 'Override day (1-31, optional)'
+        required: false
+      year:
+        description: 'Override year (YYYY, optional)'
+        required: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      DAILY_HISTORIC_USER_AGENT: ${{ secrets.DAILY_HISTORIC_USER_AGENT }}
+      WIKIMEDIA_API_TOKEN: ${{ secrets.WIKIMEDIA_API_TOKEN }}
+      INGEST_LOG_FORMAT: json
+      DISPATCH_DRY_RUN: ${{ github.event.inputs.dry-run }}
+      DISPATCH_MONTH: ${{ github.event.inputs.month }}
+      DISPATCH_DAY: ${{ github.event.inputs.day }}
+      DISPATCH_YEAR: ${{ github.event.inputs.year }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run ingestion
+        run: |
+          set -euo pipefail
+
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_JSON secret is missing"
+            exit 1
+          fi
+
+          if [ -z "${FIREBASE_PROJECT_ID:-}" ]; then
+            echo "::error::FIREBASE_PROJECT_ID secret is missing"
+            exit 1
+          fi
+
+          if [ -z "${DAILY_HISTORIC_USER_AGENT:-}" ]; then
+            echo "::error::DAILY_HISTORIC_USER_AGENT secret is missing"
+            exit 1
+          fi
+
+          args=()
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ "${DISPATCH_DRY_RUN:-false}" = "true" ]; then
+              args+=("--dry-run")
+            fi
+            if [ -n "${DISPATCH_MONTH:-}" ]; then
+              args+=("--month" "${DISPATCH_MONTH}")
+            fi
+            if [ -n "${DISPATCH_DAY:-}" ]; then
+              args+=("--day" "${DISPATCH_DAY}")
+            fi
+            if [ -n "${DISPATCH_YEAR:-}" ]; then
+              args+=("--year" "${DISPATCH_YEAR}")
+            fi
+          fi
+
+          if [ "${#args[@]}" -eq 0 ]; then
+            echo "Running ingestion with default date"
+            npm run ingest
+          else
+            echo "Running ingestion with args: ${args[*]}"
+            npm run ingest -- "${args[@]}"
+          fi
