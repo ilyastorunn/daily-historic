@@ -42,7 +42,7 @@
 
 ### CLI Ingestion Runner
 - Command: `npm run ingest -- --dry-run` (safe preview) or omit `--dry-run` to persist.
-- Built-in Zod validation blocks writes when event or digest payloads fail schema checks.
+- Built-in Zod validation blocks writes when event or digest payloads fail schema checks. CLI emits an ingestion summary (JSON when `INGEST_LOG_FORMAT=json`) for monitoring.
 - Env vars:
   - `DAILY_HISTORIC_USER_AGENT`, `WIKIMEDIA_API_TOKEN` (optional)
   - `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT_JSON`, `FIREBASE_PROJECT_ID` (optional override)
@@ -50,6 +50,8 @@
   - `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`, `MEDIA_SEARCH_LIMIT`, `MEDIA_CACHE_TTL_MS`,
     `MEDIA_DISABLE_CACHE`, `MEDIA_RETRY_ATTEMPTS`, `MEDIA_RETRY_BASE_DELAY_MS`
   - `INGEST_OVERRIDES_PATH`
+  - `INGEST_LOG_LEVEL` (set to `debug` for verbose retry/cache logging)
+  - `INGEST_LOG_FORMAT` (`json` for structured output, default text)
 - Output collections: `contentEvents`, `contentPayloadCache`, `dailyDigests`.
 - Digest doc id format: `digest:onthisday:selected:MM-DD` with ISO date metadata.
 
@@ -94,7 +96,7 @@
 ### Media Fallback Pipeline
 - During enrichment, `ensureMediaForEvent` checks existing thumbnails and calls the Commons title search API with the page’s normalized title.
 - Default minimum size is 800x600 (override via `MEDIA_MIN_WIDTH`/`MEDIA_MIN_HEIGHT`). Results include license/attribution metadata for downstream display.
-- Commons responses are memoized for the current run (override `MEDIA_CACHE_TTL_MS` / `MEDIA_DISABLE_CACHE`) and fetched with retry/backoff (`MEDIA_RETRY_*`).
+- Commons responses are cached both in-memory and on disk (`MEDIA_CACHE_PATH`, `MEDIA_CACHE_TTL_MS`). Disable with `MEDIA_DISABLE_CACHE`. Retries are controlled via `MEDIA_RETRY_*`.
 - When Commons fails, events keep their original Wikimedia thumbnails so the app can apply local fallbacks.
 
 ## 5. Media Selection (Wikimedia Commons)
@@ -152,7 +154,7 @@
   missing fields before publish.
 - Add unit tests around category heuristics so new rules do not break existing
   mappings. Run `npm run test:ingest` to execute ingestion-specific Vitest cases.
-- Log API failures with retry/backoff and fallback to cached data so the daily digest never misses a day.
+- Log API failures with retry/backoff and fallback to cached data so the daily digest never misses a day. Enable structured logging with `INGEST_LOG_FORMAT=json` for cron ingestion.
 - Keep a lightweight admin UI or spreadsheet to track which events were
   approved, edited, or suppressed.
 

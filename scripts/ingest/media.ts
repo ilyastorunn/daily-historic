@@ -1,4 +1,14 @@
 import { fetchWithRetry } from './http-utils';
+import { logDebug } from './logger';
+import {
+  DEFAULT_MEDIA_CACHE_PATH,
+  getMediaCacheAsset,
+  loadMediaCache,
+  makeMediaCacheKey,
+  persistMediaCache,
+  setMediaCacheAsset,
+  type MediaCacheState,
+} from './cache';
 import type { MediaAssetSummary, RelatedPageSummary } from './types';
 
 const COMMONS_SEARCH_ENDPOINT = 'https://api.wikimedia.org/core/v1/commons/search/title';
@@ -147,6 +157,7 @@ export const searchCommonsMedia = async (
 
 export interface MediaSelectionOptions extends CommonsSearchOptions {
   enableCommonsFallback?: boolean;
+  cachePath?: string;
 }
 
 const hasSufficientAsset = (
@@ -171,44 +182,99 @@ export const ensureMediaForEvent = async (
     disableCache,
     retryAttempts,
     retryBaseDelayMs,
+    cachePath,
   } = options;
+
+  const shouldUsePersistentCache = !disableCache;
+  const effectiveCachePath = cachePath ?? DEFAULT_MEDIA_CACHE_PATH;
+  let persistentCache: MediaCacheState | null = null;
+
+  const getPersistentCache = async () => {
+    if (!shouldUsePersistentCache) {
+      return null;
+    }
+    if (!persistentCache) {
+      persistentCache = await loadMediaCache(effectiveCachePath);
+      logDebug('media:persistent-cache-loaded', { path: effectiveCachePath, size: persistentCache.entries.size });
+    }
+    return persistentCache;
+  };
+
+  const finalize = async (value: MediaAssetSummary | undefined) => {
+    if (persistentCache) {
+      await persistMediaCache(persistentCache);
+    }
+    return value;
+  };
 
   const thumbnails = pages.flatMap((page) => page.thumbnails);
   if (hasSufficientAsset(thumbnails, minWidth, minHeight)) {
-    return thumbnails.find((asset) => asset.width >= minWidth && asset.height >= minHeight);
+    const asset = thumbnails.find((thumb) => thumb.width >= minWidth && thumb.height >= minHeight);
+    return finalize(asset);
   }
 
-  if (!enableCommonsFallback) {
-    return undefined;
+  if (!enableCommonsFallback || !pages.length) {
+    return finalize(undefined);
   }
 
-  if (!pages.length) {
-    return undefined;
-  }
+  const defaultTtl = cacheTtlMs ?? 5 * 60 * 1000; // 5 minutes
+  const now = Date.now();
 
   const primary = pages[0];
-
   const queries = new Set<string>([primary.normalizedTitle, primary.canonicalTitle, primary.displayTitle]);
 
   for (const query of queries) {
     if (!query) {
       continue;
     }
+
+    const cacheKey = makeMediaCacheKey(query, minWidth, minHeight, limit);
+    logDebug('media:query', { query, cacheKey });
+
+    if (shouldUsePersistentCache) {
+      const cache = await getPersistentCache();
+      if (cache) {
+        const cached = getMediaCacheAsset(cache, cacheKey, now);
+        if (cached !== undefined) {
+          logDebug(`media:persistent-cache-hit`, query, cached ? 'asset' : 'none');
+          if (cached) {
+            return finalize(cached);
+          }
+          continue;
+        }
+      }
+    }
+
     const result = await searchCommonsMedia(query, {
       userAgent,
       minWidth,
       minHeight,
       limit,
-      cacheTtlMs,
+      cacheTtlMs: defaultTtl,
       disableCache,
       retryAttempts,
       retryBaseDelayMs,
     });
 
     if (result) {
-      return result;
+      if (shouldUsePersistentCache) {
+        const cache = await getPersistentCache();
+        if (cache) {
+          setMediaCacheAsset(cache, cacheKey, result, defaultTtl, now);
+          logDebug('media:persistent-cache-store', { query, cacheKey, status: 'asset' });
+        }
+      }
+      return finalize(result);
+    }
+
+    if (shouldUsePersistentCache) {
+      const cache = await getPersistentCache();
+      if (cache) {
+        setMediaCacheAsset(cache, cacheKey, null, defaultTtl, now);
+        logDebug('media:persistent-cache-store', { query, cacheKey, status: 'empty' });
+      }
     }
   }
 
-  return undefined;
+  return finalize(undefined);
 };

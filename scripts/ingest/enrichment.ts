@@ -20,6 +20,7 @@ export interface EventEnrichmentOptions extends WikidataClientOptions {
   mediaDisableCache?: boolean;
   mediaRetryAttempts?: number;
   mediaRetryBaseDelayMs?: number;
+  mediaCachePath?: string;
   overridePath?: string;
 }
 
@@ -95,6 +96,7 @@ export const enrichEvents = async (
     mediaDisableCache = false,
     mediaRetryAttempts,
     mediaRetryBaseDelayMs,
+    mediaCachePath,
     overridePath,
     ...wikidataOptions
   } = options;
@@ -150,6 +152,7 @@ export const enrichEvents = async (
         disableCache: mediaDisableCache,
         retryAttempts: mediaRetryAttempts,
         retryBaseDelayMs: mediaRetryBaseDelayMs,
+        cachePath: mediaCachePath,
       });
 
       const override = overrides.events?.[event.eventId];

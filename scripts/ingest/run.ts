@@ -5,6 +5,7 @@ import { exit } from 'node:process';
 import { bootstrapFirestore } from './firestore-admin';
 import { buildCacheKey, fetchOnThisDaySelected, normalizeEvent } from './wikimedia-client';
 import { enrichEvents } from './enrichment';
+import { logInfo } from './logger';
 import { assertValidPayload } from './validation';
 import type { CachedPayload, DailyDigestRecord, HistoricalEventRecord } from './types';
 
@@ -169,6 +170,7 @@ const main = async () => {
     const mediaRetryAttempts = Number.parseInt(process.env.MEDIA_RETRY_ATTEMPTS ?? '', 10) || undefined;
     const mediaRetryBaseDelayMs = Number.parseInt(process.env.MEDIA_RETRY_BASE_DELAY_MS ?? '', 10) || undefined;
     const mediaDisableCache = ['true', '1', 'yes'].includes((process.env.MEDIA_DISABLE_CACHE ?? '').toLowerCase());
+    const mediaCachePath = process.env.MEDIA_CACHE_PATH;
 
     const enrichedEvents = await enrichEvents(normalized, {
       userAgent,
@@ -183,8 +185,16 @@ const main = async () => {
       mediaDisableCache,
       mediaRetryAttempts,
       mediaRetryBaseDelayMs,
+      mediaCachePath,
       overridePath: process.env.INGEST_OVERRIDES_PATH,
     });
+
+    const summary = {
+      eventsFetched: rawEvents.length,
+      eventsStored: enrichedEvents.length,
+      cacheKey,
+      isoDate,
+    };
 
     const payload: CachedPayload = {
       key: cacheKey,
@@ -209,12 +219,13 @@ const main = async () => {
       console.log('[dry-run] Would persist payload cache entry:', payload.key);
       console.log('[dry-run] Would persist events:', enrichedEvents.map((event) => event.eventId));
       console.log('[dry-run] Would persist digest:', digest.digestId);
+      logInfo('ingestion-summary', summary);
       return;
     }
 
     await writeToFirestore(payload, enrichedEvents, digest, options);
 
-    console.log(`Stored ${enrichedEvents.length} events for ${isoDate} (cache key: ${cacheKey}).`);
+    logInfo('ingestion-completed', summary);
   } catch (error) {
     console.error('Ingestion failed:', error);
     exit(1);
