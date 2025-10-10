@@ -141,9 +141,9 @@
    Track usage carefully—while there is a free tier, quotas are limited.
 
 ## 9. Scheduling & Automation
-1. Create a daily cron (GitHub Actions, Cloud Scheduler, or a simple cron job)
-   to run the ingestion pipeline at 00:05 UTC.
-2. Steps inside the job:
+1. Stand up a daily scheduler (Cloud Run Job + Cloud Scheduler recommended).
+   - Detailed deployment steps live in `documentations/cloud-run-scheduler.md`.
+2. Each run should:
    - Fetch On This Day data and cache it.
    - Enrich with Wikidata, categorize, select media.
    - Run optional LLM polish and queue for manual review if needed.
@@ -164,4 +164,3 @@
 3. **Week 3** – Layer in LLM polishing, fallback generators, observability.
 4. **Week 4** – Hook mobile app to the new API, test personalization logic with
    real data.
-

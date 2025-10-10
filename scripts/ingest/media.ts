@@ -53,6 +53,34 @@ interface CommonsMediaPage {
 
 const commonsCache = new Map<string, { asset: MediaAssetSummary | null; expiresAt: number }>();
 
+const PERMISSIVE_LICENSE_KEYWORDS = [
+  'creative commons',
+  'cc-by',
+  'cc by',
+  'cc-by-sa',
+  'cc by-sa',
+  'cc0',
+  'public domain',
+  'publicdomain',
+  'pd-',
+];
+
+const normalizeLicenseFragment = (value?: string) => value?.toLowerCase().trim() ?? '';
+
+export const isAcceptableCommonsLicense = (license?: { name?: string; url?: string }) => {
+  if (!license) {
+    return false;
+  }
+
+  const fragments = `${normalizeLicenseFragment(license.name)} ${normalizeLicenseFragment(license.url)}`.trim();
+
+  if (!fragments) {
+    return false;
+  }
+
+  return PERMISSIVE_LICENSE_KEYWORDS.some((keyword) => fragments.includes(keyword));
+};
+
 const pickBestAsset = (
   page: CommonsMediaPage,
   minWidth: number,
@@ -65,6 +93,10 @@ const pickBestAsset = (
   }
 
   if (candidate.width < minWidth || candidate.height < minHeight) {
+    return undefined;
+  }
+
+  if (!isAcceptableCommonsLicense(page.license)) {
     return undefined;
   }
 
