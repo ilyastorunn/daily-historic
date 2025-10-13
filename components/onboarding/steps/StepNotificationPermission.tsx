@@ -6,7 +6,7 @@ import { useOnboardingContext } from '@/contexts/onboarding-context';
 import type { StepComponentProps } from '../types';
 import { styles } from '../styles';
 
-const StepNotificationPermission = ({ onNext, onBack }: StepComponentProps) => {
+const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
 
   const handleEnable = () => {
@@ -57,13 +57,6 @@ const StepNotificationPermission = ({ onNext, onBack }: StepComponentProps) => {
           <Text style={styles.secondaryButtonText}>Maybe later</Text>
         </Pressable>
       </View>
-
-      <Pressable
-        onPress={onBack}
-        style={({ pressed }) => [styles.inlineBackLink, pressed && styles.inlineGhostButtonPressed]}
-      >
-        <Text style={styles.inlineBackLinkText}>← Back</Text>
-      </Pressable>
     </ScrollView>
   );
 };

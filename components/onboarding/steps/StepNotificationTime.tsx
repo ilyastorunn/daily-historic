@@ -28,7 +28,6 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
   );
 
   const [selected, setSelected] = useState(isQuickMatch ? state.notificationTime : 'custom');
-  const [timezoneInput, setTimezoneInput] = useState(state.timezone);
   const [timeInput, setTimeInput] = useState(isQuickMatch ? '' : state.notificationTime || '');
   const [showError, setShowError] = useState(false);
 
@@ -74,11 +73,6 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
     const normalized = `${hoursRaw.padStart(2, '0')}:${minutesRaw.padStart(2, '0')}`;
     updateState({ notificationTime: normalized, notificationEnabled: true });
     setShowError(false);
-  };
-
-  const handleTimezoneChange = (value: string) => {
-    setTimezoneInput(value);
-    updateState({ timezone: value.trim() || state.timezone });
   };
 
   return (
@@ -135,20 +129,6 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
           {showError && <Text style={styles.errorText}>Enter time as HH:MM (24-hour).</Text>}
         </View>
       )}
-
-      <View style={[styles.card, styles.timeCustomCard]}>
-        <Text style={styles.cardTitle}>Time zone</Text>
-        <TextInput
-          value={timezoneInput}
-          onChangeText={handleTimezoneChange}
-          autoCapitalize="none"
-          placeholder="America/New_York"
-          style={styles.input}
-        />
-        <Text style={styles.helperText}>
-          We detected {state.timezone}. Update it if you’d prefer reminders elsewhere.
-        </Text>
-      </View>
 
       <Pressable
         onPress={() => {

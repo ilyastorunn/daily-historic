@@ -41,12 +41,12 @@ const styles = StyleSheet.create({
   },
   headerBackIcon: {
     fontSize: 20,
-    color: colors.textInverse,
+    color: colors.textPrimary,
   },
   progressBarTrack: {
     height: 6,
     width: '100%',
-    backgroundColor: colors.progressTrack,
+    backgroundColor: colors.borderSubtle,
     borderRadius: radiusScale.pill,
     marginTop: spacingScale.xs,
   },
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.progressTrack,
+    backgroundColor: colors.borderSubtle,
   },
   paginationDotActive: {
     backgroundColor: accentColor,
