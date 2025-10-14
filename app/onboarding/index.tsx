@@ -177,7 +177,10 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
     goBack();
   };
 
-  const shouldShowFooter = !isFirstStep && currentStepDef.key !== 'notification-permission';
+  const shouldShowFooter =
+    !isFirstStep &&
+    currentStepDef.key !== 'notification-permission' &&
+    currentStepDef.key !== 'account';
 
   const showBackButton = !isFirstStep;
 
