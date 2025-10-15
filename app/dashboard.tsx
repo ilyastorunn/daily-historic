@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
+  Easing,
   FlatList,
   ImageBackground,
   Platform,
@@ -11,6 +13,9 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { Image, type ImageSource } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUserContext } from '@/contexts/user-context';
@@ -33,16 +38,32 @@ type ViewableItemsChangedParams = {
 };
 
 const TIMELINE_OPTIONS: { id: TimelineFilter; label: string }[] = [
-  { id: 'today', label: 'Bugünün Hikâyeleri' },
-  { id: 'for-you', label: 'Senin İçin' },
-  { id: 'archives', label: 'Arşiv Hazineleri' },
+  { id: 'today', label: "Today's Stories" },
+  { id: 'for-you', label: 'For You' },
+  { id: 'archives', label: 'Archive Highlights' },
 ];
+
+const HERO_MOMENT: {
+  badge: string;
+  title: string;
+  summary: string;
+  meta: string;
+  image: ImageSource;
+} = {
+  badge: '1969 · Today',
+  title: 'First footsteps on the Moon',
+  summary: "Neil Armstrong's first step expands humanity's horizon.",
+  meta: 'Sea of Tranquility, Moon',
+  image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
+};
+
+const noop = () => undefined;
 
 const createHeroCopy = (displayName?: string) => {
   if (!displayName) {
-    return 'Bugünün manşetleri seni bekliyor.';
+    return "Step into today's defining chapter.";
   }
-  return `${displayName}, bugünün manşetleri seni bekliyor.`;
+  return `${displayName}, step into today's defining chapter.`;
 };
 
 const withOpacity = (hexColor: string, opacity: number) => {
@@ -69,51 +90,155 @@ const buildStyles = (theme: ThemeDefinition) => {
       backgroundColor: colors.screen,
     },
     scrollContent: {
-      paddingBottom: spacing.xxl,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.xxl + 20,
       gap: spacing.xxl,
     },
     heroSurface: {
-      backgroundColor: colors.heroBackground,
-      borderBottomLeftRadius: radius.xl,
-      borderBottomRightRadius: radius.xl,
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.xl,
-      paddingBottom: spacing.xxl,
-      gap: spacing.xl,
+      gap: spacing.card,
     },
     heroHeader: {
-      gap: spacing.sm,
+      gap: spacing.xs,
     },
-    brandMark: {
-      color: colors.textInverse,
-      fontFamily: serifFamily,
-      fontSize: typography.headingLg.fontSize,
-      lineHeight: typography.headingLg.lineHeight,
-      letterSpacing: -0.3,
-    },
-    subheading: {
-      color: colors.accentMuted,
+    heroKicker: {
+      color: withOpacity(colors.textPrimary, 0.6),
       fontFamily: sansFamily,
-      fontSize: typography.label.fontSize,
-      lineHeight: typography.label.lineHeight,
-      letterSpacing: 0.4,
+      fontSize: typography.helper.fontSize,
+      lineHeight: typography.helper.lineHeight,
+      letterSpacing: 0.8,
       textTransform: 'uppercase',
     },
-    heroCopy: {
-      color: colors.textInverse,
+    heroTitle: {
+      color: colors.textPrimary,
       fontFamily: serifFamily,
-      fontSize: 30,
-      lineHeight: 36,
-      letterSpacing: -0.4,
+      fontSize: 32,
+      lineHeight: 38,
+      letterSpacing: -0.5,
     },
-    heroBody: {
-      color: colors.accentMuted,
+    heroLead: {
+      color: colors.textSecondary,
       fontFamily: sansFamily,
       fontSize: typography.body.fontSize,
-      lineHeight: typography.body.lineHeight,
+      lineHeight: 24,
+      maxWidth: 320,
+    },
+    heroMomentCard: {
+      borderRadius: 16,
+      overflow: 'hidden',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: withOpacity(colors.textPrimary, 0.05),
+      backgroundColor: colors.heroBackground,
+      shadowColor: colors.shadowColor,
+      shadowOpacity: 0.12,
+      shadowRadius: 32,
+      shadowOffset: { width: 0, height: 12 },
+      elevation: 10,
+    },
+    heroArtwork: {
+      height: 216,
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    heroArtworkBackground: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    heroImage: {
+      width: '100%',
+      height: '100%',
+    },
+    heroArtworkOverlay: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    heroMomentContent: {
+      paddingHorizontal: spacing.card,
+      paddingVertical: spacing.lg,
+      gap: spacing.sm,
+    },
+    heroMomentBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accentPrimary, 0.3),
+      color: colors.accentPrimary,
+      fontFamily: sansFamily,
+      fontSize: 12,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+    },
+    heroMomentTitle: {
+      color: colors.textPrimary,
+      fontFamily: serifFamily,
+      fontSize: 26,
+      lineHeight: 32,
+      letterSpacing: -0.4,
+    },
+    heroMomentSummary: {
+      color: colors.textSecondary,
+      fontFamily: sansFamily,
+      fontSize: 15,
+      lineHeight: 22,
+      maxWidth: 320,
+    },
+    heroMomentMeta: {
+      color: colors.textSecondary,
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      letterSpacing: 0.2,
+    },
+    heroActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: 16,
+    },
+    primaryAction: {
+      paddingHorizontal: spacing.card,
+      paddingVertical: 12,
+      borderRadius: radius.pill,
+      backgroundColor: colors.accentPrimary,
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.18,
+      shadowRadius: 18,
+      elevation: 4,
+    },
+    primaryActionPressed: {
+      opacity: 0.9,
+    },
+    primaryActionLabel: {
+      color: colors.surface,
+      fontFamily: sansFamily,
+      fontSize: 15,
+      fontWeight: '600',
+      letterSpacing: 0.3,
+    },
+    ghostAction: {
+      paddingHorizontal: spacing.card,
+      paddingVertical: 12,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.textSecondary, 0.2),
+      backgroundColor: 'transparent',
+    },
+    ghostActionPressed: {
+      opacity: 0.85,
+    },
+    ghostActionLabel: {
+      color: colors.textPrimary,
+      fontFamily: sansFamily,
+      fontSize: 15,
+      fontWeight: '500',
+      letterSpacing: 0.3,
+    },
+    heroControls: {
+      gap: spacing.sm,
     },
     controlsRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     timelineChip: {
@@ -122,39 +247,41 @@ const buildStyles = (theme: ThemeDefinition) => {
       borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
-      backgroundColor: 'transparent',
+      backgroundColor: colors.surface,
     },
     timelineChipActive: {
-      backgroundColor: colors.accentPrimary,
-      borderColor: colors.accentPrimary,
+      backgroundColor: colors.surfaceSubtle,
+      borderColor: colors.borderSubtle,
     },
     timelineChipText: {
       fontFamily: sansFamily,
       fontSize: typography.label.fontSize,
       lineHeight: typography.label.lineHeight,
-      color: colors.textInverse,
+      color: colors.textSecondary,
     },
     timelineChipTextActive: {
-      color: colors.surface,
+      color: colors.textPrimary,
     },
     signOutButton: {
       alignSelf: 'flex-start',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.borderSubtle,
-      backgroundColor: colors.heroBackground,
+      backgroundColor: 'transparent',
+    },
+    signOutButtonPressed: {
+      opacity: 0.85,
     },
     signOutText: {
       fontFamily: sansFamily,
       fontSize: typography.label.fontSize,
       lineHeight: typography.label.lineHeight,
-      color: colors.textInverse,
+      color: colors.textSecondary,
     },
     surfaceSection: {
-      marginTop: -spacing.xxl,
-      paddingHorizontal: spacing.xl,
+      width: '100%',
       gap: spacing.xl,
     },
     sectionHeader: {
@@ -180,10 +307,10 @@ const buildStyles = (theme: ThemeDefinition) => {
       overflow: 'hidden',
       backgroundColor: colors.surface,
       shadowColor: colors.shadowColor,
-      shadowOpacity: 0.12,
-      shadowRadius: 24,
-      shadowOffset: { width: 0, height: 12 },
-      elevation: 6,
+      shadowOpacity: 0.08,
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 10 },
+      elevation: 4,
       width: '100%',
     },
     cardImage: {
@@ -191,7 +318,7 @@ const buildStyles = (theme: ThemeDefinition) => {
       justifyContent: 'flex-end',
     },
     cardImageOverlay: {
-      backgroundColor: withOpacity(colors.appBackground, 0.58),
+      backgroundColor: 'rgba(247, 244, 238, 0.82)',
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.lg,
       gap: spacing.xs,
@@ -201,13 +328,13 @@ const buildStyles = (theme: ThemeDefinition) => {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       borderRadius: radius.pill,
-      backgroundColor: colors.accentSoft,
+      backgroundColor: colors.surfaceSubtle,
     },
     cardYearText: {
       fontFamily: sansFamily,
       fontSize: typography.helper.fontSize,
       lineHeight: typography.helper.lineHeight,
-      color: colors.accentPrimary,
+      color: colors.textSecondary,
     },
     cardTitle: {
       color: colors.surface,
@@ -256,7 +383,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     quickSection: {
       gap: spacing.md,
-      paddingHorizontal: spacing.xl,
+      width: '100%',
     },
     quickCard: {
       padding: spacing.lg,
@@ -287,29 +414,29 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
     {
       id: 'apollo-11',
       year: '1969',
-      title: 'Ay’a İlk Adım',
+      title: 'First Step on the Moon',
       summary:
-        'Neil Armstrong ve Buzz Aldrin Ay yüzeyine adım atarak insanlığın uzay keşfinde yeni bir çağ açıyor.',
-      location: 'Denizler Durağı, Ay',
+        'Neil Armstrong and Buzz Aldrin step onto the lunar surface, opening a new era of exploration.',
+      location: 'Sea of Tranquility, Moon',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Aldrin_Apollo_11_original.jpg/640px-Aldrin_Apollo_11_original.jpg',
     },
     {
       id: 'printing-press',
       year: '1455',
-      title: 'Gutenberg’in Devrimi',
+      title: "Gutenberg's Revolution",
       summary:
-        'Johannes Gutenberg’in Baskı İncili kitap üretimini hızlandırarak fikirlerin kıtalar arasında yayılmasını sağlıyor.',
-      location: 'Mainz, Kutsal Roma İmparatorluğu',
+        "Johannes Gutenberg's Bible accelerates book production and carries ideas across continents.",
+      location: 'Mainz, Holy Roman Empire',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg/640px-Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg',
     },
     {
       id: 'rosa-parks',
       year: '1955',
-      title: 'Rosa Parks’ın Direnişi',
+      title: "Rosa Parks' Stand",
       summary:
-        'Rosa Parks’ın koltuğunu bırakmayı reddetmesi, sivil haklar hareketini hızlandıran Montgomery Otobüs Boykotunu tetikliyor.',
+        "Rosa Parks refuses to surrender her seat, igniting the Montgomery Bus Boycott and fuelling the civil rights movement.",
       location: 'Montgomery, Alabama',
       imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Rosaparks_bus.jpg/640px-Rosaparks_bus.jpg',
     },
@@ -318,30 +445,30 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
     {
       id: 'curie-nobel',
       year: '1903',
-      title: 'Curie’lerin Nobel Zaferi',
+      title: 'Curie Nobel Triumph',
       summary:
-        'Marie ve Pierre Curie’nin radyoaktivite üzerine çalışmaları, bilim dünyasında kadınların görünürlüğünü artıran Nobel ödülüyle taçlanıyor.',
-      location: 'Stockholm, İsveç',
+        "Marie and Pierre Curie are honoured for their research into radioactivity, boosting women's visibility in science.",
+      location: 'Stockholm, Sweden',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Marie_Curie_c1920.jpg/640px-Marie_Curie_c1920.jpg',
     },
     {
       id: 'istanbul-convention',
       year: '1936',
-      title: 'Montreux Boğazlar Sözleşmesi',
+      title: 'Montreux Convention Secures the Straits',
       summary:
-        'Türkiye’nin boğazlar üzerindeki egemenliğini güçlendiren Montreux düzenlemesi, Karadeniz dengesini yeniden tanımlıyor.',
-      location: 'Montreux, İsviçre',
+        "The Montreux agreement strengthens Turkey's control of the straits and reshapes Black Sea balance.",
+      location: 'Montreux, Switzerland',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Montreux_Palace.jpg/640px-Montreux_Palace.jpg',
     },
     {
       id: 'voyager-golden',
       year: '1977',
-      title: 'Voyager Altın Plak',
+      title: 'Voyager Golden Record',
       summary:
-        'Dünya’nın sesleri Voyager sondalarına kazınarak yıldızlararası yolculuğa çıkıyor; geleceğin dinleyicilerine kozmik bir mesaj bırakılıyor.',
-      location: 'Cape Canaveral, ABD',
+        "Earth's sounds are etched onto the Voyager probes, sending a cosmic greeting to future listeners.",
+      location: 'Cape Canaveral, USA',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Voyager_Golden_Record.jpg/640px-Voyager_Golden_Record.jpg',
     },
@@ -350,30 +477,30 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
     {
       id: 'magna-carta',
       year: '1215',
-      title: 'Magna Carta İmzası',
+      title: 'Signing of Magna Carta',
       summary:
-        'İngiliz baronları, kralın yetkilerini sınırlayan Magna Carta’yı kabul ettirerek modern hukukun yapı taşını atıyor.',
-      location: 'Runnymede, İngiltere',
+        "English barons force the charter that limits royal power, laying a cornerstone for modern law.",
+      location: 'Runnymede, England',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg/640px-Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg',
     },
     {
       id: 'hagia-sophia',
       year: '537',
-      title: 'Ayasofya’nın Kubbesi',
+      title: 'Dome of Hagia Sophia',
       summary:
-        'İmparator Justinianus, Ayasofya’nın açılışında “Süleyman seni geçtim” diyerek Bizans mimarisinin doruk noktasını ilan ediyor.',
-      location: 'Konstantinopolis',
+        "Emperor Justinian proclaims 'Solomon, I have surpassed you' as Hagia Sophia crowns Byzantine architecture.",
+      location: 'Constantinople',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Hagia_Sophia_Mars_2013.jpg/640px-Hagia_Sophia_Mars_2013.jpg',
     },
     {
       id: 'catalhoyuk',
-      year: 'MÖ 7400',
-      title: 'Çatalhöyük’te Yaşam',
+      year: '7400 BCE',
+      title: 'Life at Catalhoyuk',
       summary:
-        'Anadolu’nun erken yerleşimlerinden Çatalhöyük’te ortaya çıkan freskler, topluluk yaşamının ritüellerini günümüze taşıyor.',
-      location: 'Konya Ovası, Anadolu',
+        "Frescoes from one of Anatolia's earliest settlements reveal the rituals of a Neolithic community.",
+      location: 'Konya Plain, Anatolia',
       imageUri:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Replica_of_a_Catalh%C3%B6y%C3%BCk_house.jpg/640px-Replica_of_a_Catalh%C3%B6y%C3%BCk_house.jpg',
     },
@@ -392,6 +519,38 @@ const DashboardScreen = () => {
   const { profile, signOut } = useUserContext();
   const [activeFilter, setActiveFilter] = useState<TimelineFilter>('today');
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const heroIntro = useRef(new Animated.Value(0)).current;
+
+  const triggerLightHaptic = useCallback(() => {
+    void Haptics.selectionAsync().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(heroIntro, {
+      toValue: 1,
+      duration: 500,
+      delay: 120,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [heroIntro]);
+
+  const heroScale = useMemo(
+    () =>
+      heroIntro.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.98, 1],
+      }),
+    [heroIntro]
+  );
+
+  const heroAnimatedStyle = useMemo(
+    () => ({
+      opacity: heroIntro,
+      transform: [{ scale: heroScale }],
+    }),
+    [heroIntro, heroScale]
+  );
 
   const activeCards = useMemo(() => EVENT_LIBRARY[activeFilter], [activeFilter]);
   const activeCardsLength = activeCards.length;
@@ -402,9 +561,13 @@ const DashboardScreen = () => {
     return Math.min(width - horizontalPadding, maxWidth);
   }, [width, theme.spacing.xl]);
 
-  const handleFilterPress = useCallback((option: TimelineFilter) => {
-    setActiveFilter(option);
-  }, []);
+  const handleFilterPress = useCallback(
+    (option: TimelineFilter) => {
+      triggerLightHaptic();
+      setActiveFilter(option);
+    },
+    [triggerLightHaptic]
+  );
 
   useEffect(() => {
     setActiveCardIndex(0);
@@ -442,7 +605,7 @@ const DashboardScreen = () => {
             </ImageBackground>
             <View style={styles.cardBody}>
               <Text style={styles.cardSummary}>{item.summary}</Text>
-              <Text style={styles.cardMeta}>Kaydırarak diğer hikâyeleri keşfet</Text>
+              <Text style={styles.cardMeta}>Swipe to discover more stories</Text>
             </View>
           </View>
         </View>
@@ -458,99 +621,159 @@ const DashboardScreen = () => {
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        overScrollMode="never"
       >
         <View style={styles.heroSurface}>
-                <View style={styles.heroHeader}>
-                  <Text style={styles.subheading}>Günün seçkisi</Text>
-                  <Text style={styles.brandMark}>Daily Historic</Text>
-                  <Text style={styles.heroCopy}>{createHeroCopy(profile?.displayName)}</Text>
-                  <Text style={styles.heroBody}>
-                    Tarih boyunca yankılanan keşifleri, devrimleri ve direnişleri tek akışta buluşturuyoruz.
-                  </Text>
-                </View>
+          <View style={styles.heroHeader}>
+            <Text style={styles.heroKicker}>Today&#39;s Moment</Text>
+            <Text style={styles.heroTitle}>Daily Historic</Text>
+            <Text style={styles.heroLead}>{createHeroCopy(profile?.displayName)}</Text>
+          </View>
 
-                <View style={styles.controlsRow}>
-                  {TIMELINE_OPTIONS.map((option) => {
-                    const isActive = option.id === activeFilter;
-                    return (
-                      <Pressable
-                        key={option.id}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: isActive }}
-                        onPress={() => handleFilterPress(option.id)}
-                        style={({ pressed }) => [
-                          styles.timelineChip,
-                          isActive && styles.timelineChipActive,
-                          pressed && { opacity: 0.85 },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.timelineChipText,
-                            isActive && styles.timelineChipTextActive,
-                          ]}
-                        >
-                          {option.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+          <Animated.View style={[styles.heroMomentCard, heroAnimatedStyle]}>
+            <View style={styles.heroArtwork}>
+              <LinearGradient
+                colors={['#EAE8E3', '#D5D0C7']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroArtworkBackground}
+              />
+              <Image
+                source={HERO_MOMENT.image}
+                style={styles.heroImage}
+                contentFit="cover"
+                transition={200}
+              />
+              <LinearGradient
+                colors={['rgba(28, 26, 22, 0.1)', 'rgba(17, 14, 10, 0.45)']}
+                start={{ x: 0.1, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+                style={styles.heroArtworkOverlay}
+              />
+            </View>
+            <View style={styles.heroMomentContent}>
+              <Text style={styles.heroMomentBadge}>{HERO_MOMENT.badge}</Text>
+              <Text style={styles.heroMomentTitle}>{HERO_MOMENT.title}</Text>
+              <Text style={styles.heroMomentSummary}>{HERO_MOMENT.summary}</Text>
+              <Text style={styles.heroMomentMeta}>{HERO_MOMENT.meta}</Text>
+
+              <View style={styles.heroActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    triggerLightHaptic();
+                    noop();
+                  }}
+                  style={({ pressed }) => [
+                    styles.primaryAction,
+                    pressed && styles.primaryActionPressed,
+                  ]}
+                >
+                  <Text style={styles.primaryActionLabel}>Continue</Text>
+                </Pressable>
 
                 <Pressable
-                  onPress={signOut}
                   accessibilityRole="button"
-                  style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.85 }]}
+                  onPress={() => {
+                    triggerLightHaptic();
+                    noop();
+                  }}
+                  style={({ pressed }) => [
+                    styles.ghostAction,
+                    pressed && styles.ghostActionPressed,
+                  ]}
                 >
-                  <Text style={styles.signOutText}>Oturumu kapat</Text>
+                  <Text style={styles.ghostActionLabel}>Preview</Text>
                 </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+
+          <View style={styles.heroControls}>
+            <View style={styles.controlsRow}>
+              {TIMELINE_OPTIONS.map((option) => {
+                const isActive = option.id === activeFilter;
+                return (
+                  <Pressable
+                    key={option.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                    onPress={() => handleFilterPress(option.id)}
+                    style={({ pressed }) => [
+                      styles.timelineChip,
+                      isActive && styles.timelineChipActive,
+                      pressed && { opacity: 0.85 },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.timelineChipText,
+                        isActive && styles.timelineChipTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Pressable
+              onPress={signOut}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutButtonPressed]}
+            >
+              <Text style={styles.signOutText}>Sign out</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.surfaceSection}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Spotlight Güncesi</Text>
-                  <Text style={styles.sectionSubtitle}>Kaydırarak keşfet</Text>
-                </View>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Spotlight Chronicle</Text>
+            <Text style={styles.sectionSubtitle}>Swipe to explore</Text>
+          </View>
 
-                <FlatList
-                  data={activeCards}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  nestedScrollEnabled
-                  keyExtractor={keyExtractor}
-                  renderItem={renderCard}
-                  contentContainerStyle={{
-                    paddingHorizontal: (width - cardWidth) / 2,
-                    paddingVertical: theme.spacing.sm,
-                  }}
-                  snapToAlignment="center"
-                  snapToInterval={cardWidth + theme.spacing.lg}
-                  decelerationRate="fast"
-                  onViewableItemsChanged={handleViewableItemsChanged.current}
-                  viewabilityConfig={viewabilityConfig}
+          <FlatList
+            data={activeCards}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            nestedScrollEnabled
+            keyExtractor={keyExtractor}
+            renderItem={renderCard}
+            contentContainerStyle={{
+              paddingHorizontal: (width - cardWidth) / 2,
+              paddingVertical: theme.spacing.sm,
+            }}
+            snapToAlignment="center"
+            snapToInterval={cardWidth + theme.spacing.lg}
+            decelerationRate="fast"
+            onViewableItemsChanged={handleViewableItemsChanged.current}
+            viewabilityConfig={viewabilityConfig}
+          />
+
+          <View style={styles.pagerDots}>
+            {activeCards.map((card, index) => {
+              const isActive = index === activeCardIndex;
+              return (
+                <View
+                  key={card.id}
+                  style={[styles.pagerDot, isActive && styles.pagerDotActive]}
+                  accessibilityLabel={`${card.year} - ${card.title}`}
+                  accessibilityState={{ selected: isActive }}
                 />
-
-                <View style={styles.pagerDots}>
-                  {activeCards.map((card, index) => {
-                    const isActive = index === activeCardIndex;
-                    return (
-                      <View
-                        key={card.id}
-                        style={[styles.pagerDot, isActive && styles.pagerDotActive]}
-                        accessibilityLabel={`${card.year} - ${card.title}`}
-                        accessibilityState={{ selected: isActive }}
-                      />
-                    );
-                  })}
-                </View>
+              );
+            })}
+          </View>
         </View>
 
         <View style={styles.quickSection}>
           <View style={styles.quickCard}>
-            <Text style={styles.quickTitle}>Keşfetmeye Devam Et</Text>
+            <Text style={styles.quickTitle}>Keep exploring</Text>
             <Text style={styles.quickCopy}>
-              İlgilendiğin dönemler için arşive göz at, kişisel zaman çizelgeni genişlet ve her gün yeni bir hikâyeyi
-              kilidinden çıkar.
+              Scan the archive for the eras you love, expand your personal timeline, and unlock a new story every day.
             </Text>
           </View>
         </View>

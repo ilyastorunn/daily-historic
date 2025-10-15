@@ -141,6 +141,7 @@
 - Content tone: factual, concise summaries, optional “Did you know?” contextual tidbits.
 - Include citations (min. 1 reliable source) and publication date where applicable.
 - Support localization; start with English, plan for Spanish (Phase 3).
+- Baseline UI copy: deliver all onboarding, dashboard, and navigation text in English until additional locales launch.
 - Provide offline-friendly cache of last viewed day (Progressive Web App readiness).
 
 ## 7. Non-Functional Requirements

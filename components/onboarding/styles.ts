@@ -547,13 +547,19 @@ const styles = StyleSheet.create({
     minHeight: '100%',
     paddingHorizontal: spacingScale.lg,
     paddingVertical: spacingScale.xxl,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   accountContent: {
     width: '100%',
+    flexGrow: 1,
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacingScale.xxl,
+  },
+  accountHeroContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   accountHero: {
     fontSize: 34,
@@ -564,8 +570,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
   accountActions: {
+    width: '100%',
     alignItems: 'center',
     gap: spacingScale.lg,
+    paddingBottom: spacingScale.md,
   },
   accountButtonsRow: {
     flexDirection: 'row',
@@ -622,6 +630,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontFamily: sansFamily,
+    textDecorationLine: 'underline',
   },
   accountLinkTextActive: {
     color: colors.textPrimary,

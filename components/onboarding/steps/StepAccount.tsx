@@ -123,9 +123,11 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.accountContent}>
-          <Text accessibilityRole="header" style={styles.accountHero}>
-            Your moment in history awaits.
-          </Text>
+          <View style={styles.accountHeroContainer}>
+            <Text accessibilityRole="header" style={styles.accountHero}>
+              Your moment in history awaits.
+            </Text>
+          </View>
 
           <View style={styles.accountActions}>
             <View style={styles.accountButtonsRow}>
