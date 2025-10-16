@@ -27,6 +27,7 @@ type UserContextValue = {
   onboardingCompleted: boolean;
   error: Error | null;
   completeOnboarding: (data: OnboardingCompletionData) => Promise<void>;
+  updateProfile: (data: Partial<UserDocument>) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -92,7 +93,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         if (!snapshot.exists) {
           setProfile(null);
         } else {
-          setProfile(snapshot.data() as UserProfile);
+          const data = snapshot.data() as UserProfile;
+          setProfile({
+            ...data,
+            savedEventIds: Array.isArray(data.savedEventIds) ? data.savedEventIds : [],
+            reactions: data.reactions ?? {},
+          });
         }
         setError(null);
         setProfileLoading(false);
@@ -133,11 +139,39 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         onboardingCompleted: true,
         updatedAt: serverTimestamp,
         ...(profile?.createdAt ? {} : { createdAt: serverTimestamp }),
+        savedEventIds: profile?.savedEventIds ?? [],
+        reactions: profile?.reactions ?? {},
       };
 
       await docRef.set(payload, { merge: true });
     },
     [authUser, profile]
+  );
+
+  const updateProfile = useCallback(
+    async (data: Partial<UserDocument>) => {
+      if (!authUser) {
+        throw new Error('Cannot update profile without an authenticated user.');
+      }
+
+      const docRef = firebaseFirestore
+        .collection<UserDocument>(USERS_COLLECTION)
+        .doc(authUser.uid);
+
+      const serverTimestamp = firebaseFieldValue.serverTimestamp();
+      const sanitized = Object.fromEntries(
+        Object.entries(data).filter(([, value]) => value !== undefined)
+      );
+
+      await docRef.set(
+        {
+          ...sanitized,
+          updatedAt: serverTimestamp,
+        },
+        { merge: true }
+      );
+    },
+    [authUser]
   );
 
   const signOut = useCallback(async () => {
@@ -161,9 +195,19 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       onboardingCompleted,
       error,
       completeOnboarding,
+      updateProfile,
       signOut,
     }),
-    [authUser, profile, initializing, onboardingCompleted, error, completeOnboarding, signOut]
+    [
+      authUser,
+      profile,
+      initializing,
+      onboardingCompleted,
+      error,
+      completeOnboarding,
+      updateProfile,
+      signOut,
+    ]
   );
 
   return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;

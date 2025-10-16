@@ -7,6 +7,14 @@ import type {
   PushPermission,
 } from '@/contexts/onboarding-context';
 
+export type ReactionValue = 'appreciate' | 'insight';
+export type ReactionMap = Record<string, ReactionValue>;
+
+export interface UserEngagementState {
+  savedEventIds: string[];
+  reactions: ReactionMap;
+}
+
 export interface OnboardingData {
   /** Optional display name supplied during onboarding (if available). */
   displayName?: string;
@@ -34,7 +42,7 @@ export interface OnboardingData {
   additionalNotes?: string;
 }
 
-export interface UserProfile extends OnboardingData {
+export interface UserProfile extends OnboardingData, UserEngagementState {
   uid: string;
   onboardingCompleted: boolean;
   createdAt?: FirebaseFirestoreTypes.Timestamp;
@@ -44,6 +52,8 @@ export interface UserProfile extends OnboardingData {
 export interface UserDocument extends OnboardingData {
   uid: string;
   onboardingCompleted: boolean;
+  savedEventIds?: string[] | FirebaseFirestoreTypes.FieldValue;
+  reactions?: ReactionMap | FirebaseFirestoreTypes.FieldValue;
   createdAt?: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp;
   updatedAt?: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp;
 }

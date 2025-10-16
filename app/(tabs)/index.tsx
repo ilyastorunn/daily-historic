@@ -1,92 +1,23 @@
-import React, { useMemo, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
-import { SelectableChip } from '@/components/ui/selectable-chip';
-import { EditorialCard } from '@/components/ui/editorial-card';
-import { PeekCarousel } from '@/components/ui/peek-carousel';
+import { heroEvent } from '@/constants/events';
+import { useEventEngagement, type ReactionType } from '@/hooks/use-event-engagement';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
+import { createLinearGradientSource } from '@/utils/gradient';
 
-const heroMoment = {
-  badge: '1920 · Today',
-  title: 'Votes finally reach every woman',
-  summary: 'The 19th Amendment is certified; millions gain the ballot.',
-  meta: 'Washington, D.C.',
-  image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
-};
-
-const spotlightMoments = [
-  {
-    id: 'moon-landing',
-    badge: '1969',
-    title: 'First footsteps on lunar soil',
-    summary: 'Neil Armstrong steps onto the Moon and shifts the horizon of exploration.',
-    meta: 'Sea of Tranquility',
-    image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
-  },
-  {
-    id: 'empire-painting',
-    badge: '1836',
-    title: 'An empire in twilight',
-    summary: 'Thomas Cole captures a civilization collapsing under its own weight.',
-    meta: 'New York, Cole Collection',
-    image: require('@/pics/Cole_Thomas_The_Course_of_Empire_Destruction_1836.jpg'),
-  },
-  {
-    id: 'caesar-assassination',
-    badge: '44 BC',
-    title: 'The Ides reverberate',
-    summary: 'Caesar falls in the Senate, and Rome hurtles toward empire.',
-    meta: 'Curia Pompeia, Rome',
-    image: require('@/pics/Vincenzo_Camuccini_-_La_morte_di_Cesare.jpg'),
-  },
+const reactions: { id: ReactionType; emoji: string; label: string }[] = [
+  { id: 'appreciate', emoji: '👍', label: 'Appreciate' },
+  { id: 'insight', emoji: '💡', label: 'Insight' },
 ];
 
-const collectionFilters = [
-  { id: 'art', label: 'Art & Design' },
-  { id: 'science', label: 'Science' },
-  { id: 'culture', label: 'Culture' },
-  { id: 'archives', label: 'Archives' },
-];
-
-const collectionEntries = [
-  {
-    id: 'italian-renaissance',
-    tag: 'art',
-    title: 'Italian Renaissance',
-    summary: "Brushstrokes that rebuilt Europe's imagination.",
-    count: 12,
-  },
-  {
-    id: 'deep-sea-mapping',
-    tag: 'science',
-    title: 'Deep-sea mapping',
-    summary: 'The pioneers who charted the ocean floor.',
-    count: 7,
-  },
-  {
-    id: 'voices-of-change',
-    tag: 'culture',
-    title: 'Voices of change',
-    summary: 'Civil rights speeches that still resonate today.',
-    count: 9,
-  },
-  {
-    id: 'letters-home',
-    tag: 'archives',
-    title: 'Letters from the front',
-    summary: 'Intimate dispatches that travelled across war lines.',
-    count: 5,
-  },
-];
-
-const noop = () => undefined;
-
-const createStyles = (theme: ThemeDefinition) => {
-  const { colors, palette, radius, spacing, typography } = theme;
-  const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
+const buildStyles = (theme: ThemeDefinition) => {
+  const { colors, spacing, radius, typography } = theme;
+  const serifFamily = Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' });
   const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
 
   return StyleSheet.create({
@@ -99,386 +30,336 @@ const createStyles = (theme: ThemeDefinition) => {
       backgroundColor: colors.screen,
     },
     scrollContent: {
-      paddingTop: spacing.xl,
       paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xxl + spacing.lg,
-      gap: spacing.xxl,
-    },
-    heroSurface: {
-      borderRadius: radius.xl,
-      overflow: 'hidden',
-      backgroundColor: palette.midnight,
-      shadowColor: colors.shadowColor,
-      shadowOffset: { width: 0, height: 18 },
-      shadowOpacity: 0.25,
-      shadowRadius: 32,
-      elevation: 8,
+      paddingTop: spacing.xl,
+      paddingBottom: spacing.xxl,
       gap: spacing.xl,
     },
-    heroIntro: {
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.xl,
+    sectionHeader: {
       gap: spacing.xs,
     },
-    heroEyebrow: {
-      color: colors.accentMuted,
+    sectionLabel: {
       fontFamily: sansFamily,
-      fontSize: typography.label.fontSize,
-      letterSpacing: 0.5,
+      color: colors.textSecondary,
+      fontSize: typography.helper.fontSize,
+      lineHeight: typography.helper.lineHeight,
+      letterSpacing: 0.6,
       textTransform: 'uppercase',
     },
-    heroBrand: {
-      color: colors.textInverse,
-      fontFamily: serifFamily,
-      fontSize: 30,
-      lineHeight: 36,
-      letterSpacing: -0.4,
-    },
-    heroHeading: {
-      color: colors.textInverse,
-      fontFamily: serifFamily,
-      fontSize: 26,
-      lineHeight: 32,
-      letterSpacing: -0.4,
-    },
-    heroBody: {
-      color: colors.accentMuted,
-      fontFamily: sansFamily,
-      fontSize: typography.body.fontSize,
-      lineHeight: typography.body.lineHeight,
-      maxWidth: 320,
-    },
-    heroMomentCard: {
-      marginHorizontal: spacing.xl,
-      marginBottom: spacing.xl,
-      borderRadius: radius.card,
+    heroCard: {
+      borderRadius: 16,
       overflow: 'hidden',
+      backgroundColor: colors.heroBackground,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.heroBorder,
-      backgroundColor: 'rgba(18, 16, 12, 0.55)',
+      borderColor: colors.borderSubtle,
+      shadowColor: colors.shadowColor,
+      shadowOpacity: 0.12,
+      shadowRadius: 32,
+      shadowOffset: { width: 0, height: 16 },
+      elevation: 8,
     },
-    heroArtwork: {
-      height: 220,
+    heroMedia: {
+      height: 240,
       position: 'relative',
-      overflow: 'hidden',
     },
     heroImage: {
       width: '100%',
       height: '100%',
     },
-    heroArtworkOverlay: {
+    vignette: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(12, 9, 5, 0.45)',
     },
-    heroMomentContent: {
-      paddingHorizontal: spacing.xl,
+    heroBody: {
+      paddingHorizontal: spacing.card,
       paddingVertical: spacing.lg,
       gap: spacing.sm,
     },
-    heroMomentBadge: {
+    yearPill: {
       alignSelf: 'flex-start',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       borderRadius: radius.pill,
       borderWidth: 1,
-      borderColor: 'rgba(247, 241, 231, 0.35)',
-      color: colors.accentMuted,
+      borderColor: colors.accentPrimary,
+      color: colors.accentPrimary,
       fontFamily: sansFamily,
       fontSize: 12,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
     },
-    heroMomentTitle: {
-      color: colors.surface,
+    heroTitle: {
       fontFamily: serifFamily,
-      fontSize: 26,
-      lineHeight: 32,
-      letterSpacing: -0.4,
+      fontSize: 30,
+      lineHeight: 36,
+      letterSpacing: -0.3,
+      color: colors.textPrimary,
     },
-    heroMomentSummary: {
-      color: colors.accentMuted,
+    heroSummary: {
       fontFamily: sansFamily,
-      fontSize: 15,
-      lineHeight: 22,
+      fontSize: typography.body.fontSize,
+      lineHeight: typography.body.lineHeight,
+      color: colors.textSecondary,
+      maxWidth: 320,
     },
-    heroMomentMeta: {
-      color: colors.accentMuted,
+    heroMeta: {
       fontFamily: sansFamily,
-      fontSize: 13,
-      letterSpacing: 0.2,
+      fontSize: typography.helper.fontSize,
+      lineHeight: typography.helper.lineHeight,
+      color: colors.textTertiary,
     },
-    heroActions: {
+    actionsRow: {
       flexDirection: 'row',
-      alignItems: 'center',
       gap: spacing.sm,
       marginTop: spacing.md,
     },
     primaryAction: {
-      paddingHorizontal: spacing.card,
-      paddingVertical: spacing.sm,
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
       borderRadius: radius.pill,
       backgroundColor: colors.accentPrimary,
       shadowColor: colors.shadowColor,
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.32,
-      shadowRadius: 20,
-      elevation: 6,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.18,
+      shadowRadius: 18,
+      elevation: 4,
     },
-    primaryActionPressed: {
+    primaryPressed: {
       opacity: 0.9,
     },
-    primaryActionLabel: {
-      color: colors.surface,
+    primaryLabel: {
       fontFamily: sansFamily,
       fontSize: 15,
       fontWeight: '600',
       letterSpacing: 0.3,
+      color: colors.surface,
     },
-    ghostAction: {
-      paddingHorizontal: spacing.card,
-      paddingVertical: spacing.sm,
+    secondaryAction: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
       borderRadius: radius.pill,
       borderWidth: 1,
-      borderColor: 'rgba(247, 241, 231, 0.35)',
+      borderColor: colors.borderSubtle,
       backgroundColor: 'transparent',
     },
-    ghostActionPressed: {
+    secondaryPressed: {
       opacity: 0.85,
     },
-    ghostActionLabel: {
-      color: colors.surface,
+    secondaryLabel: {
       fontFamily: sansFamily,
       fontSize: 15,
       fontWeight: '500',
       letterSpacing: 0.3,
-    },
-    section: {
-      gap: spacing.lg,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing.xs,
-    },
-    sectionTitle: {
-      fontFamily: serifFamily,
-      fontSize: 24,
-      lineHeight: 30,
-      letterSpacing: -0.3,
       color: colors.textPrimary,
     },
-    sectionHint: {
-      fontFamily: sansFamily,
-      fontSize: 13,
-      lineHeight: 18,
-      color: colors.textSecondary,
-    },
-    chipsRow: {
+    engagementSurface: {
       flexDirection: 'row',
+      justifyContent: 'space-between',
       flexWrap: 'wrap',
       gap: spacing.sm,
+      marginTop: spacing.lg,
     },
-    collectionList: {
-      gap: spacing.md,
-    },
-    collectionCard: {
-      backgroundColor: colors.surface,
-      borderRadius: radius.lg,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.lg,
-      gap: spacing.sm,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      shadowColor: colors.shadowColor,
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.1,
-      shadowRadius: 22,
-      elevation: 4,
-    },
-    collectionCardPressed: {
-      transform: [{ scale: 0.98 }],
-      shadowOpacity: 0.14,
-    },
-    collectionTextGroup: {
-      gap: spacing.xs,
-    },
-    collectionTitle: {
-      fontFamily: serifFamily,
-      fontSize: 20,
-      lineHeight: 26,
-      letterSpacing: -0.4,
-      color: colors.textPrimary,
-    },
-    collectionSummary: {
-      fontFamily: sansFamily,
-      fontSize: 14,
-      lineHeight: 20,
-      color: colors.textSecondary,
-    },
-    collectionFooter: {
+    reactionGroup: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: spacing.sm,
+      gap: spacing.sm,
     },
-    collectionCountBadge: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
+    reactionChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      backgroundColor: colors.surfaceSubtle,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      minWidth: 56,
     },
-    collectionCountLabel: {
+    reactionChipActive: {
+      borderColor: colors.accentPrimary,
+      backgroundColor: colors.accentSoft,
+    },
+    reactionLabel: {
       fontFamily: sansFamily,
-      fontSize: 13,
-      fontWeight: '500',
+      fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
-      letterSpacing: 0.2,
     },
-    collectionChevron: {
-      marginLeft: spacing.lg,
+    reactionLabelActive: {
+      color: colors.accentPrimary,
+      fontWeight: '600',
+    },
+    actionIconButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      minWidth: 56,
+    },
+    actionIconLabel: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
     },
   });
 };
 
-export default function HomeScreen() {
+const HomeScreen = () => {
+  const router = useRouter();
   const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
-  const [activeFilter, setActiveFilter] = useState(collectionFilters[0]?.id ?? 'art');
-
-  const filteredCollections = useMemo(
-    () => collectionEntries.filter((entry) => entry.tag === activeFilter),
-    [activeFilter]
+  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(heroEvent.id);
+  const heroGradient = useMemo(
+    () =>
+      createLinearGradientSource(
+        [
+          { offset: 0, color: 'rgba(12, 10, 6, 0.1)' },
+          { offset: 100, color: 'rgba(12, 10, 6, 0.55)' },
+        ],
+        { x1: 0.5, y1: 0, x2: 0.5, y2: 1 }
+      ),
+    []
   );
+
+  const handleOpenDetail = () => {
+    router.push({ pathname: '/event/[id]', params: { id: heroEvent.id } });
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: heroEvent.title,
+        message: `${heroEvent.title} — ${heroEvent.summary}`,
+      });
+    } catch (error) {
+      console.error('Share failed', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.heroSurface}>
-          <View style={styles.heroIntro}>
-            <Text style={styles.heroEyebrow}>Today&#39;s edition</Text>
-            <Text style={styles.heroBrand}>Daily Historic</Text>
-            <Text style={styles.heroHeading}>Headlines waiting for you.</Text>
-            <Text style={styles.heroBody}>
-              We gather the discoveries, revolutions, and acts of courage that keep history in motion.
-            </Text>
+      <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          bounces={false}
+          alwaysBounceVertical={false}
+          overScrollMode="never"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>Today’s Moment</Text>
           </View>
 
-          <View style={styles.heroMomentCard}>
-            <View style={styles.heroArtwork}>
-              <Image source={heroMoment.image} style={styles.heroImage} contentFit="cover" transition={200} />
-              <View style={styles.heroArtworkOverlay} />
+          <Pressable accessibilityRole="button" onPress={handleOpenDetail} style={styles.heroCard}>
+            <View pointerEvents="none" style={styles.heroMedia}>
+              <Image source={heroEvent.image} style={styles.heroImage} contentFit="cover" transition={180} />
+              <Image
+                pointerEvents="none"
+                source={heroGradient}
+                style={styles.vignette}
+                contentFit="cover"
+              />
             </View>
 
-            <View style={styles.heroMomentContent}>
-              <Text style={styles.heroMomentBadge}>{heroMoment.badge}</Text>
-              <Text style={styles.heroMomentTitle}>{heroMoment.title}</Text>
-              <Text style={styles.heroMomentSummary}>{heroMoment.summary}</Text>
-              <Text style={styles.heroMomentMeta}>{heroMoment.meta}</Text>
+            <View style={styles.heroBody}>
+              <Text style={styles.yearPill}>{heroEvent.year}</Text>
+              <Text style={styles.heroTitle}>{heroEvent.title}</Text>
+              <Text style={styles.heroSummary}>{heroEvent.summary}</Text>
+              <Text style={styles.heroMeta}>{heroEvent.location}</Text>
 
-              <View style={styles.heroActions}>
+              <View style={styles.actionsRow}>
                 <Pressable
-                  onPress={noop}
                   accessibilityRole="button"
-                  style={({ pressed }) => [
-                    styles.primaryAction,
-                    pressed && styles.primaryActionPressed,
-                  ]}
+                  onPress={handleOpenDetail}
+                  style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryPressed]}
                 >
-                  <Text style={styles.primaryActionLabel}>Continue</Text>
+                  <Text style={styles.primaryLabel}>Continue</Text>
                 </Pressable>
-
                 <Pressable
-                  onPress={noop}
                   accessibilityRole="button"
-                  style={({ pressed }) => [
-                    styles.ghostAction,
-                    pressed && styles.ghostActionPressed,
-                  ]}
+                  onPress={handleOpenDetail}
+                  style={({ pressed }) => [styles.secondaryAction, pressed && styles.secondaryPressed]}
                 >
-                  <Text style={styles.ghostActionLabel}>Preview</Text>
+                  <Text style={styles.secondaryLabel}>Preview</Text>
                 </Pressable>
               </View>
+
+              <View style={styles.engagementSurface}>
+                <View style={styles.reactionGroup}>
+                  {reactions.map((item) => {
+                    const isActive = reaction === item.id;
+                    return (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isActive }}
+                        onPress={() => toggleReaction(item.id)}
+                        style={({ pressed }) => [
+                          styles.reactionChip,
+                          isActive && styles.reactionChipActive,
+                          pressed && { opacity: 0.85 },
+                        ]}
+                      >
+                        <Text accessibilityLabel={`${item.label} reaction`}>{item.emoji}</Text>
+                        <Text
+                          style={[styles.reactionLabel, isActive && styles.reactionLabelActive]}
+                        >
+                          {item.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.reactionGroup}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSaved }}
+                    onPress={toggleSave}
+                    style={({ pressed }) => [
+                      styles.actionIconButton,
+                      isSaved && styles.reactionChipActive,
+                      pressed && { opacity: 0.85 },
+                    ]}
+                  >
+                    <IconSymbol
+                      name={isSaved ? 'bookmark.fill' : 'bookmark'}
+                      size={20}
+                      color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles.actionIconLabel,
+                        isSaved && styles.reactionLabelActive,
+                      ]}
+                    >
+                      Save
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={handleShare}
+                    style={({ pressed }) => [styles.actionIconButton, pressed && { opacity: 0.85 }]}
+                  >
+                    <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
+                    <Text style={styles.actionIconLabel}>Share</Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Spotlight digest</Text>
-            <Text style={styles.sectionHint}>Swipe to explore</Text>
-          </View>
-          <PeekCarousel
-            data={spotlightMoments}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <EditorialCard
-                badge={item.badge}
-                title={item.title}
-                summary={item.summary}
-                meta={item.meta}
-                imageSource={item.image}
-                onPress={noop}
-                actions={[{ label: 'Preview', onPress: noop, variant: 'secondary' }]}
-              />
-            )}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Collections</Text>
-            <Text style={styles.sectionHint}>Shape your digest</Text>
-          </View>
-
-          <View style={styles.chipsRow}>
-            {collectionFilters.map((filter) => (
-              <SelectableChip
-                key={filter.id}
-                label={filter.label}
-                selected={filter.id === activeFilter}
-                onPress={() => setActiveFilter(filter.id)}
-                accessibilityHint="Toggle collection focus"
-              />
-            ))}
-          </View>
-
-          <View style={styles.collectionList}>
-            {filteredCollections.map((entry) => (
-              <Pressable
-                key={entry.id}
-                onPress={noop}
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.collectionCard,
-                  pressed && styles.collectionCardPressed,
-                ]}
-              >
-                <View style={styles.collectionTextGroup}>
-                  <Text style={styles.collectionTitle}>{entry.title}</Text>
-                  <Text style={styles.collectionSummary}>{entry.summary}</Text>
-                </View>
-
-                <View style={styles.collectionFooter}>
-                  <View style={styles.collectionCountBadge}>
-                    <Text style={styles.collectionCountLabel}>{`${entry.count} stories`}</Text>
-                  </View>
-                  <IconSymbol
-                    name="chevron.right"
-                    size={18}
-                    color={theme.colors.textSecondary}
-                    style={styles.collectionChevron}
-                  />
-                </View>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
+          </Pressable>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
-}
+};
+
+export default HomeScreen;

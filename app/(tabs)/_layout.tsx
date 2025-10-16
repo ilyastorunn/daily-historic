@@ -6,31 +6,55 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
+const withOpacity = (color: string, opacity: number) => {
+  if (color.startsWith('#')) {
+    const normalized = color.replace('#', '');
+    const bigint = Number.parseInt(normalized, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+  if (match) {
+    const [, r, g, b] = match;
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  return color;
+};
+
 const createTabBarStyles = (theme: ThemeDefinition) => {
   const { colors, radius, spacing } = theme;
 
   return StyleSheet.create({
     tabBar: {
       position: 'absolute',
+      bottom: spacing.xl,
       left: spacing.xl,
       right: spacing.xl,
-      bottom: spacing.xl,
       height: 72,
+      maxWidth: 380,
       paddingHorizontal: spacing.md,
       paddingTop: 12,
       paddingBottom: Platform.OS === 'ios' ? 20 : 14,
       borderRadius: radius.xl,
       borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      backgroundColor: colors.surface,
+      borderColor: withOpacity(colors.borderSubtle, 0.7),
+      backgroundColor: withOpacity(colors.surface, 0.78),
       shadowColor: colors.shadowColor,
       shadowOpacity: 0.18,
       shadowRadius: 28,
       shadowOffset: { width: 0, height: 12 },
       elevation: 14,
+      alignSelf: 'center',
     },
     item: {
       borderRadius: radius.pill,
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
   });
 };
@@ -100,7 +124,7 @@ const GlowTabIcon = ({ focused, label, iconName, styles, colors }: GlowTabIconPr
       <View style={[styles.pill, focused && styles.pillActive]}>
         <IconSymbol
           name={iconName}
-          size={22}
+          size={26}
           color={focused ? colors.surface : colors.textSecondary}
         />
         <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
@@ -150,6 +174,21 @@ export default function TabLayout() {
               focused={focused}
               label="Explore"
               iconName="paperplane.fill"
+              styles={iconStyles}
+              colors={colors}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => (
+            <GlowTabIcon
+              focused={focused}
+              label="Profile"
+              iconName="person.crop.circle.fill"
               styles={iconStyles}
               colors={colors}
             />

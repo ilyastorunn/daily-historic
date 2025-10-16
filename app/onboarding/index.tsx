@@ -261,12 +261,12 @@ const OnboardingScreen = () => {
 
   useEffect(() => {
     if (!initializing && onboardingCompleted) {
-      router.replace('/dashboard');
+      router.replace('/(tabs)');
     }
   }, [initializing, onboardingCompleted, router]);
 
   const handleComplete = () => {
-    router.replace('/dashboard');
+    router.replace('/(tabs)');
   };
 
   if (initializing) {
