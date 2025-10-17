@@ -55,7 +55,9 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       "Neil Armstrong descends from Apollo 11's Eagle module and becomes the first human to touch the lunar surface, broadcasting the moment to over 600 million viewers at home.",
     location: 'Sea of Tranquility, Moon',
-    image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
+    image: {
+      uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg',
+    },
     categories: ['science', 'innovation'],
     eras: ['modern'],
     whyItMatters:

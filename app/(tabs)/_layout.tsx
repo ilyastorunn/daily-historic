@@ -1,200 +1,175 @@
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
-import React, { useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
-const withOpacity = (color: string, opacity: number) => {
-  if (color.startsWith('#')) {
-    const normalized = color.replace('#', '');
-    const bigint = Number.parseInt(normalized, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  }
-
-  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
-  if (match) {
-    const [, r, g, b] = match;
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  }
-
-  return color;
+const ICON_MAP: Record<string, IconSymbolName> = {
+  index: 'house.fill',
+  explore: 'sparkles',
+  profile: 'person.crop.circle.fill',
 };
 
-const createTabBarStyles = (theme: ThemeDefinition) => {
-  const { colors, radius, spacing } = theme;
+function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
+  const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { spacing, colors } = theme;
+  const bottomInset = insets.bottom > spacing.sm ? insets.bottom : spacing.sm;
 
-  return StyleSheet.create({
-    tabBar: {
-      position: 'absolute',
-      bottom: spacing.xl,
-      left: spacing.xl,
-      right: spacing.xl,
-      height: 72,
-      maxWidth: 380,
-      paddingHorizontal: spacing.md,
-      paddingTop: 12,
-      paddingBottom: Platform.OS === 'ios' ? 20 : 14,
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.borderSubtle, 0.7),
-      backgroundColor: withOpacity(colors.surface, 0.78),
-      shadowColor: colors.shadowColor,
-      shadowOpacity: 0.18,
-      shadowRadius: 28,
-      shadowOffset: { width: 0, height: 12 },
-      elevation: 14,
-      alignSelf: 'center',
-    },
-    item: {
-      borderRadius: radius.pill,
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-  });
-};
+  return (
+    <View style={[styles.container, { paddingBottom: bottomInset }]}>
+      <View style={styles.dock}>
+        {state.routes.map((route, index) => {
+          const isFocused = state.index === index;
+          const descriptor = descriptors[route.key];
+          const options = descriptor.options;
+          const label =
+            options.tabBarLabel ??
+            options.title ??
+            route.name.charAt(0).toUpperCase() + route.name.slice(1);
+          const iconName = ICON_MAP[route.name] ?? 'house.fill';
 
-const createIconStyles = (theme: ThemeDefinition) => {
-  const { colors, radius, spacing } = theme;
-  const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            });
+          };
+
+          const handlePressIn = () => {
+            if (Platform.OS === 'ios') {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+            }
+          };
+
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : undefined}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              onPressIn={handlePressIn}
+              onLongPress={onLongPress}
+              style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
+            >
+              <View style={[styles.pill, isFocused && styles.pillActive]}>
+                <IconSymbol
+                  name={iconName}
+                  size={22}
+                  color={isFocused ? colors.accentPrimary : colors.textSecondary}
+                />
+                <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
+                  {label}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const createStyles = (theme: ThemeDefinition) => {
+  const { colors, spacing, radius, typography, mode } = theme;
+  const dockBackground = mode === 'dark' ? colors.surfaceSubtle : colors.surface;
+  const accentWash = mode === 'dark' ? colors.accentMuted : colors.accentSoft;
+  const labelBase = typography.label;
 
   return StyleSheet.create({
     container: {
+      position: 'absolute',
+      left: spacing.xl,
+      right: spacing.xl,
+      bottom: 0,
+      pointerEvents: 'box-none',
+    },
+    dock: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: dockBackground,
+      ...Platform.select({
+        ios: {
+          shadowColor: colors.shadowColor,
+          shadowOpacity: 0.16,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+        },
+        default: {
+          elevation: 12,
+        },
+      }),
+    },
+    item: {
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
+      minWidth: 0,
     },
-    glow: {
-      position: 'absolute',
-      left: -spacing.sm,
-      right: -spacing.sm,
-      top: -spacing.sm,
-      bottom: -spacing.sm,
-      borderRadius: radius.pill,
-      backgroundColor: colors.accentPrimary,
-      opacity: 0.22,
-      shadowColor: colors.accentPrimary,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.48,
-      shadowRadius: 26,
-      elevation: 12,
+    itemPressed: {
+      opacity: 0.75,
     },
     pill: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: radius.pill,
-      paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
-      gap: spacing.xs,
-      backgroundColor: 'transparent',
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.pill,
     },
     pillActive: {
-      backgroundColor: colors.accentPrimary,
+      backgroundColor: accentWash,
     },
     label: {
-      fontFamily: sansFamily,
-      fontSize: 12,
-      fontWeight: '600',
-      letterSpacing: 0.4,
+      marginLeft: spacing.xs,
       color: colors.textSecondary,
+      fontSize: labelBase.fontSize,
+      lineHeight: labelBase.lineHeight,
+      fontWeight: labelBase.fontWeight,
     },
     labelActive: {
-      color: colors.surface,
+      color: colors.accentPrimary,
     },
   });
 };
 
-type GlowTabIconProps = {
-  focused: boolean;
-  label: string;
-  iconName: IconSymbolName;
-  styles: ReturnType<typeof createIconStyles>;
-  colors: ThemeDefinition['colors'];
-};
-
-const GlowTabIcon = ({ focused, label, iconName, styles, colors }: GlowTabIconProps) => {
-  return (
-    <View style={styles.container}>
-      {focused ? <View pointerEvents="none" style={styles.glow} /> : null}
-      <View style={[styles.pill, focused && styles.pillActive]}>
-        <IconSymbol
-          name={iconName}
-          size={26}
-          color={focused ? colors.surface : colors.textSecondary}
-        />
-        <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
-      </View>
-    </View>
-  );
-};
-
 export default function TabLayout() {
-  const theme = useAppTheme();
-  const tabBarStyles = useMemo(() => createTabBarStyles(theme), [theme]);
-  const iconStyles = useMemo(() => createIconStyles(theme), [theme]);
-  const { colors } = theme;
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: tabBarStyles.tabBar,
-        tabBarItemStyle: tabBarStyles.item,
-        tabBarShowLabel: false,
-        tabBarButton: HapticTab,
         tabBarHideOnKeyboard: true,
       }}
+      tabBar={(props) => <BottomDock {...props} />}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <GlowTabIcon
-              focused={focused}
-              label="Home"
-              iconName="house.fill"
-              styles={iconStyles}
-              colors={colors}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ focused }) => (
-            <GlowTabIcon
-              focused={focused}
-              label="Explore"
-              iconName="paperplane.fill"
-              styles={iconStyles}
-              colors={colors}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <GlowTabIcon
-              focused={focused}
-              label="Profile"
-              iconName="person.crop.circle.fill"
-              styles={iconStyles}
-              colors={colors}
-            />
-          ),
-        }}
-      />
+      <Tabs.Screen name="index" options={{ title: 'Home' }} />
+      <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
   );
 }

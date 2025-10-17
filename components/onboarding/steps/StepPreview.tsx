@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Dimensions, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import type { ImageSource } from 'expo-image';
 
 import { EditorialCard } from '@/components/ui/editorial-card';
 import { PeekCarousel } from '@/components/ui/peek-carousel';
@@ -15,7 +16,7 @@ type PreviewCard = {
   title: string;
   summary: string;
   meta?: string;
-  image: ReturnType<typeof require>;
+  image: ImageSource;
 };
 
 const previewCards: PreviewCard[] = [
@@ -25,7 +26,7 @@ const previewCards: PreviewCard[] = [
     title: 'First footsteps on lunar soil',
     summary: 'Neil Armstrong steps onto the Moon and marks a new chapter for exploration.',
     meta: 'Sea of Tranquility, NASA Archive',
-    image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
+    image: { uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg' },
   },
   {
     id: 'empire-destruction-1836',
@@ -33,7 +34,9 @@ const previewCards: PreviewCard[] = [
     title: 'Empire at the brink',
     summary: 'Thomas Cole paints the fall of an empire in sweeping colour and detail.',
     meta: 'New York, Cole Collection',
-    image: require('@/pics/Cole_Thomas_The_Course_of_Empire_Destruction_1836.jpg'),
+    image: {
+      uri: 'https://upload.wikimedia.org/wikipedia/commons/b/b2/Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg',
+    },
   },
   {
     id: 'caesar-death-44bc',
@@ -41,7 +44,9 @@ const previewCards: PreviewCard[] = [
     title: 'A turning point for Rome',
     summary: 'Julius Caesar is assassinated in the Senate and republic tremors begin.',
     meta: 'Rome, Curia Pompeia',
-    image: require('@/pics/Vincenzo_Camuccini_-_La_morte_di_Cesare.jpg'),
+    image: {
+      uri: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Vincenzo_Camuccini_-_Morte_di_Cesare.jpg',
+    },
   },
 ];
 

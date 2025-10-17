@@ -5,10 +5,14 @@ import { Image } from 'expo-image';
 import { colors, radiusScale, spacingScale } from './styles';
 
 const sources = {
-  armstrong: require('../../pics/960px-Neil_Armstrong_pose.jpg'),
-  edison: require('../../pics/Untitled-design-83.png'),
-  cesar: require('../../pics/Vincenzo_Camuccini_-_La_morte_di_Cesare.jpg'),
-  empire: require('../../pics/Cole_Thomas_The_Course_of_Empire_Destruction_1836.jpg'),
+  armstrong: { uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg' },
+  edison: { uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Thomas_Edison2.jpg' },
+  cesar: {
+    uri: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Vincenzo_Camuccini_-_Morte_di_Cesare.jpg',
+  },
+  empire: {
+    uri: 'https://upload.wikimedia.org/wikipedia/commons/b/b2/Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg',
+  },
 };
 
 const HeroCollage = () => (

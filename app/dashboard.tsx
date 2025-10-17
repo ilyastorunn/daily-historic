@@ -14,13 +14,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Image, type ImageSource } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUserContext } from '@/contexts/user-context';
 import { useAppTheme } from '@/theme';
 import type { ThemeDefinition } from '@/theme/tokens';
+import { createLinearGradientSource } from '@/utils/gradient';
 
 type TimelineFilter = 'today' | 'for-you' | 'archives';
 
@@ -54,7 +54,9 @@ const HERO_MOMENT: {
   title: 'First footsteps on the Moon',
   summary: "Neil Armstrong's first step expands humanity's horizon.",
   meta: 'Sea of Tranquility, Moon',
-  image: require('@/pics/960px-Neil_Armstrong_pose.jpg'),
+  image: {
+    uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg',
+  },
 };
 
 const noop = () => undefined;
@@ -552,6 +554,30 @@ const DashboardScreen = () => {
     [heroIntro, heroScale]
   );
 
+  const heroBackdropGradient = useMemo(
+    () =>
+      createLinearGradientSource(
+        [
+          { offset: 0, color: '#EAE8E3' },
+          { offset: 100, color: '#D5D0C7' },
+        ],
+        { x1: 0, y1: 0, x2: 1, y2: 1 }
+      ),
+    []
+  );
+
+  const heroOverlayGradient = useMemo(
+    () =>
+      createLinearGradientSource(
+        [
+          { offset: 0, color: 'rgba(28, 26, 22, 0.1)' },
+          { offset: 100, color: 'rgba(17, 14, 10, 0.45)' },
+        ],
+        { x1: 0.1, y1: 0, x2: 0.9, y2: 1 }
+      ),
+    []
+  );
+
   const activeCards = useMemo(() => EVENT_LIBRARY[activeFilter], [activeFilter]);
   const activeCardsLength = activeCards.length;
 
@@ -634,11 +660,11 @@ const DashboardScreen = () => {
 
           <Animated.View style={[styles.heroMomentCard, heroAnimatedStyle]}>
             <View style={styles.heroArtwork}>
-              <LinearGradient
-                colors={['#EAE8E3', '#D5D0C7']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+              <Image
+                pointerEvents="none"
+                source={heroBackdropGradient}
                 style={styles.heroArtworkBackground}
+                contentFit="cover"
               />
               <Image
                 source={HERO_MOMENT.image}
@@ -646,11 +672,11 @@ const DashboardScreen = () => {
                 contentFit="cover"
                 transition={200}
               />
-              <LinearGradient
-                colors={['rgba(28, 26, 22, 0.1)', 'rgba(17, 14, 10, 0.45)']}
-                start={{ x: 0.1, y: 0 }}
-                end={{ x: 0.9, y: 1 }}
+              <Image
+                pointerEvents="none"
+                source={heroOverlayGradient}
                 style={styles.heroArtworkOverlay}
+                contentFit="cover"
               />
             </View>
             <View style={styles.heroMomentContent}>
