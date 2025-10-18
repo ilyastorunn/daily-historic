@@ -3,15 +3,16 @@ import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { colors, radiusScale, spacingScale } from './styles';
+import { buildWikimediaFileUrl } from '@/utils/wikimedia';
 
 const sources = {
-  armstrong: { uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg' },
-  edison: { uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Thomas_Edison2.jpg' },
+  armstrong: { uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg') },
+  edison: { uri: buildWikimediaFileUrl('File:Thomas_Edison2.jpg') },
   cesar: {
-    uri: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Vincenzo_Camuccini_-_Morte_di_Cesare.jpg',
+    uri: buildWikimediaFileUrl('File:Vincenzo_Camuccini_-_Morte_di_Cesare.jpg'),
   },
   empire: {
-    uri: 'https://upload.wikimedia.org/wikipedia/commons/b/b2/Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg',
+    uri: buildWikimediaFileUrl('File:Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg'),
   },
 };
 

@@ -1,5 +1,7 @@
 import type { ImageSource } from 'expo-image';
 
+import { buildWikimediaFileUrl } from '@/utils/wikimedia';
+
 export type EventCategory =
   | 'science'
   | 'culture'
@@ -56,7 +58,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       "Neil Armstrong descends from Apollo 11's Eagle module and becomes the first human to touch the lunar surface, broadcasting the moment to over 600 million viewers at home.",
     location: 'Sea of Tranquility, Moon',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg',
+      uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg'),
     },
     categories: ['science', 'innovation'],
     eras: ['modern'],
@@ -80,7 +82,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'U.S. Secretary of State Bainbridge Colby certifies the 19th Amendment, granting women the right to vote nationwide after decades of activism.',
     location: 'Washington, D.C., USA',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/7/79/Tennessee_ratifies_the_19th_Amendment.jpg',
+      uri: buildWikimediaFileUrl('Tennessee ratifies the Nineteenth Amendment.jpg'),
     },
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
@@ -102,7 +104,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Ada Lovelace publishes her notes on Charles Babbage’s Analytical Engine, describing algorithmic steps and envisioning creative uses beyond calculation.',
     location: 'London, United Kingdom',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Ada_Lovelace_portrait.jpg',
+      uri: buildWikimediaFileUrl('File:Ada_Lovelace_portrait.jpg'),
     },
     categories: ['innovation', 'science'],
     eras: ['industrial'],
@@ -127,7 +129,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Speakeasies and theaters across Harlem popularize jazz legends like Duke Ellington, broadcasting a transformative sound to the entire country.',
     location: 'Harlem, New York City, USA',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Cotton_Club_interior_1936.jpg',
+      uri: buildWikimediaFileUrl('Cotton Club interior, 1936 (LOC).jpg'),
     },
     categories: ['culture', 'art'],
     eras: ['modern'],
@@ -149,7 +151,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Jean-François Champollion announces that he has decoded Egyptian hieroglyphs by comparing Greek and Demotic scripts, giving voice to millennia of inscriptions.',
     location: 'Paris, France',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Rosetta_Stone.JPG',
+      uri: buildWikimediaFileUrl('File:Rosetta_Stone.JPG'),
     },
     categories: ['culture', 'science'],
     eras: ['modern'],
@@ -170,7 +172,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Sally Ride Science starts camps to sustain girls’ curiosity in STEM, extending the impact of Ride’s 1983 mission to a new generation.',
     location: 'San Diego, USA',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/d/d4/Sally_Ride_in_1984.jpg',
+      uri: buildWikimediaFileUrl('File:Sally_Ride_in_1984.jpg'),
     },
     categories: ['science', 'human-rights'],
     eras: ['contemporary'],
@@ -186,7 +188,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Women in STEM Week',
     summary: 'A curated loop of pioneers who widened the lab doors.',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Marie_Curie_c1920.jpg',
+      uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
     },
     eventIds: ['women-suffrage-usa', 'ada-lovelace-analytical', 'women-in-stem-week'],
   },
@@ -195,7 +197,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Voices of Change',
     summary: 'Civic acts that reshaped the social contract.',
     image: {
-      uri: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/March_on_Washington_%281963%29.jpg',
+      uri: buildWikimediaFileUrl('March on Washington (August 28, 1963).jpg'),
     },
     eventIds: ['women-suffrage-usa'],
   },

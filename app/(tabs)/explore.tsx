@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   Platform,
@@ -11,22 +11,29 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
+import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  EVENT_COLLECTIONS,
-  EVENT_LIBRARY,
-  QUICK_FILTERS,
-  type EventCategory,
-  type EventRecord,
-} from '@/constants/events';
+import { heroEvent } from '@/constants/events';
+import { CATEGORY_LABELS, formatCategoryLabel } from '@/constants/personalization';
 import { useUserContext } from '@/contexts/user-context';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
+import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
+import { fetchEventsByIds } from '@/services/content';
+import type { CategoryOption } from '@/contexts/onboarding-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { PeekCarousel } from '@/components/ui/peek-carousel';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
+import type { FirestoreEventDocument } from '@/types/events';
+import { getDateParts, parseIsoDate, formatIsoDateLabel } from '@/utils/dates';
+import {
+  buildEventSearchText,
+  getEventImageUri,
+  getEventLocation,
+  getEventSummary,
+  getEventTitle,
+  getEventYearLabel,
+} from '@/utils/event-presentation';
 import { createLinearGradientSource } from '@/utils/gradient';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -37,6 +44,15 @@ const reactions = [
 ] as const;
 
 type ReactionOption = (typeof reactions)[number]['id'];
+type CategoryFilter = CategoryOption | 'all';
+
+const QUICK_FILTERS: { id: CategoryFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
+    id: key as CategoryOption,
+    label,
+  })),
+];
 
 type CalendarModalProps = {
   visible: boolean;
@@ -511,11 +527,13 @@ const createStyles = (theme: ThemeDefinition) => {
   });
 };
 
-const shareEvent = async (event: EventRecord) => {
+const shareEvent = async (event: FirestoreEventDocument) => {
   try {
+    const title = getEventTitle(event);
+    const summary = getEventSummary(event);
     await Share.share({
-      title: event.title,
-      message: `${event.title} — ${event.summary}`,
+      title,
+      message: `${title} — ${summary}`,
     });
   } catch (error) {
     console.error('Share failed', error);
@@ -530,12 +548,13 @@ const EventResultCard = ({
   styles,
   theme,
 }: {
-  event: EventRecord;
+  event: FirestoreEventDocument;
   onOpenDetail: () => void;
   styles: ExploreStyles;
   theme: ThemeDefinition;
 }) => {
-  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(event.id);
+  const eventId = event.eventId;
+  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(eventId);
   const overlaySource = useMemo(
     () =>
       createLinearGradientSource(
@@ -547,11 +566,50 @@ const EventResultCard = ({
       ),
     []
   );
+  const imageUri = useMemo(() => getEventImageUri(event), [event]);
+  const imageSource = imageUri ? { uri: imageUri } : heroEvent.image;
+  const yearLabel = getEventYearLabel(event);
+  const title = getEventTitle(event);
+  const summary = getEventSummary(event);
+  const locationText = getEventLocation(event);
+  const categoryLabels = (event.categories ?? []).slice(0, 1).map((category) => formatCategoryLabel(category));
+
+  const handleImageLoad = useCallback(
+    (loadEvent: ImageLoadEventData) => {
+      console.log('[Explore] result image loaded', {
+        eventId,
+        uri: imageUri,
+        resolvedUrl: loadEvent.source?.url,
+        cacheType: loadEvent.cacheType,
+        width: loadEvent.source?.width,
+        height: loadEvent.source?.height,
+      });
+    },
+    [eventId, imageUri]
+  );
+
+  const handleImageError = useCallback(
+    (errorEvent: ImageErrorEventData) => {
+      console.warn('[Explore] result image failed to load', {
+        eventId,
+        uri: imageUri,
+        error: errorEvent.error,
+      });
+    },
+    [eventId, imageUri]
+  );
 
   return (
     <Pressable accessibilityRole="button" onPress={onOpenDetail} style={styles.resultCard}>
       <View pointerEvents="none" style={styles.resultMedia}>
-        <Image source={event.image} style={styles.resultImage} contentFit="cover" transition={180} />
+        <Image
+          source={imageSource}
+          style={styles.resultImage}
+          contentFit="cover"
+          transition={180}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+        />
         <Image
           pointerEvents="none"
           source={overlaySource}
@@ -560,14 +618,14 @@ const EventResultCard = ({
         />
       </View>
       <View style={styles.resultBody}>
-        <Text style={styles.yearBadge}>{event.year}</Text>
-        <Text style={styles.resultTitle}>{event.title}</Text>
-        <Text style={styles.resultSummary}>{event.summary}</Text>
+        <Text style={styles.yearBadge}>{yearLabel}</Text>
+        <Text style={styles.resultTitle}>{title}</Text>
+        <Text style={styles.resultSummary}>{summary}</Text>
         <View style={styles.metaRow}>
-          <Text style={styles.locationText}>{event.location}</Text>
-          {event.categories.slice(0, 1).map((category) => (
-            <View key={category} style={styles.categoryPill}>
-              <Text style={styles.categoryText}>{category.replace('-', ' ')}</Text>
+          <Text style={styles.locationText}>{locationText}</Text>
+          {categoryLabels.map((label) => (
+            <View key={label} style={styles.categoryPill}>
+              <Text style={styles.categoryText}>{label}</Text>
             </View>
           ))}
         </View>
@@ -646,67 +704,138 @@ const ExploreScreen = () => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { profile } = useUserContext();
+  const today = useMemo(
+    () => getDateParts(new Date(), { timeZone: profile?.timezone }),
+    [profile?.timezone]
+  );
   const [query, setQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Set<EventCategory>>(new Set());
+  const [selectedDate, setSelectedDate] = useState<string>(today.isoDate);
+  const [filters, setFilters] = useState<Set<CategoryFilter>>(new Set());
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [eventCache, setEventCache] = useState<Record<string, FirestoreEventDocument>>({});
 
-  const eventsById = useMemo(() => {
-    const map = new Map<string, EventRecord>();
-    EVENT_LIBRARY.forEach((event) => {
-      map.set(event.id, event);
+  const activeDate = useMemo(() => parseIsoDate(selectedDate) ?? today, [selectedDate, today]);
+
+  const {
+    events: digestEvents,
+    digest,
+    loading: digestLoading,
+    error: digestError,
+  } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day });
+
+  useEffect(() => {
+    if (digestError) {
+      console.error('Failed to load explore digest', digestError);
+    }
+  }, [digestError]);
+
+  useEffect(() => {
+    if (digestEvents.length === 0) {
+      return;
+    }
+    setEventCache((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const event of digestEvents) {
+        const existing = next[event.eventId];
+        const existingStamp = existing?.updatedAt ? String(existing.updatedAt) : '';
+        const incomingStamp = event.updatedAt ? String(event.updatedAt) : '';
+        if (!existing || existingStamp !== incomingStamp) {
+          next[event.eventId] = event;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
     });
-    return map;
-  }, []);
+  }, [digestEvents]);
+
+  useEffect(() => {
+    const savedIds = profile?.savedEventIds ?? [];
+    if (savedIds.length === 0) {
+      return;
+    }
+    const missing = savedIds.filter((id) => !eventCache[id]);
+    if (missing.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const fetched = await fetchEventsByIds(missing);
+        if (cancelled) {
+          return;
+        }
+        setEventCache((prev) => {
+          const next = { ...prev };
+          let changed = false;
+          for (const event of fetched) {
+            if (!next[event.eventId]) {
+              next[event.eventId] = event;
+              changed = true;
+            }
+          }
+          return changed ? next : prev;
+        });
+      } catch (error) {
+        console.error('Failed to load saved events for highlights', error);
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.savedEventIds, eventCache]);
 
   const highlightedDates = useMemo(() => {
     const savedIds = profile?.savedEventIds ?? [];
     const set = new Set<string>();
     savedIds.forEach((id) => {
-      const event = eventsById.get(id);
-      if (event) {
-        set.add(event.date);
+      const event = eventCache[id];
+      const date = event?.date;
+      if (date) {
+        const month = date.month.toString().padStart(2, '0');
+        const day = date.day.toString().padStart(2, '0');
+        set.add(`${today.year}-${month}-${day}`);
       }
     });
     return set;
-  }, [eventsById, profile?.savedEventIds]);
+  }, [eventCache, profile?.savedEventIds, today.year]);
 
   const normalizedQuery = query.trim().toLowerCase();
-  const activeFilters = Array.from(filters);
+  const activeFilters = useMemo(() => Array.from(filters), [filters]);
 
   const results = useMemo(() => {
-    const filtered = EVENT_LIBRARY.filter((event) => {
-      if (selectedDate && event.date !== selectedDate) {
-        return false;
-      }
-      if (activeFilters.length > 0) {
-        const matchesFilter = activeFilters.some((filter) => event.categories.includes(filter));
-        if (!matchesFilter) {
-          return false;
+    return digestEvents
+      .filter((event) => {
+        if (activeFilters.length > 0) {
+          const categories = event.categories ?? [];
+          if (!activeFilters.some((filter) => categories.includes(filter))) {
+            return false;
+          }
         }
-      }
-      if (!normalizedQuery) {
-        return true;
-      }
-      const haystack = `${event.title} ${event.summary} ${event.location}`.toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-
-    return filtered
-      .sort((a, b) => (a.date > b.date ? -1 : 1))
+        if (!normalizedQuery) {
+          return true;
+        }
+        return buildEventSearchText(event).includes(normalizedQuery);
+      })
       .slice(0, 20);
-  }, [activeFilters, normalizedQuery, selectedDate]);
+  }, [activeFilters, digestEvents, normalizedQuery]);
+
+  const suggestionPool = useMemo(() => Object.values(eventCache), [eventCache]);
 
   const suggestions = useMemo(() => {
     if (normalizedQuery.length < 2) {
-      return [] as EventRecord[];
+      return [] as FirestoreEventDocument[];
     }
-    return EVENT_LIBRARY.filter((event) =>
-      event.title.toLowerCase().includes(normalizedQuery)
-    ).slice(0, 4);
-  }, [normalizedQuery]);
+    return suggestionPool
+      .filter((event) => getEventTitle(event).toLowerCase().includes(normalizedQuery))
+      .slice(0, 4);
+  }, [normalizedQuery, suggestionPool]);
 
-  const handleToggleFilter = (filterId: EventCategory | 'all') => {
+  const handleToggleFilter = useCallback((filterId: CategoryFilter) => {
     if (filterId === 'all') {
       setFilters(new Set());
       return;
@@ -721,7 +850,7 @@ const ExploreScreen = () => {
       }
       return next;
     });
-  };
+  }, []);
 
   const handleOpenDetail = useCallback(
     (id: string) => {
@@ -730,20 +859,30 @@ const ExploreScreen = () => {
     [router]
   );
 
-  const handleRandomDate = () => {
-    const pool = EVENT_LIBRARY;
-    const random = pool[Math.floor(Math.random() * pool.length)];
-    setSelectedDate(random.date);
-    setQuery('');
-  };
+  const handleRandomDate = useCallback(() => {
+    const datedEvents = suggestionPool.filter((event) => event.date);
+    if (datedEvents.length === 0) {
+      setSelectedDate(today.isoDate);
+      return;
+    }
+    const random = datedEvents[Math.floor(Math.random() * datedEvents.length)];
+    if (random.date) {
+      const month = random.date.month.toString().padStart(2, '0');
+      const day = random.date.day.toString().padStart(2, '0');
+      setSelectedDate(`${today.year}-${month}-${day}`);
+      setQuery('');
+    }
+  }, [suggestionPool, today.year, today.isoDate]);
 
-  const selectedDateDisplay = selectedDate
-    ? new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }).format(new Date(selectedDate))
-    : 'Any date';
+  const selectedDateDisplay = formatIsoDateLabel(digest?.date ?? selectedDate, {
+    timeZone: profile?.timezone,
+  });
+
+  const statusMessage = digestLoading
+    ? 'Fetching daily stories…'
+    : digestError
+      ? 'Showing the latest cached set while we refresh.'
+      : undefined;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -758,6 +897,7 @@ const ExploreScreen = () => {
             <Text style={styles.helperText}>
               Search the archive, skim collections, or jump to a date.
             </Text>
+            {statusMessage ? <Text style={styles.helperText}>{statusMessage}</Text> : null}
           </View>
 
           <View style={styles.fieldRow}>
@@ -772,58 +912,51 @@ const ExploreScreen = () => {
             <Pressable
               accessibilityRole="button"
               onPress={() => setCalendarVisible(true)}
-              onLongPress={() => setSelectedDate(null)}
               style={({ pressed }) => [styles.dateButton, pressed && { opacity: 0.9 }]}
             >
-              <IconSymbol
-                name="calendar"
-                size={18}
-                color={theme.colors.textSecondary}
-              />
-              <Text style={styles.dateLabel}>{selectedDateDisplay}</Text>
+              <IconSymbol name="calendar" size={18} color={theme.colors.textSecondary} />
+              <Text style={styles.dateLabel}>{selectedDateDisplay || 'Select date'}</Text>
             </Pressable>
           </View>
 
           {suggestions.length > 0 && (
             <View style={styles.suggestionsSurface}>
-              {suggestions.map((item) => (
-                <Pressable
-                  key={item.id}
-                  accessibilityRole="button"
-                  onPress={() => {
-                    setQuery(item.title);
-                    handleOpenDetail(item.id);
-                  }}
-                  style={({ pressed }) => [styles.suggestionPill, pressed && { opacity: 0.85 }]}
-                >
-                  <Text style={styles.suggestionLabel}>{item.title}</Text>
-                </Pressable>
-              ))}
+              {suggestions.map((item) => {
+                const title = getEventTitle(item);
+                return (
+                  <Pressable
+                    key={item.eventId}
+                    accessibilityRole="button"
+                    onPress={() => {
+                      setQuery(title);
+                      handleOpenDetail(item.eventId);
+                    }}
+                    style={({ pressed }) => [styles.suggestionPill, pressed && { opacity: 0.85 }]}
+                  >
+                    <Text style={styles.suggestionLabel}>{title}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
           )}
 
           <View style={styles.fieldRow}>
             {QUICK_FILTERS.map((filter) => {
-              const isActive = filter.id !== 'all' && filters.has(filter.id as EventCategory);
               const isAll = filter.id === 'all';
+              const isActive = isAll ? filters.size === 0 : filters.has(filter.id);
               return (
                 <Pressable
                   key={filter.id}
                   accessibilityRole="button"
-                  accessibilityState={{ selected: isAll ? filters.size === 0 : isActive }}
-                  onPress={() => handleToggleFilter(filter.id as EventCategory | 'all')}
+                  accessibilityState={{ selected: isActive }}
+                  onPress={() => handleToggleFilter(filter.id)}
                   style={({ pressed }) => [
                     styles.chip,
-                    (isAll ? filters.size === 0 : isActive) && styles.chipActive,
+                    isActive && styles.chipActive,
                     pressed && { opacity: 0.85 },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.chipLabel,
-                      (isAll ? filters.size === 0 : isActive) && styles.chipLabelActive,
-                    ]}
-                  >
+                  <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                     {filter.label}
                   </Text>
                 </Pressable>
@@ -843,49 +976,16 @@ const ExploreScreen = () => {
           <View style={styles.resultsColumn}>
             {results.map((event) => (
               <EventResultCard
-                key={event.id}
+                key={event.eventId}
                 event={event}
-                onOpenDetail={() => handleOpenDetail(event.id)}
+                onOpenDetail={() => handleOpenDetail(event.eventId)}
                 styles={styles}
                 theme={theme}
               />
             ))}
-            {results.length === 0 && (
+            {!digestLoading && results.length === 0 ? (
               <Text style={styles.helperText}>No moments yet—adjust filters or try another date.</Text>
-            )}
-          </View>
-
-          <View style={styles.collectionsSurface}>
-            <Text style={styles.sectionTitle}>Collections</Text>
-            <PeekCarousel
-              data={EVENT_COLLECTIONS}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => handleOpenDetail(item.eventIds[0])}
-                  style={({ pressed }) => [styles.collectionCard, pressed && { opacity: 0.92 }]}
-                >
-                  <Image source={item.image} style={StyleSheet.absoluteFill} contentFit="cover" />
-                  <Image
-                    pointerEvents="none"
-                    source={createLinearGradientSource(
-                      [
-                        { offset: 0, color: 'rgba(12, 10, 6, 0.2)' },
-                        { offset: 100, color: 'rgba(12, 10, 6, 0.65)' },
-                      ],
-                      { x1: 0.5, y1: 0, x2: 0.5, y2: 1 }
-                    )}
-                    style={StyleSheet.absoluteFill}
-                    contentFit="cover"
-                  />
-                  <View style={styles.collectionOverlay}>
-                    <Text style={styles.collectionTitle}>{item.title}</Text>
-                    <Text style={styles.collectionSummary}>{item.summary}</Text>
-                  </View>
-                </Pressable>
-              )}
-            />
+            ) : null}
           </View>
         </ScrollView>
       </View>
@@ -894,8 +994,8 @@ const ExploreScreen = () => {
         visible={calendarVisible}
         selectedDate={selectedDate}
         highlightedDates={highlightedDates}
-        onSelect={setSelectedDate}
         onClose={() => setCalendarVisible(false)}
+        onSelect={(date) => setSelectedDate(date)}
       />
     </SafeAreaView>
   );

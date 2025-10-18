@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   Linking,
   Platform,
@@ -9,28 +9,32 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
+import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { getEventById, heroEvent, type EventRecord } from '@/constants/events';
+import { getEventById, heroEvent } from '@/constants/events';
+import { formatCategoryLabel, formatEraLabel } from '@/constants/personalization';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
+import { useEventContent } from '@/hooks/use-event-content';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import { createLinearGradientSource } from '@/utils/gradient';
+import { getImageUri } from '@/utils/image-source';
+import {
+  buildEventSourceLinks,
+  getEventImageUri,
+  getEventLocation,
+  getEventSummary,
+  getEventTitle,
+  getEventYearLabel,
+  selectPrimaryPage,
+} from '@/utils/event-presentation';
 
 const reactions = [
   { id: 'appreciate' as const, emoji: '👍', label: 'Appreciate' },
   { id: 'insight' as const, emoji: '💡', label: 'Insight' },
 ];
-
-const shareEvent = async (event: EventRecord) => {
-  try {
-    await Share.share({ title: event.title, message: `${event.title} — ${event.summary}` });
-  } catch (error) {
-    console.error('Share failed', error);
-  }
-};
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography } = theme;
@@ -243,10 +247,69 @@ const EventDetailScreen = () => {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
-  const event = params.id ? getEventById(params.id) : heroEvent;
+  const rawId = params.id;
+  const eventIdParam = Array.isArray(rawId) ? rawId[0] : rawId ?? null;
+  const staticEvent = useMemo(() => (eventIdParam ? getEventById(eventIdParam) : null), [eventIdParam]);
+  const { event: fetchedEvent, loading: remoteLoading, error: remoteError } = useEventContent(eventIdParam);
+  const fallbackImageSource = staticEvent?.image ?? heroEvent.image;
+  const dynamicImageUri = fetchedEvent ? getEventImageUri(fetchedEvent) : undefined;
+  const heroImageSource = dynamicImageUri ? { uri: dynamicImageUri } : fallbackImageSource;
+  const heroImageUri = useMemo(
+    () => (dynamicImageUri ? dynamicImageUri : getImageUri(fallbackImageSource)),
+    [dynamicImageUri, fallbackImageSource]
+  );
+  const displayEventId = fetchedEvent?.eventId ?? staticEvent?.id ?? eventIdParam ?? heroEvent.id;
+  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(displayEventId);
+  const title = fetchedEvent ? getEventTitle(fetchedEvent) : staticEvent?.title ?? heroEvent.title;
+  const summary = fetchedEvent ? getEventSummary(fetchedEvent) : staticEvent?.summary ?? heroEvent.summary;
+  const yearBadge = fetchedEvent ? getEventYearLabel(fetchedEvent) : staticEvent?.year ?? '';
+  const locationText = fetchedEvent ? getEventLocation(fetchedEvent) : staticEvent?.location ?? '';
+  const eraLabel = fetchedEvent?.era ? formatEraLabel(fetchedEvent.era) : undefined;
+  const categoryLabels = fetchedEvent
+    ? (fetchedEvent.categories ?? []).map((category) => formatCategoryLabel(category))
+    : (staticEvent?.categories ?? []).map((category) =>
+        category
+          .split('-')
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' ')
+      );
+  const heroMetaParts: string[] = [];
+  if (locationText) {
+    heroMetaParts.push(locationText);
+  }
+  if (eraLabel) {
+    heroMetaParts.push(eraLabel);
+  }
+  if (categoryLabels.length > 0) {
+    heroMetaParts.push(categoryLabels.join(', '));
+  }
+  const heroMeta = heroMetaParts.join(' • ');
+  const detailParagraphs = fetchedEvent
+    ? (() => {
+        const paragraphs: string[] = [];
+        const primaryPage = selectPrimaryPage(fetchedEvent);
+        if (primaryPage?.extract) {
+          paragraphs.push(primaryPage.extract);
+        } else if (fetchedEvent.text) {
+          paragraphs.push(fetchedEvent.text);
+        }
+        return paragraphs;
+      })()
+    : staticEvent?.detail
+      ? [staticEvent.detail]
+      : [];
+  const whyItMatters = staticEvent?.whyItMatters;
+  const sources = fetchedEvent ? buildEventSourceLinks(fetchedEvent) : staticEvent?.sources ?? [];
+  const shareTitle = title;
+  const shareSummary = summary;
+  const hasEvent = Boolean(fetchedEvent || staticEvent);
 
-  const fallback = !event;
-  const engagement = useEventEngagement(event?.id ?? '');
+  useEffect(() => {
+    if (remoteError) {
+      console.error('Failed to load event content', remoteError);
+    }
+  }, [remoteError]);
+
   const heroOverlay = useMemo(
     () =>
       createLinearGradientSource(
@@ -259,7 +322,42 @@ const EventDetailScreen = () => {
     []
   );
 
-  if (fallback || !event) {
+  const handleHeroImageLoad = useCallback(
+    (loadEvent: ImageLoadEventData) => {
+      console.log('[EventDetail] hero image loaded', {
+        eventId: displayEventId,
+        uri: heroImageUri,
+        resolvedUrl: loadEvent.source?.url,
+        cacheType: loadEvent.cacheType,
+        width: loadEvent.source?.width,
+        height: loadEvent.source?.height,
+      });
+    },
+    [displayEventId, heroImageUri]
+  );
+
+  const handleHeroImageError = useCallback(
+    (errorEvent: ImageErrorEventData) => {
+      console.warn('[EventDetail] hero image failed to load', {
+        eventId: displayEventId,
+        uri: heroImageUri,
+        error: errorEvent.error,
+      });
+    },
+    [displayEventId, heroImageUri]
+  );
+
+  if (!hasEvent && remoteLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.missingSurface}>
+          <Text style={styles.heroTitle}>Loading story…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!hasEvent && !remoteLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.missingSurface}>
@@ -276,7 +374,13 @@ const EventDetailScreen = () => {
     );
   }
 
-  const { isSaved, reaction, toggleReaction, toggleSave } = engagement;
+  const handleShare = async () => {
+    try {
+      await Share.share({ title: shareTitle, message: `${shareTitle} — ${shareSummary}` });
+    } catch (error) {
+      console.error('Share failed', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -284,7 +388,14 @@ const EventDetailScreen = () => {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.heroHeader}>
             <View style={styles.heroMedia}>
-              <Image source={event.image} style={styles.heroImage} contentFit="cover" transition={200} />
+              <Image
+                source={heroImageSource}
+                style={styles.heroImage}
+                contentFit="cover"
+                transition={200}
+                onLoad={handleHeroImageLoad}
+                onError={handleHeroImageError}
+              />
               <Image
                 pointerEvents="none"
                 source={heroOverlay}
@@ -302,7 +413,7 @@ const EventDetailScreen = () => {
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => shareEvent(event)}
+                  onPress={handleShare}
                   style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
                 >
                   <IconSymbol name="square.and.arrow.up" size={18} color="#fff" />
@@ -310,10 +421,10 @@ const EventDetailScreen = () => {
               </View>
             </View>
             <View style={styles.heroBody}>
-              <Text style={styles.heroBadge}>{event.year}</Text>
-              <Text style={styles.heroTitle}>{event.title}</Text>
-              <Text style={styles.heroSummary}>{event.summary}</Text>
-              <Text style={styles.heroMeta}>{event.location}</Text>
+              {yearBadge ? <Text style={styles.heroBadge}>{yearBadge}</Text> : null}
+              <Text style={styles.heroTitle}>{title}</Text>
+              <Text style={styles.heroSummary}>{summary}</Text>
+              {heroMeta ? <Text style={styles.heroMeta}>{heroMeta}</Text> : null}
 
               <View style={styles.engagementRow}>
                 <View style={styles.reactionGroup}>
@@ -363,7 +474,7 @@ const EventDetailScreen = () => {
 
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => shareEvent(event)}
+                    onPress={handleShare}
                     style={({ pressed }) => [styles.actionButton, pressed && { opacity: 0.85 }]}
                   >
                     <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
@@ -375,31 +486,39 @@ const EventDetailScreen = () => {
           </View>
 
           <View style={styles.contentSection}>
-            <Text style={styles.paragraph}>{event.detail}</Text>
+            {(detailParagraphs.length > 0 ? detailParagraphs : [summary]).map((paragraph, index) => (
+              <Text key={`detail-${index}`} style={styles.paragraph}>
+                {paragraph}
+              </Text>
+            ))}
 
-            {event.whyItMatters ? (
+            {whyItMatters ? (
               <View style={styles.callout}>
                 <Text style={styles.calloutLabel}>Why you’re seeing this</Text>
-                <Text style={styles.calloutBody}>{event.whyItMatters}</Text>
+                <Text style={styles.calloutBody}>{whyItMatters}</Text>
               </View>
             ) : null}
 
-            <Text style={styles.secondaryCopy}>Sources</Text>
-            <View style={styles.sourceList}>
-              {event.sources.map((source) => (
-                <View key={source.url} style={styles.sourceRow}>
-                  <IconSymbol name="chevron.right" size={16} color={theme.colors.textSecondary} />
-                  <Pressable
-                    accessibilityRole="link"
-                    onPress={() => {
-                      void Linking.openURL(source.url);
-                    }}
-                  >
-                    <Text style={styles.sourceLink}>{source.label}</Text>
-                  </Pressable>
+            {sources.length > 0 ? (
+              <>
+                <Text style={styles.secondaryCopy}>Sources</Text>
+                <View style={styles.sourceList}>
+                  {sources.map((source) => (
+                    <View key={source.url} style={styles.sourceRow}>
+                      <IconSymbol name="chevron.right" size={16} color={theme.colors.textSecondary} />
+                      <Pressable
+                        accessibilityRole="link"
+                        onPress={() => {
+                          void Linking.openURL(source.url);
+                        }}
+                      >
+                        <Text style={styles.sourceLink}>{source.label}</Text>
+                      </Pressable>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              </>
+            ) : null}
           </View>
         </ScrollView>
       </View>

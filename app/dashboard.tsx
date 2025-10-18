@@ -13,14 +13,26 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { Image, type ImageSource } from 'expo-image';
+import {
+  Image,
+  type ImageErrorEventData,
+  type ImageLoadEventData,
+  type ImageSource,
+} from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type {
+  ImageErrorEventData as RNImageErrorEventData,
+  ImageLoadEventData as RNImageLoadEventData,
+  NativeSyntheticEvent,
+} from 'react-native';
 
 import { useUserContext } from '@/contexts/user-context';
 import { useAppTheme } from '@/theme';
 import type { ThemeDefinition } from '@/theme/tokens';
 import { createLinearGradientSource } from '@/utils/gradient';
+import { buildWikimediaFileUrl } from '@/utils/wikimedia';
+import { getImageUri } from '@/utils/image-source';
 
 type TimelineFilter = 'today' | 'for-you' | 'archives';
 
@@ -55,7 +67,7 @@ const HERO_MOMENT: {
   summary: "Neil Armstrong's first step expands humanity's horizon.",
   meta: 'Sea of Tranquility, Moon',
   image: {
-    uri: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Neil_Armstrong_pose.jpg',
+    uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg'),
   },
 };
 
@@ -420,8 +432,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         'Neil Armstrong and Buzz Aldrin step onto the lunar surface, opening a new era of exploration.',
       location: 'Sea of Tranquility, Moon',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Aldrin_Apollo_11_original.jpg/640px-Aldrin_Apollo_11_original.jpg',
+      imageUri: buildWikimediaFileUrl('File:Aldrin_Apollo_11_original.jpg', { width: 640 }),
     },
     {
       id: 'printing-press',
@@ -430,8 +441,10 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "Johannes Gutenberg's Bible accelerates book production and carries ideas across continents.",
       location: 'Mainz, Holy Roman Empire',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg/640px-Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg',
+      imageUri: buildWikimediaFileUrl(
+        'File:Gutenberg_Bible,_Lenox_Copy,_New_York_Public_Library,_2009._Pic_01.jpg',
+        { width: 640 }
+      ),
     },
     {
       id: 'rosa-parks',
@@ -440,7 +453,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "Rosa Parks refuses to surrender her seat, igniting the Montgomery Bus Boycott and fuelling the civil rights movement.",
       location: 'Montgomery, Alabama',
-      imageUri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Rosaparks_bus.jpg/640px-Rosaparks_bus.jpg',
+      imageUri: buildWikimediaFileUrl('File:Rosaparks_bus.jpg', { width: 640 }),
     },
   ],
   'for-you': [
@@ -451,8 +464,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "Marie and Pierre Curie are honoured for their research into radioactivity, boosting women's visibility in science.",
       location: 'Stockholm, Sweden',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Marie_Curie_c1920.jpg/640px-Marie_Curie_c1920.jpg',
+      imageUri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg', { width: 640 }),
     },
     {
       id: 'istanbul-convention',
@@ -461,8 +473,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "The Montreux agreement strengthens Turkey's control of the straits and reshapes Black Sea balance.",
       location: 'Montreux, Switzerland',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Montreux_Palace.jpg/640px-Montreux_Palace.jpg',
+      imageUri: buildWikimediaFileUrl('File:Montreux_Palace.jpg', { width: 640 }),
     },
     {
       id: 'voyager-golden',
@@ -471,8 +482,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "Earth's sounds are etched onto the Voyager probes, sending a cosmic greeting to future listeners.",
       location: 'Cape Canaveral, USA',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Voyager_Golden_Record.jpg/640px-Voyager_Golden_Record.jpg',
+      imageUri: buildWikimediaFileUrl('File:Voyager_Golden_Record.jpg', { width: 640 }),
     },
   ],
   archives: [
@@ -483,8 +493,10 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "English barons force the charter that limits royal power, laying a cornerstone for modern law.",
       location: 'Runnymede, England',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg/640px-Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg',
+      imageUri: buildWikimediaFileUrl(
+        'File:Magna_Carta_(British_Library_Cotton_MS_Augustus_II.106).jpg',
+        { width: 640 }
+      ),
     },
     {
       id: 'hagia-sophia',
@@ -493,8 +505,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "Emperor Justinian proclaims 'Solomon, I have surpassed you' as Hagia Sophia crowns Byzantine architecture.",
       location: 'Constantinople',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Hagia_Sophia_Mars_2013.jpg/640px-Hagia_Sophia_Mars_2013.jpg',
+      imageUri: buildWikimediaFileUrl('File:Hagia_Sophia_Mars_2013.jpg', { width: 640 }),
     },
     {
       id: 'catalhoyuk',
@@ -503,8 +514,7 @@ const EVENT_LIBRARY: Record<TimelineFilter, EventCard[]> = {
       summary:
         "Frescoes from one of Anatolia's earliest settlements reveal the rituals of a Neolithic community.",
       location: 'Konya Plain, Anatolia',
-      imageUri:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Replica_of_a_Catalh%C3%B6y%C3%BCk_house.jpg/640px-Replica_of_a_Catalh%C3%B6y%C3%BCk_house.jpg',
+      imageUri: buildWikimediaFileUrl('File:Replica_of_a_Catalh%C3%B6y%C3%BCk_house.jpg', { width: 640 }),
     },
   ],
 };
@@ -577,6 +587,30 @@ const DashboardScreen = () => {
       ),
     []
   );
+  const heroImageUri = useMemo(() => getImageUri(HERO_MOMENT.image), []);
+
+  const handleHeroImageLoad = useCallback(
+    (loadEvent: ImageLoadEventData) => {
+      console.log('[Dashboard] hero image loaded', {
+        uri: heroImageUri,
+        resolvedUrl: loadEvent.source?.url,
+        cacheType: loadEvent.cacheType,
+        width: loadEvent.source?.width,
+        height: loadEvent.source?.height,
+      });
+    },
+    [heroImageUri]
+  );
+
+  const handleHeroImageError = useCallback(
+    (errorEvent: ImageErrorEventData) => {
+      console.warn('[Dashboard] hero image failed to load', {
+        uri: heroImageUri,
+        error: errorEvent.error,
+      });
+    },
+    [heroImageUri]
+  );
 
   const activeCards = useMemo(() => EVENT_LIBRARY[activeFilter], [activeFilter]);
   const activeCardsLength = activeCards.length;
@@ -620,7 +654,28 @@ const DashboardScreen = () => {
           }}
         >
           <View style={styles.cardWrapper}>
-            <ImageBackground source={{ uri: item.imageUri }} style={styles.cardImage} resizeMode="cover">
+            <ImageBackground
+              source={{ uri: item.imageUri }}
+              style={styles.cardImage}
+              resizeMode="cover"
+              onLoad={(loadEvent: NativeSyntheticEvent<RNImageLoadEventData>) => {
+                const { width, height, url } = loadEvent.nativeEvent?.source ?? {};
+                console.log('[Dashboard] timeline card image loaded', {
+                  cardId: item.id,
+                  uri: item.imageUri,
+                  resolvedUrl: url,
+                  width,
+                  height,
+                });
+              }}
+              onError={(errorEvent: NativeSyntheticEvent<RNImageErrorEventData>) => {
+                console.warn('[Dashboard] timeline card image failed to load', {
+                  cardId: item.id,
+                  uri: item.imageUri,
+                  error: errorEvent.nativeEvent?.error,
+                });
+              }}
+            >
               <View style={styles.cardImageOverlay}>
                 <View style={styles.cardYearBadge}>
                   <Text style={styles.cardYearText}>{item.year}</Text>
@@ -671,6 +726,8 @@ const DashboardScreen = () => {
                 style={styles.heroImage}
                 contentFit="cover"
                 transition={200}
+                onLoad={handleHeroImageLoad}
+                onError={handleHeroImageError}
               />
               <Image
                 pointerEvents="none"

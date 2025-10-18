@@ -1,14 +1,27 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
+import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { heroEvent } from '@/constants/events';
+import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement, type ReactionType } from '@/hooks/use-event-engagement';
+import { useUserContext } from '@/contexts/user-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
+import type { FirestoreEventDocument } from '@/types/events';
+import { getDateParts } from '@/utils/dates';
 import { createLinearGradientSource } from '@/utils/gradient';
+import { getImageUri } from '@/utils/image-source';
+import {
+  getEventImageUri,
+  getEventLocation,
+  getEventMeta,
+  getEventSummary,
+  getEventTitle,
+  getEventYearLabel,
+} from '@/utils/event-presentation';
 
 const reactions: { id: ReactionType; emoji: string; label: string }[] = [
   { id: 'appreciate', emoji: '👍', label: 'Appreciate' },
@@ -208,14 +221,56 @@ const buildStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
+    sectionHelper: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+    },
   });
+};
+
+const selectPreferredDigestEvent = (
+  events: FirestoreEventDocument[],
+  preferredCategories: string[] | undefined,
+  preferredEras: string[] | undefined
+): FirestoreEventDocument | null => {
+  if (events.length === 0) {
+    return null;
+  }
+
+  const categoryMatches =
+    preferredCategories && preferredCategories.length > 0
+      ? events.filter((event) => {
+          const categories = event.categories ?? [];
+          return categories.some((category) => preferredCategories.includes(category));
+        })
+      : events;
+
+  const eraMatches =
+    preferredEras && preferredEras.length > 0
+      ? categoryMatches.filter((event) => event.era && preferredEras.includes(event.era))
+      : categoryMatches;
+
+  return eraMatches[0] ?? categoryMatches[0] ?? events[0] ?? null;
 };
 
 const HomeScreen = () => {
   const router = useRouter();
+  const { profile } = useUserContext();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
-  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(heroEvent.id);
+  const today = useMemo(() => getDateParts(new Date(), { timeZone: profile?.timezone }), [profile?.timezone]);
+  const {
+    events: digestEvents,
+    loading: digestLoading,
+    error: digestError,
+  } = useDailyDigestEvents({ month: today.month, day: today.day });
+  const preferredEvent = useMemo(
+    () => selectPreferredDigestEvent(digestEvents, profile?.categories, profile?.eras),
+    [digestEvents, profile?.categories, profile?.eras]
+  );
+  const heroIdentifier = preferredEvent?.eventId ?? heroEvent.id;
+  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(heroIdentifier);
   const heroGradient = useMemo(
     () =>
       createLinearGradientSource(
@@ -227,16 +282,65 @@ const HomeScreen = () => {
       ),
     []
   );
+  const staticHeroImageUri = useMemo(() => getImageUri(heroEvent.image), []);
+  const dynamicHeroImageUri = preferredEvent ? getEventImageUri(preferredEvent) : undefined;
+  const heroImageSource = dynamicHeroImageUri ? { uri: dynamicHeroImageUri } : heroEvent.image;
+  const heroImageUri = dynamicHeroImageUri ?? staticHeroImageUri;
+  const heroYear = preferredEvent ? getEventYearLabel(preferredEvent) : heroEvent.year;
+  const heroTitle = preferredEvent ? getEventTitle(preferredEvent) : heroEvent.title;
+  const heroSummary = preferredEvent ? getEventSummary(preferredEvent) : heroEvent.summary;
+  const heroLocation = preferredEvent ? getEventLocation(preferredEvent) : heroEvent.location;
+  const heroMeta = preferredEvent
+    ? heroLocation || getEventMeta(preferredEvent)
+    : digestLoading
+      ? "Loading today's story…"
+      : heroEvent.location;
+  const shareTitle = heroTitle;
+  const shareSummary = heroSummary;
+  const statusMessage = digestLoading
+    ? "Curating today's picks…"
+    : digestError
+      ? 'Showing a highlight while we refresh new stories.'
+      : undefined;
+
+  useEffect(() => {
+    if (digestError) {
+      console.error('Failed to load daily digest events', digestError);
+    }
+  }, [digestError]);
+
+  const handleHeroImageLoad = useCallback(
+    (event: ImageLoadEventData) => {
+      console.log('[Home] hero image loaded', {
+        uri: heroImageUri,
+        resolvedUrl: event.source?.url,
+        cacheType: event.cacheType,
+        width: event.source?.width,
+        height: event.source?.height,
+      });
+    },
+    [heroImageUri]
+  );
+
+  const handleHeroImageError = useCallback(
+    (event: ImageErrorEventData) => {
+      console.warn('[Home] hero image failed to load', {
+        uri: heroImageUri,
+        error: event.error,
+      });
+    },
+    [heroImageUri]
+  );
 
   const handleOpenDetail = () => {
-    router.push({ pathname: '/event/[id]', params: { id: heroEvent.id } });
+    router.push({ pathname: '/event/[id]', params: { id: heroIdentifier } });
   };
 
   const handleShare = async () => {
     try {
       await Share.share({
-        title: heroEvent.title,
-        message: `${heroEvent.title} — ${heroEvent.summary}`,
+        title: shareTitle,
+        message: `${shareTitle} — ${shareSummary}`,
       });
     } catch (error) {
       console.error('Share failed', error);
@@ -252,14 +356,22 @@ const HomeScreen = () => {
           alwaysBounceVertical={false}
           overScrollMode="never"
           showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>Today’s Moment</Text>
-          </View>
+      >
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionLabel}>Today’s Moment</Text>
+          {statusMessage ? <Text style={styles.sectionHelper}>{statusMessage}</Text> : null}
+        </View>
 
           <Pressable accessibilityRole="button" onPress={handleOpenDetail} style={styles.heroCard}>
             <View pointerEvents="none" style={styles.heroMedia}>
-              <Image source={heroEvent.image} style={styles.heroImage} contentFit="cover" transition={180} />
+              <Image
+                source={heroImageSource}
+                style={styles.heroImage}
+                contentFit="cover"
+                transition={180}
+                onLoad={handleHeroImageLoad}
+                onError={handleHeroImageError}
+              />
               <Image
                 pointerEvents="none"
                 source={heroGradient}
@@ -269,10 +381,10 @@ const HomeScreen = () => {
             </View>
 
             <View style={styles.heroBody}>
-              <Text style={styles.yearPill}>{heroEvent.year}</Text>
-              <Text style={styles.heroTitle}>{heroEvent.title}</Text>
-              <Text style={styles.heroSummary}>{heroEvent.summary}</Text>
-              <Text style={styles.heroMeta}>{heroEvent.location}</Text>
+              <Text style={styles.yearPill}>{heroYear}</Text>
+              <Text style={styles.heroTitle}>{heroTitle}</Text>
+              <Text style={styles.heroSummary}>{heroSummary}</Text>
+              <Text style={styles.heroMeta}>{heroMeta}</Text>
 
               <View style={styles.actionsRow}>
                 <Pressable

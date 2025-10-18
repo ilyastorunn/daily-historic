@@ -103,6 +103,7 @@
 1. Check whether the `event.pages[].thumbnail` or `originalimage` fields already
    provide a suitable asset. Validate size/aspect ratio and license data.
    - ✅ Automated via `ensureMediaForEvent` in `scripts/ingest/media.ts`.
+   > **Important:** When the client shifts to using Firestore-backed data, persist and serve the canonical `selectedMedia.sourceUrl` (or `originalimage.source`) from the ingestion pipeline. Avoid hard-coding Commons filenames in the app; instead, rely on ingestion output or helper functions that build `Special:FilePath` URLs so new daily content continues to render without manual updates.
 2. If missing, query Commons Search:
    `https://api.wikimedia.org/core/v1/commons/search/title?q={query}&limit=10`.
    Use the event title or participant names as the query string.

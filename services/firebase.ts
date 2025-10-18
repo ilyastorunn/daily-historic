@@ -7,3 +7,5 @@ export const firebaseFirestore = firestore();
 export const firebaseFieldValue = firestore.FieldValue;
 
 export const USERS_COLLECTION = 'Users';
+export const CONTENT_EVENTS_COLLECTION = 'contentEvents';
+export const DAILY_DIGESTS_COLLECTION = 'dailyDigests';

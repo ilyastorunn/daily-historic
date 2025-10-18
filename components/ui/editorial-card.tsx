@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   GestureResponderEvent,
   Platform,
@@ -9,9 +9,15 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Image, type ImageSource } from 'expo-image';
+import {
+  Image,
+  type ImageErrorEventData,
+  type ImageLoadEventData,
+  type ImageSource,
+} from 'expo-image';
 
 import { useAppTheme, type ThemeDefinition } from '@/theme';
+import { getImageUri } from '@/utils/image-source';
 
 export type EditorialCardAction = {
   label: string;
@@ -166,11 +172,35 @@ export const EditorialCard: React.FC<EditorialCardProps> = ({
 }) => {
   const theme = useAppTheme();
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
+  const imageUri = useMemo(() => getImageUri(imageSource), [imageSource]);
 
   const handleActionPress = (callback: () => void) => (event: GestureResponderEvent) => {
     event.stopPropagation();
     callback();
   };
+
+  const handleImageLoad = useCallback(
+    (event: ImageLoadEventData) => {
+      console.log('[EditorialCard] image loaded', {
+        uri: imageUri,
+        resolvedUrl: event.source?.url,
+        cacheType: event.cacheType,
+        width: event.source?.width,
+        height: event.source?.height,
+      });
+    },
+    [imageUri]
+  );
+
+  const handleImageError = useCallback(
+    (event: ImageErrorEventData) => {
+      console.warn('[EditorialCard] image failed to load', {
+        uri: imageUri,
+        error: event.error,
+      });
+    },
+    [imageUri]
+  );
 
   const renderActions = () => {
     if (!actions || actions.length === 0) {
@@ -230,6 +260,8 @@ export const EditorialCard: React.FC<EditorialCardProps> = ({
             style={themedStyles.media}
             contentFit="cover"
             transition={150}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
           />
           <Image
             source={OVERLAY_GRADIENT}
