@@ -8,9 +8,52 @@ import {
 import type { DailyDigestDocument, FirestoreEventDocument } from '@/types/events';
 
 const toTwoDigits = (value: number) => value.toString().padStart(2, '0');
+const toFourDigits = (value: number) => value.toString().padStart(4, '0');
+
+const buildLegacyDigestDocumentId = (month: number, day: number) => {
+  return `digest:onthisday:selected:${toTwoDigits(month)}-${toTwoDigits(day)}`;
+};
+
+const buildYearAwareDigestDocumentId = (year: number, month: number, day: number) => {
+  return `digest:onthisday:selected:${toFourDigits(year)}-${toTwoDigits(month)}-${toTwoDigits(day)}`;
+};
+
+const buildIsoDate = (year: number, month: number, day: number) => {
+  return `${toFourDigits(year)}-${toTwoDigits(month)}-${toTwoDigits(day)}`;
+};
+
+const extractEventIds = (
+  digest: DailyDigestDocument | (DailyDigestDocument & { entries?: unknown }) | null
+) => {
+  if (!digest) {
+    return [];
+  }
+
+  if (Array.isArray(digest.eventIds)) {
+    return digest.eventIds.filter((id): id is string => typeof id === 'string' && id.length > 0);
+  }
+
+  const entries = (digest as { entries?: unknown }).entries;
+  if (Array.isArray(entries)) {
+    return entries
+      .map((entry) => {
+        if (typeof entry === 'string') {
+          return entry;
+        }
+        if (entry && typeof entry === 'object' && 'eventId' in entry) {
+          const eventId = (entry as { eventId?: unknown }).eventId;
+          return typeof eventId === 'string' ? eventId : null;
+        }
+        return null;
+      })
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
+  }
+
+  return [];
+};
 
 export const buildDigestDocumentId = (month: number, day: number) => {
-  return `digest:onthisday:selected:${toTwoDigits(month)}-${toTwoDigits(day)}`;
+  return buildLegacyDigestDocumentId(month, day);
 };
 
 const mapEventSnapshot = (
@@ -51,23 +94,64 @@ export const fetchEventsByIds = async (ids: string[]): Promise<FirestoreEventDoc
 
 export const fetchDailyDigest = async (
   month: number,
-  day: number
+  day: number,
+  year?: number
 ): Promise<{ digest: DailyDigestDocument | null; events: FirestoreEventDocument[] }> => {
-  const digestId = buildDigestDocumentId(month, day);
-  const digestRef = firebaseFirestore.collection<DailyDigestDocument>(DAILY_DIGESTS_COLLECTION).doc(digestId);
-  const snapshot = await digestRef.get();
+  const digestCollection = firebaseFirestore.collection<DailyDigestDocument>(DAILY_DIGESTS_COLLECTION);
+  const numericYear = typeof year === 'number' && Number.isFinite(year) ? year : undefined;
+  const candidateIds: string[] = [];
 
-  if (!snapshot.exists) {
+  if (numericYear !== undefined) {
+    candidateIds.push(buildYearAwareDigestDocumentId(numericYear, month, day));
+  }
+  candidateIds.push(buildLegacyDigestDocumentId(month, day));
+
+  let resolvedSnapshot: FirebaseFirestoreTypes.DocumentSnapshot<DailyDigestDocument> | null = null;
+
+  for (const candidateId of candidateIds) {
+    const snapshot = await digestCollection.doc(candidateId).get();
+    if (snapshot.exists) {
+      resolvedSnapshot = snapshot;
+      break;
+    }
+  }
+
+  if (!resolvedSnapshot && numericYear !== undefined) {
+    const isoDate = buildIsoDate(numericYear, month, day);
+    const querySnapshot = await digestCollection.where('date', '==', isoDate).limit(1).get();
+    if (!querySnapshot.empty) {
+      resolvedSnapshot =
+        (querySnapshot.docs[0] as FirebaseFirestoreTypes.DocumentSnapshot<DailyDigestDocument>) ?? null;
+    }
+  }
+
+  if (!resolvedSnapshot) {
     return { digest: null, events: [] };
   }
 
-  const digest = snapshot.data() ?? null;
-  const eventIds = digest?.eventIds ?? [];
+  const digestData = resolvedSnapshot.data() ?? null;
+
+  if (!digestData) {
+    return { digest: null, events: [] };
+  }
+
+  const eventIds = extractEventIds(digestData);
 
   if (eventIds.length === 0) {
-    return { digest, events: [] };
+    const normalizedDigest: DailyDigestDocument = {
+      ...digestData,
+      digestId: digestData.digestId ?? resolvedSnapshot.id,
+      eventIds,
+    };
+    return { digest: normalizedDigest, events: [] };
   }
 
   const events = await fetchEventsByIds(eventIds);
-  return { digest, events };
+  const normalizedDigest: DailyDigestDocument = {
+    ...digestData,
+    digestId: digestData.digestId ?? resolvedSnapshot.id,
+    eventIds,
+  };
+
+  return { digest: normalizedDigest, events };
 };

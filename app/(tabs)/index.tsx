@@ -264,7 +264,7 @@ const HomeScreen = () => {
     events: digestEvents,
     loading: digestLoading,
     error: digestError,
-  } = useDailyDigestEvents({ month: today.month, day: today.day });
+  } = useDailyDigestEvents({ month: today.month, day: today.day, year: today.year });
   const preferredEvent = useMemo(
     () => selectPreferredDigestEvent(digestEvents, profile?.categories, profile?.eras),
     [digestEvents, profile?.categories, profile?.eras]

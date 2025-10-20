@@ -84,21 +84,35 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     }
 
     setProfileLoading(true);
-    const docRef = firebaseFirestore
-      .collection<UserDocument>(USERS_COLLECTION)
-      .doc(authUser.uid);
+    const docRef = firebaseFirestore.collection<UserDocument>(USERS_COLLECTION).doc(authUser.uid);
 
     const unsubscribe = docRef.onSnapshot(
       (snapshot) => {
         if (!snapshot.exists) {
           setProfile(null);
         } else {
-          const data = snapshot.data() as UserProfile;
-          setProfile({
-            ...data,
-            savedEventIds: Array.isArray(data.savedEventIds) ? data.savedEventIds : [],
-            reactions: data.reactions ?? {},
-          });
+          const data = snapshot.data();
+
+          if (!data) {
+            setProfile(null);
+          } else {
+            const savedEventIds = Array.isArray(data.savedEventIds) ? data.savedEventIds : [];
+            const reactions =
+              data.reactions && typeof data.reactions === 'object' ? data.reactions : {};
+            const categories = Array.isArray(data.categories) ? data.categories : [];
+            const eras = Array.isArray(data.eras) ? data.eras : [];
+            const categoriesSkipped =
+              typeof data.categoriesSkipped === 'boolean' ? data.categoriesSkipped : false;
+
+            setProfile({
+              ...(data as UserProfile),
+              categories,
+              eras,
+              savedEventIds,
+              reactions,
+              categoriesSkipped,
+            });
+          }
         }
         setError(null);
         setProfileLoading(false);
@@ -123,9 +137,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         throw new Error('Cannot complete onboarding without an authenticated user.');
       }
 
-      const docRef = firebaseFirestore
-        .collection<UserDocument>(USERS_COLLECTION)
-        .doc(authUser.uid);
+      const docRef = firebaseFirestore.collection<UserDocument>(USERS_COLLECTION).doc(authUser.uid);
 
       const serverTimestamp = firebaseFieldValue.serverTimestamp();
 
@@ -175,6 +187,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   );
 
   const signOut = useCallback(async () => {
+    if (!firebaseAuth.currentUser) {
+      setError(null);
+      return;
+    }
+
     try {
       await firebaseAuth.signOut();
       setError(null);

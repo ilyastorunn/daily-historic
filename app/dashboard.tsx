@@ -13,12 +13,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import {
-  Image,
-  type ImageErrorEventData,
-  type ImageLoadEventData,
-  type ImageSource,
-} from 'expo-image';
+import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type {
@@ -27,6 +22,9 @@ import type {
   NativeSyntheticEvent,
 } from 'react-native';
 
+import type { CategoryOption } from '@/contexts/onboarding-context';
+import { EVENT_LIBRARY as FEATURED_EVENT_LIBRARY, HERO_EVENT_ID } from '@/constants/events';
+import type { EventCategory, EventRecord } from '@/constants/events';
 import { useUserContext } from '@/contexts/user-context';
 import { useAppTheme } from '@/theme';
 import type { ThemeDefinition } from '@/theme/tokens';
@@ -55,22 +53,6 @@ const TIMELINE_OPTIONS: { id: TimelineFilter; label: string }[] = [
   { id: 'archives', label: 'Archive Highlights' },
 ];
 
-const HERO_MOMENT: {
-  badge: string;
-  title: string;
-  summary: string;
-  meta: string;
-  image: ImageSource;
-} = {
-  badge: '1969 · Today',
-  title: 'First footsteps on the Moon',
-  summary: "Neil Armstrong's first step expands humanity's horizon.",
-  meta: 'Sea of Tranquility, Moon',
-  image: {
-    uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg'),
-  },
-};
-
 const noop = () => undefined;
 
 const createHeroCopy = (displayName?: string) => {
@@ -87,6 +69,126 @@ const withOpacity = (hexColor: string, opacity: number) => {
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
+const EVENT_CATEGORY_KEYS: EventCategory[] = [
+  'science',
+  'culture',
+  'politics',
+  'innovation',
+  'art',
+  'human-rights',
+];
+
+const CATEGORY_TO_EVENT_CATEGORIES: Record<string, EventCategory[]> = {
+  'science-discovery': ['science', 'innovation'],
+  inventions: ['innovation', 'science'],
+  exploration: ['science', 'innovation', 'culture'],
+  'art-culture': ['art', 'culture'],
+  politics: ['politics'],
+  'civil-rights': ['human-rights', 'politics'],
+  'world-wars': ['politics', 'human-rights'],
+  'ancient-civilizations': ['culture', 'art'],
+  'natural-disasters': ['science', 'human-rights'],
+};
+
+for (const category of EVENT_CATEGORY_KEYS) {
+  if (!CATEGORY_TO_EVENT_CATEGORIES[category]) {
+    CATEGORY_TO_EVENT_CATEGORIES[category] = [category];
+  }
+}
+
+const DEFAULT_HERO_EVENT =
+  (FEATURED_EVENT_LIBRARY.find((event) => event.id === HERO_EVENT_ID) ?? FEATURED_EVENT_LIBRARY[0])!;
+
+const getSeededIndex = (length: number, seed: string) => {
+  if (length <= 0) {
+    return 0;
+  }
+
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) | 0;
+  }
+
+  return Math.abs(hash) % length;
+};
+
+const pickEventForDay = (events: EventRecord[], dayKey?: string, seedHint?: string): EventRecord => {
+  if (events.length === 0) {
+    return DEFAULT_HERO_EVENT;
+  }
+
+  const seed = `${dayKey ?? ''}:${seedHint ?? ''}:${events.map((event) => event.id).join('|')}`;
+  const selectedIndex = getSeededIndex(events.length, seed);
+
+  return events[selectedIndex];
+};
+
+const selectHeroEvent = (
+  preferredCategories: readonly (CategoryOption | string)[] | null | undefined,
+  categoriesSkipped?: boolean,
+  dayKey?: string,
+  seedHint?: string
+): EventRecord => {
+  if (FEATURED_EVENT_LIBRARY.length === 0) {
+    return DEFAULT_HERO_EVENT;
+  }
+
+  if (categoriesSkipped) {
+    return pickEventForDay(FEATURED_EVENT_LIBRARY, dayKey, seedHint);
+  }
+
+  const normalizedCategories = (preferredCategories ?? [])
+    .map((category) => category || '')
+    .filter((category): category is string => category.length > 0);
+
+  if (normalizedCategories.length === 0) {
+    return pickEventForDay(FEATURED_EVENT_LIBRARY, dayKey, seedHint);
+  }
+
+  if (normalizedCategories.includes('surprise')) {
+    return pickEventForDay(FEATURED_EVENT_LIBRARY, dayKey, seedHint);
+  }
+
+  const categoryWeights = new Map<EventCategory, number>();
+  const preferenceCount = normalizedCategories.length;
+
+  normalizedCategories.forEach((category, index) => {
+    const related = CATEGORY_TO_EVENT_CATEGORIES[category];
+    if (!related) {
+      return;
+    }
+
+    const weight = preferenceCount - index;
+    related.forEach((eventCategory) => {
+      categoryWeights.set(eventCategory, (categoryWeights.get(eventCategory) ?? 0) + weight);
+    });
+  });
+
+  if (categoryWeights.size === 0) {
+    return pickEventForDay(FEATURED_EVENT_LIBRARY, dayKey, seedHint);
+  }
+
+  const scoredEvents = FEATURED_EVENT_LIBRARY.map((event) => {
+    const score = event.categories.reduce((total, category) => {
+      return total + (categoryWeights.get(category) ?? 0);
+    }, 0);
+
+    return { event, score };
+  });
+
+  const viableEvents = scoredEvents.filter((entry) => entry.score > 0);
+  if (viableEvents.length === 0) {
+    return pickEventForDay(FEATURED_EVENT_LIBRARY, dayKey, seedHint);
+  }
+
+  const maxScore = Math.max(...viableEvents.map((entry) => entry.score));
+  const topEvents = viableEvents
+    .filter((entry) => entry.score === maxScore)
+    .map((entry) => entry.event);
+
+  return pickEventForDay(topEvents, dayKey, seedHint);
 };
 
 const buildStyles = (theme: ThemeDefinition) => {
@@ -528,7 +630,7 @@ const DashboardScreen = () => {
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { width } = useWindowDimensions();
 
-  const { profile, signOut } = useUserContext();
+  const { profile, authUser, signOut } = useUserContext();
   const [activeFilter, setActiveFilter] = useState<TimelineFilter>('today');
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const heroIntro = useRef(new Animated.Value(0)).current;
@@ -587,11 +689,19 @@ const DashboardScreen = () => {
       ),
     []
   );
-  const heroImageUri = useMemo(() => getImageUri(HERO_MOMENT.image), []);
+  const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const heroSeed = useMemo(() => profile?.uid ?? authUser?.uid ?? '', [profile?.uid, authUser?.uid]);
+  const heroEvent = useMemo(
+    () => selectHeroEvent(profile?.categories, profile?.categoriesSkipped, todayKey, heroSeed),
+    [profile?.categories, profile?.categoriesSkipped, todayKey, heroSeed]
+  );
+  const heroBadge = `${heroEvent.year} · Today`;
+  const heroImageUri = useMemo(() => getImageUri(heroEvent.image), [heroEvent]);
 
   const handleHeroImageLoad = useCallback(
     (loadEvent: ImageLoadEventData) => {
       console.log('[Dashboard] hero image loaded', {
+        eventId: heroEvent.id,
         uri: heroImageUri,
         resolvedUrl: loadEvent.source?.url,
         cacheType: loadEvent.cacheType,
@@ -599,18 +709,28 @@ const DashboardScreen = () => {
         height: loadEvent.source?.height,
       });
     },
-    [heroImageUri]
+    [heroEvent.id, heroImageUri]
   );
 
   const handleHeroImageError = useCallback(
     (errorEvent: ImageErrorEventData) => {
       console.warn('[Dashboard] hero image failed to load', {
+        eventId: heroEvent.id,
         uri: heroImageUri,
         error: errorEvent.error,
       });
     },
-    [heroImageUri]
+    [heroEvent.id, heroImageUri]
   );
+
+  useEffect(() => {
+    console.log('[Dashboard] hero selection', {
+      categories: profile?.categories,
+      categoriesSkipped: profile?.categoriesSkipped,
+      heroSeed,
+      heroEventId: heroEvent.id,
+    });
+  }, [heroEvent.id, heroSeed, profile?.categories, profile?.categoriesSkipped]);
 
   const activeCards = useMemo(() => EVENT_LIBRARY[activeFilter], [activeFilter]);
   const activeCardsLength = activeCards.length;
@@ -722,7 +842,7 @@ const DashboardScreen = () => {
                 contentFit="cover"
               />
               <Image
-                source={HERO_MOMENT.image}
+                source={heroEvent.image}
                 style={styles.heroImage}
                 contentFit="cover"
                 transition={200}
@@ -737,10 +857,10 @@ const DashboardScreen = () => {
               />
             </View>
             <View style={styles.heroMomentContent}>
-              <Text style={styles.heroMomentBadge}>{HERO_MOMENT.badge}</Text>
-              <Text style={styles.heroMomentTitle}>{HERO_MOMENT.title}</Text>
-              <Text style={styles.heroMomentSummary}>{HERO_MOMENT.summary}</Text>
-              <Text style={styles.heroMomentMeta}>{HERO_MOMENT.meta}</Text>
+              <Text style={styles.heroMomentBadge}>{heroBadge}</Text>
+              <Text style={styles.heroMomentTitle}>{heroEvent.title}</Text>
+              <Text style={styles.heroMomentSummary}>{heroEvent.summary}</Text>
+              <Text style={styles.heroMomentMeta}>{heroEvent.location}</Text>
 
               <View style={styles.heroActions}>
                 <Pressable

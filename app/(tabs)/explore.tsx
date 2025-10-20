@@ -62,7 +62,12 @@ type CalendarModalProps = {
   onSelect: (date: string) => void;
 };
 
-const toDateKey = (date: Date) => date.toISOString().slice(0, 10);
+const toDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const buildMonthMatrix = (pivot: Date) => {
   const year = pivot.getFullYear();
@@ -121,8 +126,8 @@ const CalendarModal = ({ visible, selectedDate, highlightedDates, onClose, onSel
         </View>
 
         <View style={styles.dayRow}>
-          {DAY_LABELS.map((day) => (
-            <Text key={day} style={styles.dayLabel}>
+          {DAY_LABELS.map((day, index) => (
+            <Text key={`${day}-${index}`} style={styles.dayLabel}>
               {day}
             </Text>
           ))}
@@ -721,7 +726,7 @@ const ExploreScreen = () => {
     digest,
     loading: digestLoading,
     error: digestError,
-  } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day });
+  } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day, year: activeDate.year });
 
   useEffect(() => {
     if (digestError) {

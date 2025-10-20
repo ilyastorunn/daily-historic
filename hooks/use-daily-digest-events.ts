@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { buildDevDailyDigest } from '@/constants/dev-digest';
 import { fetchDailyDigest } from '@/services/content';
+import { fetchWikimediaDailyDigest } from '@/services/wikimedia-digest';
 import type { DailyDigestDocument, FirestoreEventDocument } from '@/types/events';
 
 type UseDailyDigestEventsArgs = {
   month: number;
   day: number;
+  year?: number;
   enabled?: boolean;
 };
 
@@ -23,7 +26,7 @@ const createInitialState = (): UseDailyDigestEventsState => ({
   error: null,
 });
 
-export const useDailyDigestEvents = ({ month, day, enabled = true }: UseDailyDigestEventsArgs) => {
+export const useDailyDigestEvents = ({ month, day, year, enabled = true }: UseDailyDigestEventsArgs) => {
   const [state, setState] = useState<UseDailyDigestEventsState>(() => createInitialState());
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -32,6 +35,8 @@ export const useDailyDigestEvents = ({ month, day, enabled = true }: UseDailyDig
   }, []);
 
   useEffect(() => {
+    const normalizedYear = typeof year === 'number' && Number.isFinite(year) ? year : undefined;
+
     if (!enabled || !Number.isFinite(month) || !Number.isFinite(day) || month <= 0 || day <= 0) {
       setState((previous) => ({
         ...previous,
@@ -51,19 +56,69 @@ export const useDailyDigestEvents = ({ month, day, enabled = true }: UseDailyDig
 
     const load = async () => {
       try {
-        const result = await fetchDailyDigest(month, day);
+        const result = await fetchDailyDigest(month, day, normalizedYear);
         if (cancelled) {
           return;
         }
 
+        let resolvedEvents = result.events;
+        let resolvedDigest = result.digest;
+
+        if (!resolvedDigest || resolvedEvents.length === 0) {
+          try {
+            const wikimediaResult = await fetchWikimediaDailyDigest({ month, day });
+            if (cancelled) {
+              return;
+            }
+            if (wikimediaResult.digest && wikimediaResult.events.length > 0) {
+              resolvedEvents = wikimediaResult.events;
+              resolvedDigest = wikimediaResult.digest;
+            }
+          } catch (wikimediaError) {
+            console.warn('Falling back to local digest after Wikimedia fetch error', wikimediaError);
+          }
+        }
+
+        if (!resolvedDigest || resolvedEvents.length === 0) {
+          const fallback = buildDevDailyDigest(month, day);
+          if (fallback) {
+            resolvedEvents = fallback.events;
+            resolvedDigest = fallback.digest;
+          }
+        }
+
         setState({
           loading: false,
-          events: result.events,
-          digest: result.digest,
+          events: resolvedEvents,
+          digest: resolvedDigest,
           error: null,
         });
       } catch (error) {
         if (cancelled) {
+          return;
+        }
+        try {
+          const wikimediaResult = await fetchWikimediaDailyDigest({ month, day });
+          if (!cancelled && wikimediaResult.digest && wikimediaResult.events.length > 0) {
+            setState({
+              loading: false,
+              events: wikimediaResult.events,
+              digest: wikimediaResult.digest,
+              error: null,
+            });
+            return;
+          }
+        } catch (wikimediaError) {
+          console.warn('Wikimedia digest fetch failed after Firestore error', wikimediaError);
+        }
+        const fallback = buildDevDailyDigest(month, day);
+        if (fallback) {
+          setState({
+            loading: false,
+            events: fallback.events,
+            digest: fallback.digest,
+            error: null,
+          });
           return;
         }
         const resolvedError = error instanceof Error ? error : new Error('Failed to load daily digest');
@@ -81,7 +136,7 @@ export const useDailyDigestEvents = ({ month, day, enabled = true }: UseDailyDig
     return () => {
       cancelled = true;
     };
-  }, [month, day, enabled, reloadKey]);
+  }, [month, day, year, enabled, reloadKey]);
 
   return {
     ...state,
