@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
+import { getDevDigestEventById, isDevDigestEventId } from '@/constants/dev-digest';
 import { fetchEventsByIds } from '@/services/content';
+import { isWikimediaEventId, resolveWikimediaEventById } from '@/services/wikimedia-digest';
 import type { FirestoreEventDocument } from '@/types/events';
 
 type EventContentState = {
@@ -37,28 +39,39 @@ export const useEventContent = (eventId: string | null | undefined) => {
     }));
 
     const load = async () => {
+      let resolvedEvent: FirestoreEventDocument | null = null;
+      let resolvedError: Error | null = null;
+
       try {
         const events = await fetchEventsByIds([eventId]);
-        if (cancelled) {
-          return;
-        }
-
-        setState({
-          loading: false,
-          event: events[0] ?? null,
-          error: null,
-        });
+        resolvedEvent = events[0] ?? null;
       } catch (error) {
-        if (cancelled) {
-          return;
-        }
-        const resolvedError = error instanceof Error ? error : new Error('Failed to load event content');
-        setState({
-          loading: false,
-          event: null,
-          error: resolvedError,
-        });
+        resolvedError = error instanceof Error ? error : new Error('Failed to load event content');
       }
+
+      if (!resolvedEvent && isDevDigestEventId(eventId)) {
+        resolvedEvent = getDevDigestEventById(eventId);
+      }
+
+      if (!resolvedEvent && isWikimediaEventId(eventId)) {
+        try {
+          resolvedEvent = await resolveWikimediaEventById(eventId);
+        } catch (error) {
+          if (!resolvedError) {
+            resolvedError = error instanceof Error ? error : new Error('Failed to load event content');
+          }
+        }
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      setState({
+        loading: false,
+        event: resolvedEvent,
+        error: resolvedEvent ? null : resolvedError,
+      });
     };
 
     void load();

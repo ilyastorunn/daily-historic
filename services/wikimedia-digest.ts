@@ -117,6 +117,19 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
+const cloneFirestoreEvent = (event: FirestoreEventDocument): FirestoreEventDocument => ({
+  ...event,
+  categories: event.categories ? [...event.categories] : undefined,
+  tags: event.tags ? [...event.tags] : undefined,
+  relatedPages: event.relatedPages?.map((page) => ({
+    ...page,
+    thumbnails: page.thumbnails?.map((asset) => ({ ...asset })),
+    selectedMedia: page.selectedMedia ? { ...page.selectedMedia } : undefined,
+  })),
+  source: event.source ? { ...event.source } : undefined,
+  enrichment: event.enrichment ? { ...event.enrichment } : undefined,
+});
+
 type CategoryRule = {
   id: CategoryOption;
   patterns: RegExp[];
@@ -307,6 +320,8 @@ const buildEventId = (event: WikimediaEvent, month: number, day: number, index: 
   return `wikimedia:${toTwoDigits(month)}-${toTwoDigits(day)}:${slug || index}`;
 };
 
+const WIKIMEDIA_EVENT_ID_PATTERN = /^wikimedia:(\d{2})-(\d{2}):.+$/;
+
 export const fetchWikimediaDailyDigest = async ({
   month,
   day,
@@ -385,4 +400,27 @@ export const fetchWikimediaDailyDigest = async ({
   };
 
   return { digest, events: filteredEvents };
+};
+
+export const isWikimediaEventId = (eventId: string | null | undefined) =>
+  typeof eventId === 'string' && WIKIMEDIA_EVENT_ID_PATTERN.test(eventId);
+
+export const resolveWikimediaEventById = async (
+  eventId: string,
+  options: { signal?: AbortSignal; userAgent?: string } = {}
+): Promise<FirestoreEventDocument | null> => {
+  const match = eventId.match(WIKIMEDIA_EVENT_ID_PATTERN);
+  if (!match) {
+    return null;
+  }
+
+  const month = Number.parseInt(match[1], 10);
+  const day = Number.parseInt(match[2], 10);
+  if (!Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
+
+  const result = await fetchWikimediaDailyDigest({ month, day, ...options });
+  const target = result.events.find((event) => event.eventId === eventId);
+  return target ? cloneFirestoreEvent(target) : null;
 };

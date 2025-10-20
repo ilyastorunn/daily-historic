@@ -111,6 +111,21 @@ const DEV_DIGEST_EVENTS: FirestoreEventDocument[] = EVENT_LIBRARY.map((event, in
   normalizeEventRecord(event, index + 1)
 );
 
+const cloneFirestoreEvent = (event: FirestoreEventDocument): FirestoreEventDocument => {
+  return {
+    ...event,
+    categories: event.categories ? [...event.categories] : undefined,
+    tags: event.tags ? [...event.tags] : undefined,
+    relatedPages: event.relatedPages?.map((page) => ({
+      ...page,
+      thumbnails: page.thumbnails?.map((asset) => ({ ...asset })),
+      selectedMedia: page.selectedMedia ? { ...page.selectedMedia } : undefined,
+    })),
+    source: event.source ? { ...event.source } : undefined,
+    enrichment: event.enrichment ? { ...event.enrichment } : undefined,
+  };
+};
+
 const selectDevEventsForDate = (month: number, day: number) => {
   if (DEV_DIGEST_EVENTS.length === 0) {
     return [];
@@ -126,14 +141,7 @@ const selectDevEventsForDate = (month: number, day: number) => {
   for (let offset = 0; offset < maxEvents; offset += 1) {
     const index = (startIndex + offset) % DEV_DIGEST_EVENTS.length;
     const event = DEV_DIGEST_EVENTS[index];
-    events.push({
-      ...event,
-      relatedPages: event.relatedPages?.map((page) => ({
-        ...page,
-        thumbnails: page.thumbnails?.map((asset) => ({ ...asset })),
-        selectedMedia: page.selectedMedia ? { ...page.selectedMedia } : undefined,
-      })),
-    });
+    events.push(cloneFirestoreEvent(event));
   }
 
   return events;
@@ -159,3 +167,11 @@ export const buildDevDailyDigest = (
 
   return { digest, events };
 };
+
+export const getDevDigestEventById = (eventId: string): FirestoreEventDocument | null => {
+  const match = DEV_DIGEST_EVENTS.find((event) => event.eventId === eventId);
+  return match ? cloneFirestoreEvent(match) : null;
+};
+
+export const isDevDigestEventId = (eventId: string | null | undefined) =>
+  typeof eventId === 'string' && eventId.startsWith('dev-digest:');
