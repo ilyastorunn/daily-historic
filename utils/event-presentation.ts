@@ -98,8 +98,9 @@ export const buildEventSourceLinks = (event: FirestoreEventDocument): EventSourc
   const pages = event.relatedPages ?? [];
   return pages
     .map((page) => {
-      const label =
+      const rawLabel =
         page.displayTitle ?? page.canonicalTitle ?? page.normalizedTitle ?? page.desktopUrl ?? '';
+      const label = stripHtmlTags(rawLabel) ?? rawLabel;
       const url = page.desktopUrl ?? page.mobileUrl ?? '';
       if (!label || !url) {
         return null;
