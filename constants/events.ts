@@ -201,6 +201,24 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     },
     eventIds: ['women-suffrage-usa'],
   },
+  {
+    id: 'space-race',
+    title: 'Sprint to the Stars',
+    summary: 'Cold War rivalries that pushed human ingenuity beyond Earth.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Saturn_V.jpg'),
+    },
+    eventIds: ['apollo-11-first-footsteps'],
+  },
+  {
+    id: 'ancient-innovations',
+    title: 'Ancient Inventions',
+    summary: 'Engineering leaps that shaped early civilizations.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Antikythera_mechanism_(Replica)_01.jpg'),
+    },
+    eventIds: ['rosetta-stone-decode'],
+  },
 ];
 
 export const QUICK_FILTERS: { id: EventCategory | 'all'; label: string }[] = [

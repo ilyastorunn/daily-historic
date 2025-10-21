@@ -63,3 +63,20 @@ export const formatIsoDateLabel = (
 
   return formatter.format(date);
 };
+
+export const getIsoWeekKey = (date: Date, options: DatePartsOptions = {}) => {
+  const { timeZone } = options;
+  const parts = getDateParts(date, { timeZone });
+  const utcDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+
+  // ISO week starts on Monday. Adjust date to nearest Thursday.
+  const dayOfWeek = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayOfWeek);
+
+  const isoYear = utcDate.getUTCFullYear();
+  const firstThursday = new Date(Date.UTC(isoYear, 0, 4));
+  const weekNumber =
+    1 + Math.round((utcDate.getTime() - firstThursday.getTime()) / (7 * 24 * 60 * 60 * 1000));
+
+  return `${isoYear}-${toTwoDigits(weekNumber)}`;
+};

@@ -1,17 +1,33 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
+import { Image, type ImageErrorEventData, type ImageLoadEventData, type ImageSource } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 import { heroEvent } from '@/constants/events';
+import { PeekCarousel } from '@/components/ui/peek-carousel';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement, type ReactionType } from '@/hooks/use-event-engagement';
 import { useUserContext } from '@/contexts/user-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
-import { getDateParts } from '@/utils/dates';
+import { trackEvent } from '@/services/analytics';
+import { WeeklyCollectionsGrid } from '@/components/home/WeeklyCollectionsGrid';
+import { CategoryChipRail } from '@/components/home/CategoryChipRail';
+import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
+import { useHomeChips } from '@/hooks/use-home-chips';
+import { getDateParts, getIsoWeekKey } from '@/utils/dates';
 import { createLinearGradientSource } from '@/utils/gradient';
 import { getImageUri } from '@/utils/image-source';
 import {
@@ -22,11 +38,26 @@ import {
   getEventTitle,
   getEventYearLabel,
 } from '@/utils/event-presentation';
+import { TimeMachineBlock } from '@/components/home/TimeMachineBlock';
+import { useTimeMachine } from '@/hooks/use-time-machine';
 
 const reactions: { id: ReactionType; emoji: string; label: string }[] = [
   { id: 'appreciate', emoji: '👍', label: 'Appreciate' },
   { id: 'insight', emoji: '💡', label: 'Insight' },
 ];
+
+type HeroCarouselItem = {
+  id: string;
+  title: string;
+  summary: string;
+  meta: string;
+  yearLabel: string;
+  imageSource: ImageSource;
+  imageUri?: string;
+  event?: FirestoreEventDocument;
+  isFallback?: boolean;
+  categories?: string[];
+};
 
 const buildStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography } = theme;
@@ -51,6 +82,56 @@ const buildStyles = (theme: ThemeDefinition) => {
     sectionHeader: {
       gap: spacing.xs,
     },
+    heroCarouselContainer: {
+      gap: spacing.sm,
+    },
+    moduleSpacing: {
+      marginTop: spacing.xl,
+    },
+    bottomSpacer: {
+      height: spacing.xxl + spacing.lg,
+    },
+    relatedStrip: {
+      marginTop: spacing.md,
+      gap: spacing.sm,
+    },
+    relatedHeading: {
+      fontFamily: serifFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+      letterSpacing: 0.3,
+    },
+    relatedList: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    relatedCard: {
+      width: 180,
+      borderRadius: radius.md,
+      backgroundColor: colors.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSubtle,
+      overflow: 'hidden',
+    },
+    relatedImage: {
+      width: '100%',
+      height: 120,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    relatedCardBody: {
+      padding: spacing.md,
+      gap: spacing.xs,
+    },
+    relatedTitle: {
+      fontFamily: serifFamily,
+      fontSize: typography.helper.fontSize + 1,
+      color: colors.textPrimary,
+    },
+    relatedMeta: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+    },
     sectionLabel: {
       fontFamily: sansFamily,
       color: colors.textSecondary,
@@ -58,6 +139,19 @@ const buildStyles = (theme: ThemeDefinition) => {
       lineHeight: typography.helper.lineHeight,
       letterSpacing: 0.6,
       textTransform: 'uppercase',
+    },
+    carouselIndicator: {
+      alignSelf: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    carouselIndicatorText: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+      letterSpacing: 0.3,
     },
     heroCard: {
       borderRadius: 16,
@@ -254,23 +348,203 @@ const selectPreferredDigestEvent = (
   return eraMatches[0] ?? categoryMatches[0] ?? events[0] ?? null;
 };
 
+type HeroCarouselCta = 'continue' | 'preview';
+
+type HeroCarouselCardProps = {
+  item: HeroCarouselItem;
+  index: number;
+  styles: ReturnType<typeof buildStyles>;
+  theme: ThemeDefinition;
+  heroGradient: ImageSource;
+  onOpen: (eventId: string) => void;
+  onCardOpened: (eventId: string, index: number) => void;
+  onCtaPress: (eventId: string, index: number, cta: HeroCarouselCta) => void;
+  onShare?: (eventId: string, index: number) => void;
+};
+
+const HeroCarouselCard = React.memo(
+  ({ item, index, styles, theme, heroGradient, onOpen, onCardOpened, onCtaPress, onShare }: HeroCarouselCardProps) => {
+  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(item.id);
+
+  const handleOpenDetail = useCallback(() => {
+    onCardOpened(item.id, index);
+    onOpen(item.id);
+  }, [index, item.id, onCardOpened, onOpen]);
+
+  const handlePrimaryPress = useCallback(() => {
+    onCtaPress(item.id, index, 'continue');
+    onOpen(item.id);
+  }, [index, item.id, onCtaPress, onOpen]);
+
+  const handleSecondaryPress = useCallback(() => {
+    onCtaPress(item.id, index, 'preview');
+    onOpen(item.id);
+  }, [index, item.id, onCtaPress, onOpen]);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        title: item.title,
+        message: `${item.title} — ${item.summary}`,
+      });
+      onShare?.(item.id, index);
+    } catch (error) {
+      console.error('Share failed', error);
+    }
+  }, [index, item.id, item.summary, item.title, onShare]);
+
+  const handleHeroImageLoad = useCallback(
+    (event: ImageLoadEventData) => {
+      console.log('[Home] hero image loaded', {
+        id: item.id,
+        uri: item.imageUri,
+        resolvedUrl: event.source?.url,
+        cacheType: event.cacheType,
+        width: event.source?.width,
+        height: event.source?.height,
+      });
+    },
+    [item.id, item.imageUri]
+  );
+
+  const handleHeroImageError = useCallback(
+    (event: ImageErrorEventData) => {
+      console.warn('[Home] hero image failed to load', {
+        id: item.id,
+        uri: item.imageUri,
+        error: event.error,
+      });
+    },
+    [item.id, item.imageUri]
+  );
+
+  return (
+    <Pressable accessibilityRole="button" onPress={handleOpenDetail} style={styles.heroCard}>
+      <View pointerEvents="none" style={styles.heroMedia}>
+        <Image
+          source={item.imageSource}
+          style={styles.heroImage}
+          contentFit="cover"
+          transition={180}
+          onLoad={handleHeroImageLoad}
+          onError={handleHeroImageError}
+        />
+        <Image pointerEvents="none" source={heroGradient} style={styles.vignette} contentFit="cover" />
+      </View>
+
+      <View style={styles.heroBody}>
+        <Text style={styles.yearPill}>{item.yearLabel}</Text>
+        <Text style={styles.heroTitle}>{item.title}</Text>
+        <Text style={styles.heroSummary}>{item.summary}</Text>
+        {item.meta ? <Text style={styles.heroMeta}>{item.meta}</Text> : null}
+
+        <View style={styles.actionsRow}>
+          <Pressable accessibilityRole="button" onPress={handlePrimaryPress} style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryPressed]}>
+            <Text style={styles.primaryLabel}>Continue</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleSecondaryPress}
+            style={({ pressed }) => [styles.secondaryAction, pressed && styles.secondaryPressed]}
+          >
+            <Text style={styles.secondaryLabel}>Preview</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.engagementSurface}>
+          <View style={styles.reactionGroup}>
+            {reactions.map((reactionOption) => {
+              const isActive = reaction === reactionOption.id;
+              return (
+                <Pressable
+                  key={reactionOption.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isActive }}
+                  onPress={() => toggleReaction(reactionOption.id)}
+                  style={({ pressed }) => [
+                    styles.reactionChip,
+                    isActive && styles.reactionChipActive,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text accessibilityLabel={`${reactionOption.label} reaction`}>{reactionOption.emoji}</Text>
+                  <Text style={[styles.reactionLabel, isActive && styles.reactionLabelActive]}>
+                    {reactionOption.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.reactionGroup}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSaved }}
+              onPress={toggleSave}
+              style={({ pressed }) => [
+                styles.actionIconButton,
+                isSaved && styles.reactionChipActive,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <IconSymbol
+                name={isSaved ? 'bookmark.fill' : 'bookmark'}
+                size={20}
+                color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
+              />
+              <Text style={[styles.actionIconLabel, isSaved && styles.reactionLabelActive]}>Save</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleShare}
+              style={({ pressed }) => [styles.actionIconButton, pressed && { opacity: 0.85 }]}
+            >
+              <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
+              <Text style={styles.actionIconLabel}>Share</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+  }
+);
+
+HeroCarouselCard.displayName = 'HeroCarouselCard';
+
 const HomeScreen = () => {
   const router = useRouter();
   const { profile } = useUserContext();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const today = useMemo(() => getDateParts(new Date(), { timeZone: profile?.timezone }), [profile?.timezone]);
-  const {
-    events: digestEvents,
-    loading: digestLoading,
-    error: digestError,
-  } = useDailyDigestEvents({ month: today.month, day: today.day, year: today.year });
+  const { events: digestEvents, loading: digestLoading, error: digestError } = useDailyDigestEvents({
+    month: today.month,
+    day: today.day,
+    year: today.year,
+  });
+
   const preferredEvent = useMemo(
     () => selectPreferredDigestEvent(digestEvents, profile?.categories, profile?.eras),
     [digestEvents, profile?.categories, profile?.eras]
   );
-  const heroIdentifier = preferredEvent?.eventId ?? heroEvent.id;
-  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(heroIdentifier);
+
+  const defaultHeroItem = useMemo<HeroCarouselItem>(
+    () => ({
+      id: heroEvent.id,
+      title: heroEvent.title,
+      summary: heroEvent.summary,
+      meta: heroEvent.location,
+      yearLabel: heroEvent.year,
+      imageSource: heroEvent.image,
+      imageUri: getImageUri(heroEvent.image),
+      isFallback: true,
+      categories: heroEvent.categories ?? [],
+    }),
+    []
+  );
+
   const heroGradient = useMemo(
     () =>
       createLinearGradientSource(
@@ -282,21 +556,167 @@ const HomeScreen = () => {
       ),
     []
   );
-  const staticHeroImageUri = useMemo(() => getImageUri(heroEvent.image), []);
-  const dynamicHeroImageUri = preferredEvent ? getEventImageUri(preferredEvent) : undefined;
-  const heroImageSource = dynamicHeroImageUri ? { uri: dynamicHeroImageUri } : heroEvent.image;
-  const heroImageUri = dynamicHeroImageUri ?? staticHeroImageUri;
-  const heroYear = preferredEvent ? getEventYearLabel(preferredEvent) : heroEvent.year;
-  const heroTitle = preferredEvent ? getEventTitle(preferredEvent) : heroEvent.title;
-  const heroSummary = preferredEvent ? getEventSummary(preferredEvent) : heroEvent.summary;
-  const heroLocation = preferredEvent ? getEventLocation(preferredEvent) : heroEvent.location;
-  const heroMeta = preferredEvent
-    ? heroLocation || getEventMeta(preferredEvent)
-    : digestLoading
-      ? "Loading today's story…"
-      : heroEvent.location;
-  const shareTitle = heroTitle;
-  const shareSummary = heroSummary;
+
+  const isoWeekKey = useMemo(() => {
+    const referenceDate = today.isoDate ? new Date(`${today.isoDate}T00:00:00Z`) : new Date();
+    return getIsoWeekKey(referenceDate, { timeZone: profile?.timezone });
+  }, [profile?.timezone, today.isoDate]);
+
+  const {
+    items: weeklyCollectionItems,
+    loading: weeklyCollectionsLoading,
+    error: weeklyCollectionsError,
+  } = useWeeklyCollections({ weekKey: isoWeekKey, limit: 4 });
+
+  useEffect(() => {
+    if (weeklyCollectionsError) {
+      console.error('Failed to load weekly collections', weeklyCollectionsError);
+    }
+  }, [weeklyCollectionsError]);
+
+  const {
+    chips: homeChips,
+    loading: homeChipsLoading,
+    setPinned: setChipPinned,
+  } = useHomeChips();
+
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [heroCarouselWidth, setHeroCarouselWidth] = useState<number | null>(null);
+  const lastViewedHeroIdRef = useRef<string | null>(null);
+  const [selectedChipId, setSelectedChipId] = useState<string | null>(null);
+
+  const isPremiumUser = useMemo(() => {
+    const inferredProfile = profile as { isPremium?: boolean } | null;
+    return Boolean(inferredProfile?.isPremium);
+  }, [profile]);
+
+  useEffect(() => {
+    if (selectedChipId) {
+      return;
+    }
+    const defaultPinned = homeChips.find((chip) => chip.pinned);
+    if (defaultPinned) {
+      setSelectedChipId(defaultPinned.id);
+    }
+  }, [homeChips, selectedChipId]);
+
+  const {
+    loading: timeMachineLoading,
+    seedLoading: timeMachineSeeding,
+    timelineYear: timeMachineYear,
+    heroImageUrl: timeMachineImageUrl,
+    loadTimeline: loadTimeMachineTimeline,
+  } = useTimeMachine({ enabled: true, seedOnMount: true, premium: isPremiumUser });
+
+  const weeklyCollections = useMemo(
+    () =>
+      weeklyCollectionItems.map((collection) => ({
+        id: collection.id,
+        title: collection.title,
+        coverUrl: collection.coverUrl || defaultHeroItem.imageUri || '',
+      })),
+    [defaultHeroItem.imageUri, weeklyCollectionItems]
+  );
+
+  const heroCarouselItems = useMemo(() => {
+    const items: HeroCarouselItem[] = [];
+    const seen = new Set<string>();
+
+    const pushEvent = (event?: FirestoreEventDocument | null) => {
+      if (!event || !event.eventId || seen.has(event.eventId)) {
+        return;
+      }
+      seen.add(event.eventId);
+
+      const title = getEventTitle(event);
+      const summary = getEventSummary(event);
+      const location = getEventLocation(event);
+      const meta = location || getEventMeta(event) || defaultHeroItem.meta;
+      const yearLabel = getEventYearLabel(event, defaultHeroItem.yearLabel);
+      const imageUri = getEventImageUri(event);
+      const categories = Array.isArray(event.categories) ? event.categories : [];
+
+      items.push({
+        id: event.eventId,
+        title,
+        summary,
+        meta,
+        yearLabel,
+        imageSource: imageUri ? { uri: imageUri } : defaultHeroItem.imageSource,
+        imageUri: imageUri ?? defaultHeroItem.imageUri,
+        event,
+        categories,
+      });
+    };
+
+    pushEvent(preferredEvent);
+    digestEvents.forEach((event) => pushEvent(event));
+
+    if (items.length === 0) {
+      items.push(defaultHeroItem);
+    }
+
+    return items.slice(0, 5);
+  }, [defaultHeroItem, digestEvents, preferredEvent]);
+
+  const filteredHeroItems = useMemo(() => {
+    if (!selectedChipId) {
+      return heroCarouselItems;
+    }
+    const filtered = heroCarouselItems.filter((item) => item.categories?.includes(selectedChipId));
+    return filtered.length > 0 ? filtered : heroCarouselItems;
+  }, [heroCarouselItems, selectedChipId]);
+
+  const relatedNowItems = useMemo(() => {
+    if (!selectedChipId) {
+      return [] as HeroCarouselItem[];
+    }
+    const current = filteredHeroItems[activeHeroIndex];
+    return filteredHeroItems
+      .filter((item) => item.id !== current?.id)
+      .slice(0, 3);
+  }, [activeHeroIndex, filteredHeroItems, selectedChipId]);
+
+  const fallbackHeroWidth = useMemo(() => {
+    const screenWidth = Dimensions.get('window').width;
+    const horizontalPadding = theme.spacing.xl * 2;
+    return Math.max(screenWidth - horizontalPadding, 320);
+  }, [theme.spacing.xl]);
+
+  const computedHeroWidth = heroCarouselWidth ?? fallbackHeroWidth;
+
+  const handleHeroCarouselLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const width = event.nativeEvent.layout.width;
+      if (width > 0 && Math.abs(width - (heroCarouselWidth ?? 0)) > 1) {
+        setHeroCarouselWidth(width);
+      }
+    },
+    [heroCarouselWidth]
+  );
+
+  const handleHeroIndexChange = useCallback((index: number) => {
+    setActiveHeroIndex(index);
+  }, []);
+
+  useEffect(() => {
+    if (activeHeroIndex >= filteredHeroItems.length) {
+      setActiveHeroIndex(0);
+    }
+  }, [activeHeroIndex, filteredHeroItems.length]);
+
+  useEffect(() => {
+    const currentItem = filteredHeroItems[activeHeroIndex];
+    if (currentItem && lastViewedHeroIdRef.current !== currentItem.id) {
+      trackEvent('hero_card_viewed', { card_id: currentItem.id, index: activeHeroIndex });
+      lastViewedHeroIdRef.current = currentItem.id;
+    }
+  }, [activeHeroIndex, filteredHeroItems]);
+
+  useEffect(() => {
+    setActiveHeroIndex(0);
+  }, [selectedChipId]);
+
   const statusMessage = digestLoading
     ? "Curating today's picks…"
     : digestError
@@ -309,43 +729,78 @@ const HomeScreen = () => {
     }
   }, [digestError]);
 
-  const handleHeroImageLoad = useCallback(
-    (event: ImageLoadEventData) => {
-      console.log('[Home] hero image loaded', {
-        uri: heroImageUri,
-        resolvedUrl: event.source?.url,
-        cacheType: event.cacheType,
-        width: event.source?.width,
-        height: event.source?.height,
-      });
+  const handleOpenEvent = useCallback(
+    (eventId: string) => {
+      router.push({ pathname: '/event/[id]', params: { id: eventId } });
     },
-    [heroImageUri]
+    [router]
   );
 
-  const handleHeroImageError = useCallback(
-    (event: ImageErrorEventData) => {
-      console.warn('[Home] hero image failed to load', {
-        uri: heroImageUri,
-        error: event.error,
-      });
+  const handleOpenCollection = useCallback(
+    (collectionId: string, index: number) => {
+      trackEvent('collections_tile_opened', { collection_id: collectionId, index, week_key: isoWeekKey });
+      router.push({ pathname: '/collection/[id]', params: { id: collectionId } });
     },
-    [heroImageUri]
+    [isoWeekKey, router]
   );
 
-  const handleOpenDetail = () => {
-    router.push({ pathname: '/event/[id]', params: { id: heroIdentifier } });
-  };
+  const handleSeeAllCollections = useCallback(() => {
+    trackEvent('collections_see_all_clicked', { week_key: isoWeekKey });
+    router.push('/explore');
+  }, [isoWeekKey, router]);
 
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        title: shareTitle,
-        message: `${shareTitle} — ${shareSummary}`,
-      });
-    } catch (error) {
-      console.error('Share failed', error);
+  const timeMachineImage = useMemo(
+    () => timeMachineImageUrl ?? defaultHeroItem.imageUri ?? getImageUri(heroEvent.image) ?? '',
+    [defaultHeroItem.imageUri, timeMachineImageUrl]
+  );
+
+  const handleTimeMachineTeaser = useCallback(() => {
+    trackEvent('time_machine_paywall_shown', { source: 'teaser' });
+    router.push({ pathname: '/time-machine', params: { mode: 'teaser' } });
+  }, [router]);
+
+  const handleTimeMachinePress = useCallback(async () => {
+    const userTier = isPremiumUser ? 'premium' : 'free';
+    trackEvent('time_machine_open_clicked', { user_tier: userTier });
+    if (!isPremiumUser) {
+      handleTimeMachineTeaser();
+      return;
     }
-  };
+    await loadTimeMachineTimeline();
+    trackEvent('time_machine_started', { year: timeMachineYear ?? undefined, user_tier: userTier });
+    router.push({ pathname: '/time-machine', params: { year: timeMachineYear ? String(timeMachineYear) : undefined } });
+  }, [handleTimeMachineTeaser, isPremiumUser, loadTimeMachineTimeline, router, timeMachineYear]);
+
+  const handleChipSelect = useCallback((chipId: string) => {
+    setSelectedChipId((previous) => {
+      const nextValue = previous === chipId ? null : chipId;
+      trackEvent('chip_selected', { chip_id: nextValue ?? 'all' });
+      return nextValue;
+    });
+  }, []);
+
+  const handleChipPin = useCallback(
+    (chipId: string, pinned: boolean) => {
+      setChipPinned(chipId, pinned);
+      if (pinned) {
+        setSelectedChipId(chipId);
+      }
+      trackEvent('chip_pinned', { chip_id: chipId, pinned });
+    },
+    [setChipPinned]
+  );
+
+  const handleHeroCardOpened = useCallback((eventId: string, index: number) => {
+    trackEvent('hero_card_opened', { card_id: eventId, index });
+  }, []);
+
+  const handleHeroCtaPress = useCallback((eventId: string, index: number, cta: HeroCarouselCta) => {
+    trackEvent('hero_cta_clicked', { card_id: eventId, index, cta });
+  }, []);
+
+  const handleHeroShare = useCallback((eventId: string, index: number) => {
+    trackEvent('hero_share_clicked', { card_id: eventId, index });
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -356,118 +811,109 @@ const HomeScreen = () => {
           alwaysBounceVertical={false}
           overScrollMode="never"
           showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Today’s Moment</Text>
-          {statusMessage ? <Text style={styles.sectionHelper}>{statusMessage}</Text> : null}
-        </View>
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>Today’s Moment</Text>
+            {statusMessage ? <Text style={styles.sectionHelper}>{statusMessage}</Text> : null}
+          </View>
 
-          <Pressable accessibilityRole="button" onPress={handleOpenDetail} style={styles.heroCard}>
-            <View pointerEvents="none" style={styles.heroMedia}>
-              <Image
-                source={heroImageSource}
-                style={styles.heroImage}
-                contentFit="cover"
-                transition={180}
-                onLoad={handleHeroImageLoad}
-                onError={handleHeroImageError}
-              />
-              <Image
-                pointerEvents="none"
-                source={heroGradient}
-                style={styles.vignette}
-                contentFit="cover"
-              />
-            </View>
-
-            <View style={styles.heroBody}>
-              <Text style={styles.yearPill}>{heroYear}</Text>
-              <Text style={styles.heroTitle}>{heroTitle}</Text>
-              <Text style={styles.heroSummary}>{heroSummary}</Text>
-              <Text style={styles.heroMeta}>{heroMeta}</Text>
-
-              <View style={styles.actionsRow}>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={handleOpenDetail}
-                  style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryPressed]}
-                >
-                  <Text style={styles.primaryLabel}>Continue</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={handleOpenDetail}
-                  style={({ pressed }) => [styles.secondaryAction, pressed && styles.secondaryPressed]}
-                >
-                  <Text style={styles.secondaryLabel}>Preview</Text>
-                </Pressable>
+          <View style={styles.heroCarouselContainer} onLayout={handleHeroCarouselLayout}>
+            <PeekCarousel
+              data={filteredHeroItems}
+              keyExtractor={(item) => item.id}
+              onIndexChange={handleHeroIndexChange}
+              itemWidth={computedHeroWidth}
+              gap={0}
+              renderItem={({ item, index }) => (
+                <HeroCarouselCard
+                  item={item}
+                  index={index}
+                  styles={styles}
+                  theme={theme}
+                  heroGradient={heroGradient}
+                  onOpen={handleOpenEvent}
+                  onCardOpened={handleHeroCardOpened}
+                  onCtaPress={handleHeroCtaPress}
+                  onShare={handleHeroShare}
+                />
+              )}
+              testID="home-hero-carousel"
+            />
+            {filteredHeroItems.length > 1 ? (
+              <View style={styles.carouselIndicator}>
+                <Text style={styles.carouselIndicatorText}>
+                  {activeHeroIndex + 1}/{filteredHeroItems.length}
+                </Text>
               </View>
+            ) : null}
+          </View>
 
-              <View style={styles.engagementSurface}>
-                <View style={styles.reactionGroup}>
-                  {reactions.map((item) => {
-                    const isActive = reaction === item.id;
-                    return (
-                      <Pressable
-                        key={item.id}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: isActive }}
-                        onPress={() => toggleReaction(item.id)}
-                        style={({ pressed }) => [
-                          styles.reactionChip,
-                          isActive && styles.reactionChipActive,
-                          pressed && { opacity: 0.85 },
-                        ]}
-                      >
-                        <Text accessibilityLabel={`${item.label} reaction`}>{item.emoji}</Text>
-                        <Text
-                          style={[styles.reactionLabel, isActive && styles.reactionLabelActive]}
-                        >
-                          {item.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+          <View style={styles.moduleSpacing}>
+            <WeeklyCollectionsGrid
+              items={weeklyCollections}
+              loading={weeklyCollectionsLoading}
+              onOpen={handleOpenCollection}
+              onSeeAll={handleSeeAllCollections}
+              testID="home-weekly-collections"
+            />
+          </View>
 
-                <View style={styles.reactionGroup}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isSaved }}
-                    onPress={toggleSave}
-                    style={({ pressed }) => [
-                      styles.actionIconButton,
-                      isSaved && styles.reactionChipActive,
-                      pressed && { opacity: 0.85 },
-                    ]}
-                  >
-                    <IconSymbol
-                      name={isSaved ? 'bookmark.fill' : 'bookmark'}
-                      size={20}
-                      color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.actionIconLabel,
-                        isSaved && styles.reactionLabelActive,
-                      ]}
+          <View style={styles.moduleSpacing}>
+            <TimeMachineBlock
+              premium={isPremiumUser}
+              imageUrl={timeMachineImage}
+              subtitle="Guided timeline journeys."
+              onPress={handleTimeMachinePress}
+              onTeaser={handleTimeMachineTeaser}
+              loading={timeMachineLoading || timeMachineSeeding}
+              testID="home-time-machine"
+            />
+          </View>
+
+          <View style={styles.moduleSpacing}>
+            <CategoryChipRail
+              chips={homeChips}
+              selectedId={selectedChipId}
+              loading={homeChipsLoading}
+              onSelect={handleChipSelect}
+              onPin={handleChipPin}
+              testID="home-category-chips"
+            />
+            {selectedChipId && relatedNowItems.length > 0 ? (
+              <View style={styles.relatedStrip}>
+                <Text style={styles.relatedHeading}>Related now</Text>
+                <View style={styles.relatedList}>
+                  {relatedNowItems.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      accessibilityRole="button"
+                      onPress={() => handleOpenEvent(item.id)}
+                      style={styles.relatedCard}
                     >
-                      Save
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={handleShare}
-                    style={({ pressed }) => [styles.actionIconButton, pressed && { opacity: 0.85 }]}
-                  >
-                    <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
-                    <Text style={styles.actionIconLabel}>Share</Text>
-                  </Pressable>
+                      <Image
+                        source={item.imageUri ? { uri: item.imageUri } : heroEvent.image}
+                        style={styles.relatedImage}
+                        contentFit="cover"
+                      />
+                      <View style={styles.relatedCardBody}>
+                        <Text style={styles.relatedTitle} numberOfLines={2}>
+                          {item.title}
+                        </Text>
+                        {item.meta ? (
+                          <Text style={styles.relatedMeta} numberOfLines={1}>
+                            {item.meta}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </Pressable>
+                  ))}
                 </View>
               </View>
-            </View>
-          </Pressable>
+            ) : null}
+          </View>
+
+          <View style={styles.bottomSpacer} />
+
         </ScrollView>
       </View>
     </SafeAreaView>

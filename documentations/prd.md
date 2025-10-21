@@ -166,6 +166,36 @@
 - **Phase 3 (8+ weeks)**: PWA enhancements, localization (EN→ES), user notes, push notifications, premium upsell exploration.
 - **Success Criteria for GA**: >40% Day-7 retention, <5% weekly churn, NPS >25, content coverage for all 365 days with ≥5 events per category.
 
+### Home Experience Roadmap (2025 H2)
+- **Phase A – Alignment & Data Validation (Week 0–1)** ✅ completed (hero data availability confirmed; collections/time machine placeholders defined).
+  - Confirm backend ability to deliver 5+ personalized hero events and weekly collections payloads.
+  - Validate Time Machine timeline contract, entitlement flags, and seed workflow.
+  - Gather required art assets (static illustration, fallback imagery) and copy alignment.
+- **Phase B – Platform & API Enablement (Week 1–3)** ⏳ in progress (client hooks using stub services; backend endpoints pending).
+  - Implement `/home/hero`, `/home/collections`, `/home/chips`, and Time Machine endpoints with caching rules.
+  - Migrate personalization profile to store pinned chips and last Time Machine year.
+  - Add monitoring/logging for new endpoints.
+- **Phase C – Hero Carousel Foundation (Week 3–5)** ✅ shipped in-app (carousel w/ analytics + filtering).
+  - Wrap existing hero card in carousel shell with pagination indicators and image prefetch.
+  - Integrate chip filtering logic and ensure fallback to single hero when data thin.
+  - QA expand animation, saved/reaction states, analytics events (`hero_card_opened`, `hero_cta_clicked`).
+- **Phase D – Collections Grid & Explore Hook (Week 5–7)** ✅ UI live (awaiting real data + detail screen).
+  - Build 2×2 Weekly Collections component with skeleton and empty states.
+  - Implement Collection Detail pager screen; deep-link Explore via `collectionId`.
+  - Instrument `collections_tile_opened` and `collections_see_all_clicked`.
+- **Phase E – Category Chip Rail & Related Strip (Week 6–8)** ✅ live with analytics (pin persistence pending profile schema).
+  - Ship compact chips with selection/pin interaction and persisted defaults.
+  - Surface “Related now” mini-cards powered by filtered hero dataset.
+  - Add haptic feedback and analytics (`chip_selected`, `chip_pinned`, `related_strip_card_opened`).
+- **Phase F – Time Machine Premium Block (Week 7–9)** 🚧 CTA + teaser/premium screen live; backend data + polished premium UX ongoing.
+  - Deliver premium CTA block with free teaser flow and entitlement gating.
+  - Integrate paywall trigger, remembered year state, and timeline fetch with loading skeleton. _(Client now calls `/time-machine/seed` & `/time-machine/timeline` via service wrapper; backend still pending.)_
+  - Track `time_machine_open_clicked`, `time_machine_started`, `time_machine_paywall_shown`. _(Home + screen emitting events as of 2024-06-19.)_
+- **Phase G – Polish, Performance & Launch (Week 9–10)** 🔜
+  - Run accessibility pass (AA contrast, 48pt hit areas) and animation tuning (120–220ms).
+  - Conduct performance profiling: first meaningful paint <2.5s on mid-range devices.
+  - Execute beta rollout checklist, finalize release notes, update docs (PRD, NorthStar) and training materials.
+
 ## 10. Dependencies & Resources
 - Secure content licensing agreements.
 - Staffing: 1 PM, 1 UX designer, 2 full-stack engineers, 1 data/ML engineer, 1 content editor, 0.5 FTE marketing/CRM.
