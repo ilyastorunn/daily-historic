@@ -12,9 +12,11 @@ export type TimelineCardProps = {
   dateISO?: string;
   categoryId?: string;
   onPress?: (id: string) => void;
+  footerLabel?: string;
 };
 
-export const TimelineCard = memo(({ id, title, summary, imageUrl, dateISO, categoryId, onPress }: TimelineCardProps) => {
+export const TimelineCard = memo(
+  ({ id, title, summary, imageUrl, dateISO, categoryId, footerLabel, onPress }: TimelineCardProps) => {
   const theme = useAppTheme();
   const styles = getStyles(theme);
 
@@ -32,10 +34,12 @@ export const TimelineCard = memo(({ id, title, summary, imageUrl, dateISO, categ
           {summary}
         </Text>
         {categoryId ? <Text style={styles.meta}>{categoryLabelFromId(categoryId)}</Text> : null}
+        {footerLabel ? <Text style={styles.footer}>{footerLabel}</Text> : null}
       </View>
     </Pressable>
   );
-});
+}
+);
 
 TimelineCard.displayName = 'TimelineCard';
 
@@ -83,10 +87,14 @@ const getStyles = (() => {
         fontSize: 12,
         color: theme.colors.textTertiary,
       },
+      footer: {
+        fontFamily: 'System',
+        fontSize: 12,
+        color: theme.colors.textSecondary,
+      },
     });
     cachedTheme = theme;
     cachedStyles = styles;
     return styles;
   };
 })();
-

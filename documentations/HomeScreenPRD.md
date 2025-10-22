@@ -44,7 +44,7 @@ Revision history:
 - **Behavior**: tap opens Collection Detail (stack screen) with swipeable pages of cards; `See all` CTA routes to Explore pre-filtered by `collectionId`.
 - **Content source**: rotation resets weekly (Mon 00:00 UTC); if fewer than four collections, show available + skeleton/placeholder copy.
 - **Empty state**: “Editor’s picks incoming” and fallback popular tags (click opens Explore with matching filter).
-- **Implementation status**: grid shell + placeholder navigation live; awaiting backend data hook + detail screen.
+- **Implementation status**: grid consumes service wrapper for `/home/collections` with fallback (2024-06-19); `/collection/[id]` detail screen renders cards while full backend data finalizes.
 
 ### 2.3 Time Machine Block
 - **Purpose**: premium upsell into guided timeline (Model A).
@@ -55,7 +55,7 @@ Revision history:
   - Entire block is tappable; pressed state scales to 0.98 and dims.
 - **State**: loading (faded), disabled (opacity 60% with accessible text), memory of last year stored locally.
 - **Haptics**: light impact on press for both tiers.
-- **Implementation status**: CTA block live; dedicated `/time-machine` screen renders teaser for free users and premium timeline cards via `useTimeMachine` (2024-06-19). Full premium UX (year picker, context panes) still pending.
+- **Implementation status**: CTA block live; dedicated `/time-machine` screen renders teaser for free users and premium timeline cards via `useTimeMachine` (2024-06-19). Year picker modal ve “before/after” context listeleri eklendi; daha derin premium deneyimi (ör. timeline annotations) sonraya kaldı.
   - API integration: Home uses `fetchTimeMachineSeed` / `fetchTimeMachineTimeline` wrappers that hit `/time-machine` endpoints with local fallback.
   - `/time-machine` screen emits `time_machine_started` for premium journeys and `time_machine_paywall_shown` for teaser mode (2024-06-19).
 
@@ -66,7 +66,7 @@ Revision history:
   - Long-press to pin chip as default; persisted to profile/settings.
   - Scroll position resets when selection changes.
 - **States**: default, selected (accent fill, white label), disabled; selection animates (120ms scale 1.05 + opacity lift).
-- **Implementation status**: chip rail + hero filtering + related strip live; pin persistence still local until profile schema updated.
+- **Implementation status**: chip rail + hero filtering + related strip live. `/home/chips` fetch + pin endpoint wrapped with fallback (2024-06-19); long-term persistence awaits profile schema support.
 
 ### 2.5 Related Now Strip (conditional)
 - Compact list (horizontal or small vertical stack) that appears only when a chip is selected.

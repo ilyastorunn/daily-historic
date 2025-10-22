@@ -70,6 +70,47 @@ export const fetchTimeMachineTimeline = async (
           title: heroEvent.title,
           summary: heroEvent.summary,
           imageUrl: getImageUri(heroEvent.image) ?? undefined,
+          dateISO: heroEvent.date,
+          categoryId: heroEvent.categories?.[0],
+        },
+      ],
+      before: [
+        {
+          id: 'gemini-program',
+          title: 'Project Gemini lifts off',
+          summary: 'NASA perfects rendezvous and EVA techniques in the years leading up to Apollo.',
+          imageUrl:
+            'https://upload.wikimedia.org/wikipedia/commons/5/5c/Gemini_6A_and_Gemini_7_photograph.jpg',
+          dateISO: '1965-12-15',
+          categoryId: 'science',
+        },
+        {
+          id: 'sputnik-launch',
+          title: 'Sputnik starts the space race',
+          summary: 'The Soviet Union launches the first artificial satellite, spurring global competition.',
+          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Sputnik_1.jpg',
+          dateISO: '1957-10-04',
+          categoryId: 'science',
+        },
+      ],
+      after: [
+        {
+          id: 'viking-on-mars',
+          title: 'Viking 1 touches down on Mars',
+          summary: 'NASA’s robotic lander beams back the first clear images from the Martian surface.',
+          imageUrl:
+            'https://upload.wikimedia.org/wikipedia/commons/1/1a/Viking_Lander_model.png',
+          dateISO: '1976-07-20',
+          categoryId: 'science',
+        },
+        {
+          id: 'iss-assembly',
+          title: 'International Space Station assembly begins',
+          summary: 'Nations collaborate to build a permanent laboratory in orbit.',
+          imageUrl:
+            'https://upload.wikimedia.org/wikipedia/commons/d/d3/ISS_assembly_animation.gif',
+          dateISO: '1998-11-20',
+          categoryId: 'science',
         },
       ],
     };

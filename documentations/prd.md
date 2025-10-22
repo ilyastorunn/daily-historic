@@ -179,9 +179,9 @@
   - Wrap existing hero card in carousel shell with pagination indicators and image prefetch.
   - Integrate chip filtering logic and ensure fallback to single hero when data thin.
   - QA expand animation, saved/reaction states, analytics events (`hero_card_opened`, `hero_cta_clicked`).
-- **Phase D – Collections Grid & Explore Hook (Week 5–7)** ✅ UI live (awaiting real data + detail screen).
+- **Phase D – Collections Grid & Explore Hook (Week 5–7)** ✅ grid + detail screen live; backend payload polishing underway.
   - Build 2×2 Weekly Collections component with skeleton and empty states.
-  - Implement Collection Detail pager screen; deep-link Explore via `collectionId`.
+  - Implement Collection Detail pager screen; deep-link Explore via `collectionId`. _(Clients call `/home/collections` + `/collections/:id` via service wrapper with fallback.)_
   - Instrument `collections_tile_opened` and `collections_see_all_clicked`.
 - **Phase E – Category Chip Rail & Related Strip (Week 6–8)** ✅ live with analytics (pin persistence pending profile schema).
   - Ship compact chips with selection/pin interaction and persisted defaults.
