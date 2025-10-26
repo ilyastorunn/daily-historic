@@ -236,7 +236,7 @@ type YMBIResponse = {
 ## 13. Implementation Roadmap
 
 **Last Updated**: 2025-10-24
-**Status**: Sprint 1 In Progress
+**Status**: Sprint 1 Complete, Sprint 2 Ready
 
 ### Technical Decisions
 - **Backend**: Firebase Cloud Functions (TypeScript)
@@ -244,9 +244,9 @@ type YMBIResponse = {
 - **Alias Table**: JSON file + ingestion script
 - **Caching**: AsyncStorage for client-side (SOTD 24h, YMBI 6h)
 
-### Sprint 1: Backend Pagination ⏳ IN PROGRESS
+### Sprint 1: Backend Pagination ✅ COMPLETED
 **Timeline**: 3-4 days
-**Status**: 🟡 In Progress (Started 2025-10-24)
+**Status**: 🟢 Completed (2025-10-24)
 
 **Goals**:
 - Implement cursor-based pagination with backend API
@@ -255,16 +255,29 @@ type YMBIResponse = {
 
 **Tasks**:
 - [x] MVP Implementation (Sprint 1-5, October 2024)
-- [ ] 1.1: Firebase Functions setup
-- [ ] 1.2: `/api/explore/search` endpoint (cursor pagination, filters, text search)
-- [ ] 1.3: Client pagination state & scroll handler
-- [ ] 1.4: Testing & analytics (`explore_pagination_loaded`)
-- [ ] 1.5: Update PRD with completion status
+- [x] 1.1: Firebase Functions setup
+- [x] 1.2: `/api/explore/search` endpoint (cursor pagination, filters, text search)
+- [x] 1.3: Client pagination state & scroll handler
+- [x] 1.4: Testing & analytics (`explore_pagination_loaded`)
+- [x] 1.5: Update PRD with completion status
 
 **Deliverables**:
-- `/api/explore/search?q=&categories=&era=&cursor=` endpoint
-- Infinite scroll in Explore results
-- Analytics tracking for pagination events
+- ✅ `/api/explore/search?q=&categories=&era=&cursor=` endpoint
+- ✅ Infinite scroll in Explore results (70% scroll threshold)
+- ✅ Analytics tracking for pagination events
+- ✅ Loading indicator during pagination
+
+**Implementation Notes**:
+- API base URL configured for development/production
+- Pagination state managed with cursor, hasMore, loading flags
+- Duplicate prevention via loadedIds Set
+- ScrollView throttle set to 400ms for performance
+- Falls back to digestEvents for date picker when not searching
+
+**Files Modified**:
+- `functions/src/api/explore/search.ts` - Search endpoint
+- `app/(tabs)/explore.tsx` - Client pagination logic
+- `firebase.json` - Functions configuration
 
 ---
 
@@ -330,7 +343,7 @@ type YMBIResponse = {
 
 ---
 
-### Current MVP Status: ~85% Complete
+### Current MVP Status: ~90% Complete
 
 **✅ Completed**:
 - Search with debouncing (350ms)
@@ -338,11 +351,9 @@ type YMBIResponse = {
 - Story of the Day (24h cache, Firestore → Wikimedia stub → Seed fallback)
 - You Might Be Interested (6h cache, diversity algorithm)
 - Conditional layout (Default: SOTD + YMBI / Active: Results)
-- Analytics (9 events tracked)
+- Analytics (11 events tracked: +search_results_loaded, +pagination_loaded)
 - Accessibility (≥44pt targets, VO labels, AA contrast)
-
-**🟡 In Progress**:
-- Backend pagination (Sprint 1)
+- **Backend pagination with infinite scroll (Sprint 1 ✅)**
 
 **⚪ Planned**:
 - UX improvements (Sprint 2)
