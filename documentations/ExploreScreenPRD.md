@@ -233,4 +233,145 @@ type YMBIResponse = {
 
 ---
 
+## 13. Implementation Roadmap
+
+**Last Updated**: 2025-10-24
+**Status**: Sprint 1 In Progress
+
+### Technical Decisions
+- **Backend**: Firebase Cloud Functions (TypeScript)
+- **Pagination**: Cursor-based with backend API
+- **Alias Table**: JSON file + ingestion script
+- **Caching**: AsyncStorage for client-side (SOTD 24h, YMBI 6h)
+
+### Sprint 1: Backend Pagination ⏳ IN PROGRESS
+**Timeline**: 3-4 days
+**Status**: 🟡 In Progress (Started 2025-10-24)
+
+**Goals**:
+- Implement cursor-based pagination with backend API
+- Support infinite scroll in results view
+- Replace client-side slice(0, 20) limitation
+
+**Tasks**:
+- [x] MVP Implementation (Sprint 1-5, October 2024)
+- [ ] 1.1: Firebase Functions setup
+- [ ] 1.2: `/api/explore/search` endpoint (cursor pagination, filters, text search)
+- [ ] 1.3: Client pagination state & scroll handler
+- [ ] 1.4: Testing & analytics (`explore_pagination_loaded`)
+- [ ] 1.5: Update PRD with completion status
+
+**Deliverables**:
+- `/api/explore/search?q=&categories=&era=&cursor=` endpoint
+- Infinite scroll in Explore results
+- Analytics tracking for pagination events
+
+---
+
+### Sprint 2: UX Improvements ⏸️ PLANNED
+**Timeline**: 2-3 days
+**Status**: ⚪ Planned
+
+**Goals**:
+- Add "Not Interested" suppression for YMBI (7-day local storage)
+- Add "See More" navigation from YMBI
+- Implement Relevance/Recent sort toggle
+
+**Tasks**:
+- [ ] 2.1: YMBI "Not Interested" with AsyncStorage (7-day TTL)
+- [ ] 2.2: YMBI "See More" button with filter navigation
+- [ ] 2.3: Relevance/Recent sort toggle with scoring algorithm
+- [ ] 2.4: Update PRD
+
+**Deliverables**:
+- Long-press "Not Interested" gesture on YMBI cards
+- "See More" quick navigation
+- Sort toggle UI with analytics
+
+---
+
+### Sprint 3: Wikimedia Integration ⏸️ PLANNED
+**Timeline**: 3-4 days
+**Status**: ⚪ Planned
+
+**Goals**:
+- Replace SOTD stub with real Wikimedia Pageviews API
+- Implement title normalization & matching
+- Create alias table system for manual overrides
+
+**Tasks**:
+- [ ] 3.1: Wikimedia Pageviews API client
+- [ ] 3.2: Title normalization & fuzzy matching
+- [ ] 3.3: Alias table (JSON + ingestion script)
+- [ ] 3.4: Update `fetchSOTDFromWikimedia()` implementation
+- [ ] 3.5: Data migration (add `normalizedTitle` to contentEvents)
+- [ ] 3.6: Update PRD
+
+**Deliverables**:
+- Real-time trending Wikipedia articles as SOTD
+- `scripts/ingest/wiki-aliases.json` with manual mappings
+- Fallback for unmatched articles
+
+---
+
+### Sprint 4: Premium Features 🔒 BLOCKED
+**Timeline**: 2 weeks (blocked by subscription system)
+**Status**: ⚪ Blocked (Requires paywall infrastructure)
+
+**Goals**:
+- Deep Dive module for premium users
+- Paywall integration for free users
+- Premium analytics tracking
+
+**Blockers**:
+- Subscription system (RevenueCat/Stripe) not implemented
+- `Users/{uid}.isPremium` field not available
+- Paywall modal component missing
+
+---
+
+### Current MVP Status: ~85% Complete
+
+**✅ Completed**:
+- Search with debouncing (350ms)
+- Filter modal (categories multi-select, era single-select)
+- Story of the Day (24h cache, Firestore → Wikimedia stub → Seed fallback)
+- You Might Be Interested (6h cache, diversity algorithm)
+- Conditional layout (Default: SOTD + YMBI / Active: Results)
+- Analytics (9 events tracked)
+- Accessibility (≥44pt targets, VO labels, AA contrast)
+
+**🟡 In Progress**:
+- Backend pagination (Sprint 1)
+
+**⚪ Planned**:
+- UX improvements (Sprint 2)
+- Wikimedia integration (Sprint 3)
+- Backend API migration for SOTD/YMBI (future)
+
+**🔒 Blocked**:
+- Premium Deep Dive module (requires subscription system)
+- Paywall hooks
+- Advanced admin features
+
+---
+
+### Known Issues & Workarounds
+1. **Pagination Limited to 20 Results**
+   - **Issue**: Client-side `slice(0, 20)` in explore.tsx:829
+   - **Workaround**: Sprint 1 implementing backend pagination
+   - **ETA**: Sprint 1 completion
+
+2. **Wikimedia SOTD is Stub**
+   - **Issue**: `fetchSOTDFromWikimedia()` returns null
+   - **Workaround**: Falls back to seed data
+   - **ETA**: Sprint 3 completion
+
+3. **No "Not Interested" Feature**
+   - **Issue**: Users can't hide YMBI content
+   - **Workaround**: N/A
+   - **ETA**: Sprint 2 completion
+
+---
+
 Keep this document in sync as Explore design/implementation evolves. Reference `documentations/NorthStar.md` before introducing new interactions or motion treatments.

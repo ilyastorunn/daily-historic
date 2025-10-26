@@ -43,6 +43,12 @@ import { StoryOfTheDay } from '@/components/explore/StoryOfTheDay';
 import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
 import { trackEvent } from '@/services/analytics';
 
+// API Configuration
+// TODO: Move to environment config
+const API_BASE_URL = __DEV__
+  ? 'http://localhost:5001/daily-historic/us-central1/api'
+  : 'https://us-central1-daily-historic.cloudfunctions.net/api';
+
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const reactions = [
@@ -708,6 +714,15 @@ const ExploreScreen = () => {
   const [selectedDate, setSelectedDate] = useState<string>(today.isoDate);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [eventCache, setEventCache] = useState<Record<string, FirestoreEventDocument>>({});
+
+  // Pagination state (backend API)
+  const [paginationState, setPaginationState] = useState({
+    cursor: null as string | null,
+    hasMore: true,
+    loading: false,
+    loadedIds: new Set<string>(),
+  });
+  const [apiResults, setApiResults] = useState<FirestoreEventDocument[]>([]);
 
   // Debounce search query
   useEffect(() => {
