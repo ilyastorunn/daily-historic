@@ -1,0 +1,35 @@
+{
+  "$schema": "./wiki-aliases.schema.json",
+  "aliases": [
+    {
+      "wikipediaTitle": "World_War_II",
+      "eventId": "event-1939-world-war-2-begins",
+      "reason": "Common alternate name",
+      "addedAt": "2025-10-27"
+    },
+    {
+      "wikipediaTitle": "Second_World_War",
+      "eventId": "event-1939-world-war-2-begins",
+      "reason": "British English variant",
+      "addedAt": "2025-10-27"
+    },
+    {
+      "wikipediaTitle": "Albert_Einstein",
+      "eventId": "event-1879-einstein-birth",
+      "reason": "Famous physicist",
+      "addedAt": "2025-10-27"
+    },
+    {
+      "wikipediaTitle": "Moon_landing",
+      "eventId": "event-1969-apollo-11-moon-landing",
+      "reason": "Common search term",
+      "addedAt": "2025-10-27"
+    },
+    {
+      "wikipediaTitle": "Apollo_11",
+      "eventId": "event-1969-apollo-11-moon-landing",
+      "reason": "Mission name",
+      "addedAt": "2025-10-27"
+    }
+  ]
+}

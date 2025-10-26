@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Wikipedia Article Aliases",
+  "description": "Manual mapping of Wikipedia article titles to Firestore event IDs",
+  "type": "object",
+  "properties": {
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "wikipediaTitle": {
+            "type": "string",
+            "description": "Wikipedia article title (URL-encoded, e.g., 'World_War_II')"
+          },
+          "eventId": {
+            "type": "string",
+            "description": "Firestore event document ID"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this alias was created (for documentation)"
+          },
+          "addedAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when alias was added (YYYY-MM-DD)"
+          }
+        },
+        "required": ["wikipediaTitle", "eventId", "reason", "addedAt"]
+      }
+    }
+  },
+  "required": ["aliases"]
+}
