@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import type { FirestoreEventDocument } from '@/types/events';
@@ -8,11 +8,14 @@ import { formatCategoryLabel } from '@/constants/personalization';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import { getEventImageUri, getEventSummary, getEventTitle, getEventYearLabel } from '@/utils/event-presentation';
 import { createLinearGradientSource } from '@/utils/gradient';
+import { markNotInterested } from '@/services/you-might-be-interested';
+import { trackEvent } from '@/services/analytics';
 
 type YouMightBeInterestedProps = {
   items: FirestoreEventDocument[];
   loading?: boolean;
   onCardPress?: (eventId: string) => void;
+  onRefresh?: () => void;
 };
 
 const createStyles = (theme: ThemeDefinition) => {
@@ -163,11 +166,13 @@ const createStyles = (theme: ThemeDefinition) => {
 const YMBICard = ({
   event,
   onPress,
+  onRefresh,
   theme,
   styles,
 }: {
   event: FirestoreEventDocument;
   onPress: () => void;
+  onRefresh?: () => void;
   theme: ThemeDefinition;
   styles: ReturnType<typeof createStyles>;
 }) => {
@@ -191,12 +196,49 @@ const YMBICard = ({
   const primaryCategory = event.categories?.[0];
   const categoryLabel = primaryCategory ? formatCategoryLabel(primaryCategory) : null;
 
+  const handleLongPress = () => {
+    Alert.alert(
+      'Not Interested',
+      `Hide "${title}" and similar content for 7 days?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Hide',
+          style: 'destructive',
+          onPress: async () => {
+            if (!primaryCategory) return;
+
+            try {
+              await markNotInterested(event.eventId, primaryCategory);
+
+              trackEvent('ymbi_not_interested', {
+                event_id: event.eventId,
+                category_id: primaryCategory,
+                event_year: event.year,
+              });
+
+              onRefresh?.();
+            } catch (error) {
+              console.error('[YMBI] Failed to mark not interested:', error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`You might be interested: ${title}`}
-      accessibilityHint="Double tap to view event details"
+      accessibilityHint="Double tap to view event details. Long press to hide."
       onPress={onPress}
+      onLongPress={handleLongPress}
+      delayLongPress={500}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.95 }]}
     >
       <View style={styles.cardMedia}>
@@ -231,6 +273,7 @@ export const YouMightBeInterested = ({
   items,
   loading,
   onCardPress,
+  onRefresh,
 }: YouMightBeInterestedProps) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -293,6 +336,7 @@ export const YouMightBeInterested = ({
             key={event.eventId}
             event={event}
             onPress={() => onCardPress?.(event.eventId)}
+            onRefresh={onRefresh}
             theme={theme}
             styles={styles}
           />

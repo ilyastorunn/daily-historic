@@ -748,7 +748,7 @@ const ExploreScreen = () => {
 
   const { story, loading: sotdLoading } = useStoryOfTheDay({ enabled: !showResults });
 
-  const { items: ymbiItems, loading: ymbiLoading } = useYMBI({
+  const { items: ymbiItems, loading: ymbiLoading, refresh: refreshYMBI } = useYMBI({
     userId: authUser?.uid ?? '',
     userCategories: profile?.categories ?? [],
     savedEventIds: profile?.savedEventIds ?? [],
@@ -1189,6 +1189,7 @@ const ExploreScreen = () => {
                 items={ymbiItems}
                 loading={ymbiLoading}
                 onCardPress={handleYMBICardPress}
+                onRefresh={refreshYMBI}
               />
             </>
           )}
