@@ -1020,6 +1020,23 @@ const ExploreScreen = () => {
     [ymbiItems, handleOpenDetail]
   );
 
+  const handleYMBISeeMore = useCallback(() => {
+    // Clear search query
+    setQuery('');
+    setDebouncedQuery('');
+
+    // Pre-select all user categories
+    const userCategories = profile?.categories ?? [];
+    setFilters({
+      categories: new Set(userCategories),
+      era: null,
+    });
+
+    trackEvent('ymbi_see_more', {
+      categories_count: userCategories.length,
+    });
+  }, [profile?.categories]);
+
   const handleFilterOpen = () => {
     setTempFilters(filters);
     setFilterModalVisible(true);
@@ -1190,6 +1207,7 @@ const ExploreScreen = () => {
                 loading={ymbiLoading}
                 onCardPress={handleYMBICardPress}
                 onRefresh={refreshYMBI}
+                onSeeMore={handleYMBISeeMore}
               />
             </>
           )}

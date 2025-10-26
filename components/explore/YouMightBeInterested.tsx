@@ -16,6 +16,7 @@ type YouMightBeInterestedProps = {
   loading?: boolean;
   onCardPress?: (eventId: string) => void;
   onRefresh?: () => void;
+  onSeeMore?: () => void;
 };
 
 const createStyles = (theme: ThemeDefinition) => {
@@ -274,6 +275,7 @@ export const YouMightBeInterested = ({
   loading,
   onCardPress,
   onRefresh,
+  onSeeMore,
 }: YouMightBeInterestedProps) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -324,10 +326,17 @@ export const YouMightBeInterested = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.sectionLabel}>You Might Be Interested</Text>
-        {/* TODO: Implement "See more" functionality */}
-        {/* <Pressable style={styles.seeMoreButton} onPress={onSeeMore}>
-          <Text style={styles.seeMoreLabel}>See more</Text>
-        </Pressable> */}
+        {onSeeMore && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="See more recommendations"
+            accessibilityHint="Navigate to search with similar content"
+            style={styles.seeMoreButton}
+            onPress={onSeeMore}
+          >
+            <Text style={styles.seeMoreLabel}>See more</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.list}>
