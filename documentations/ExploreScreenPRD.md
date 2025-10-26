@@ -335,9 +335,9 @@ type YMBIResponse = {
 
 ---
 
-### Sprint 3: Wikimedia Integration ⏸️ PLANNED
+### Sprint 3: Wikimedia Integration ✅ COMPLETED
 **Timeline**: 3-4 days
-**Status**: ⚪ Planned
+**Status**: 🟢 Completed (2025-10-27)
 
 **Goals**:
 - Replace SOTD stub with real Wikimedia Pageviews API
@@ -345,17 +345,82 @@ type YMBIResponse = {
 - Create alias table system for manual overrides
 
 **Tasks**:
-- [ ] 3.1: Wikimedia Pageviews API client
-- [ ] 3.2: Title normalization & fuzzy matching
-- [ ] 3.3: Alias table (JSON + ingestion script)
-- [ ] 3.4: Update `fetchSOTDFromWikimedia()` implementation
-- [ ] 3.5: Data migration (add `normalizedTitle` to contentEvents)
-- [ ] 3.6: Update PRD
+- [x] 3.1: Wikimedia Pageviews API client
+- [x] 3.2: Title normalization & fuzzy matching
+- [x] 3.3: Alias table (JSON + ingestion script)
+- [x] 3.4: Update `fetchSOTDFromWikimedia()` implementation
+- [x] 3.5: Data migration (add `normalizedTitle` to contentEvents)
+- [x] 3.6: Update PRD
 
 **Deliverables**:
-- Real-time trending Wikipedia articles as SOTD
-- `scripts/ingest/wiki-aliases.json` with manual mappings
-- Fallback for unmatched articles
+- ✅ Real-time trending Wikipedia articles as SOTD
+- ✅ `scripts/ingest/wiki-aliases.json` with manual mappings
+- ✅ Fallback for unmatched articles
+
+**Implementation Notes**:
+
+**3.1 - Pageviews API Client** (`services/wikimedia-pageviews.ts`):
+- `fetchTopArticles()`: Get top viewed Wikipedia articles
+- Defaults to yesterday's data (API has ~1 day lag)
+- `filterContentArticles()`: Remove meta pages (Main_Page, Special:, etc.)
+- `getTopContentArticle()`: Returns #1 trending article
+- Configurable project (default: en.wikipedia)
+- AbortSignal support for cancellation
+
+**3.2 - Title Matching** (`utils/title-matching.ts`):
+- `normalizeTitle()`: Standardize titles for comparison
+  * Remove disambiguation: "(city)", "(film)"
+  * Remove prefixes: "The", "A", "An"
+  * Lowercase, trim, remove special chars
+- `levenshteinDistance()`: Edit distance algorithm (DP)
+- `calculateSimilarity()`: Normalize to 0-1 score
+- `matchTitle()`: Scoring system:
+  * Exact match: 100 points
+  * High similarity (>0.8): 80-99 points
+  * Keyword match: +20 points
+  * Year match: +10 points
+  * Below 0.5 similarity: 0 points (no match)
+- `findBestMatch()`: Find best event from array (min score: 50)
+
+**3.3 - Alias Table**:
+- `scripts/ingest/wiki-aliases.json`: Manual title mappings
+  * Example: "World_War_II" → "event-1939-world-war-2-begins"
+  * Each entry has reason + addedAt for documentation
+- `scripts/ingest/wiki-aliases.schema.json`: JSON Schema validation
+- `utils/wiki-aliases.ts`: Runtime lookup functions
+  * Singleton pattern with lazy loading
+  * `lookupAlias()`: Find event by Wikipedia title
+  * `hasAlias()`, `getAllAliases()`, `getAliasCount()`
+
+**3.4 - SOTD Integration** (`services/story-of-the-day.ts`):
+- Replaced stub with 4-step cascading logic:
+  1. Get top viewed article from Pageviews API
+  2. Check alias table for manual mapping
+  3. Try fuzzy matching (min score: 70, limit: 100 events)
+  4. Return generic article card if no match
+- Lazy imports to avoid circular dependencies
+- Comprehensive logging for debugging
+- Returns matched event OR trending article card
+- Falls back to seed data on failure
+
+**3.5 - Migration Script** (`scripts/migrations/add-normalized-titles.ts`):
+- Batch migration (100 events per batch)
+- Dry-run mode by default (--execute flag required)
+- Skips events with existing normalizedTitle
+- Sets updatedAt timestamp for audit trail
+- Performance: ~100 events/second
+- Safety: 3-second countdown, comprehensive logging
+- Documentation: README with rollback strategy
+
+**Files Modified/Created**:
+- `services/wikimedia-pageviews.ts` - API client
+- `utils/title-matching.ts` - Fuzzy matching
+- `scripts/ingest/wiki-aliases.json` - Alias data
+- `scripts/ingest/wiki-aliases.schema.json` - Schema
+- `utils/wiki-aliases.ts` - Alias helpers
+- `services/story-of-the-day.ts` - SOTD implementation
+- `scripts/migrations/add-normalized-titles.ts` - Migration
+- `scripts/migrations/README.md` - Migration docs
 
 ---
 
@@ -375,12 +440,12 @@ type YMBIResponse = {
 
 ---
 
-### Current MVP Status: ~95% Complete
+### Current MVP Status: ~98% Complete
 
 **✅ Completed**:
 - Search with debouncing (350ms)
 - Filter modal (categories multi-select, era single-select)
-- Story of the Day (24h cache, Firestore → Wikimedia stub → Seed fallback)
+- Story of the Day (24h cache, Firestore → **Wikimedia Pageviews API** → Seed fallback)
 - You Might Be Interested (6h cache, diversity algorithm)
 - Conditional layout (Default: SOTD + YMBI / Active: Results)
 - Analytics (14 events tracked: +search_results_loaded, +pagination_loaded, +ymbi_not_interested, +ymbi_see_more, +explore_sort_changed)
@@ -389,10 +454,15 @@ type YMBIResponse = {
 - **YMBI "Not Interested" with 7-day TTL (Sprint 2.1 ✅)**
 - **YMBI "See More" navigation (Sprint 2.2 ✅)**
 - **Relevance/Recent sort toggle (Sprint 2.3 ✅)**
+- **Wikimedia Pageviews API integration (Sprint 3.1 ✅)**
+- **Title normalization & fuzzy matching (Sprint 3.2 ✅)**
+- **Wikipedia alias table system (Sprint 3.3 ✅)**
+- **SOTD Wikimedia integration (Sprint 3.4 ✅)**
+- **Database migration tooling (Sprint 3.5 ✅)**
 
 **⚪ Planned**:
-- Wikimedia integration (Sprint 3)
-- Backend API migration for SOTD/YMBI (future)
+- Backend API migration for YMBI (future optimization)
+- Advanced search filters (location, participants)
 
 **🔒 Blocked**:
 - Premium Deep Dive module (requires subscription system)
@@ -402,13 +472,11 @@ type YMBIResponse = {
 ---
 
 ### Known Issues & Workarounds
-1. **Wikimedia SOTD is Stub**
-   - **Issue**: `fetchSOTDFromWikimedia()` returns null
-   - **Workaround**: Falls back to seed data
-   - **ETA**: Sprint 3 completion
-
+~~1. **Wikimedia SOTD is Stub** - ✅ FIXED (Sprint 3.4)~~
 ~~2. **Pagination Limited to 20 Results** - ✅ FIXED (Sprint 1)~~
 ~~3. **No "Not Interested" Feature** - ✅ FIXED (Sprint 2.1)~~
+
+**All MVP blockers resolved!**
 
 ---
 
