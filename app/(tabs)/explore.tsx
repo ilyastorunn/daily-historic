@@ -377,6 +377,36 @@ const createStyles = (theme: ThemeDefinition) => {
     resultsColumn: {
       gap: spacing.lg,
     },
+    sortToggleContainer: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingBottom: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderSubtle,
+      marginBottom: spacing.lg,
+    },
+    sortToggleButton: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: 'transparent',
+    },
+    sortToggleButtonActive: {
+      backgroundColor: colors.accentSoft,
+      borderColor: colors.accentPrimary,
+    },
+    sortToggleText: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    sortToggleTextActive: {
+      color: colors.accentPrimary,
+      fontWeight: '600',
+    },
     resultCard: {
       borderRadius: 16,
       overflow: 'hidden',
@@ -710,6 +740,9 @@ const ExploreScreen = () => {
   const [tempFilters, setTempFilters] = useState<FilterState>(filters);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
+  // Sort state (persisted per session)
+  const [sortMode, setSortMode] = useState<'relevance' | 'recent'>('relevance');
+
   // Date state
   const [selectedDate, setSelectedDate] = useState<string>(today.isoDate);
   const [calendarVisible, setCalendarVisible] = useState(false);
@@ -855,6 +888,7 @@ const ExploreScreen = () => {
           params.append('categories', Array.from(filters.categories).join(','));
         }
         if (filters.era) params.append('era', filters.era);
+        params.append('sort', sortMode);
         if (cursor) params.append('cursor', cursor);
         params.append('limit', '20');
 
@@ -907,7 +941,7 @@ const ExploreScreen = () => {
         setPaginationState((prev) => ({ ...prev, loading: false }));
       }
     },
-    [normalizedQuery, filters, paginationState.loading, paginationState.loadedIds]
+    [normalizedQuery, filters, sortMode, paginationState.loading, paginationState.loadedIds]
   );
 
   // Fetch next page
@@ -977,7 +1011,7 @@ const ExploreScreen = () => {
       setApiResults([]);
       fetchSearchResults(null);
     }
-  }, [showResults, normalizedQuery, filters.categories, filters.era]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showResults, normalizedQuery, filters.categories, filters.era, sortMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track no results when search/filters yield empty results
   useEffect(() => {
@@ -1168,6 +1202,54 @@ const ExploreScreen = () => {
           {showResults ? (
             // Results Layout
             <View style={styles.resultsColumn}>
+              {/* Sort Toggle */}
+              <View style={styles.sortToggleContainer}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Sort by relevance"
+                  accessibilityState={{ selected: sortMode === 'relevance' }}
+                  style={[
+                    styles.sortToggleButton,
+                    sortMode === 'relevance' && styles.sortToggleButtonActive,
+                  ]}
+                  onPress={() => {
+                    setSortMode('relevance');
+                    trackEvent('explore_sort_changed', { sort_mode: 'relevance' });
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.sortToggleText,
+                      sortMode === 'relevance' && styles.sortToggleTextActive,
+                    ]}
+                  >
+                    Relevance
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Sort by recent"
+                  accessibilityState={{ selected: sortMode === 'recent' }}
+                  style={[
+                    styles.sortToggleButton,
+                    sortMode === 'recent' && styles.sortToggleButtonActive,
+                  ]}
+                  onPress={() => {
+                    setSortMode('recent');
+                    trackEvent('explore_sort_changed', { sort_mode: 'recent' });
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.sortToggleText,
+                      sortMode === 'recent' && styles.sortToggleTextActive,
+                    ]}
+                  >
+                    Recent
+                  </Text>
+                </Pressable>
+              </View>
+
               {results.map((event) => (
                 <EventResultCard
                   key={event.eventId}

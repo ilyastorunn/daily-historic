@@ -51,10 +51,13 @@ export interface FirestoreEventDocument {
   updatedAt?: any;
 }
 
+export type SortOption = "relevance" | "recent";
+
 export interface SearchRequest {
   q?: string;
   categories?: string; // Comma-separated
   era?: EraOption;
+  sort?: SortOption;
   cursor?: string;
   limit?: number;
 }
