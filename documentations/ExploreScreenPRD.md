@@ -281,9 +281,9 @@ type YMBIResponse = {
 
 ---
 
-### Sprint 2: UX Improvements ⏸️ PLANNED
+### Sprint 2: UX Improvements ✅ COMPLETED
 **Timeline**: 2-3 days
-**Status**: ⚪ Planned
+**Status**: 🟢 Completed (2025-10-27)
 
 **Goals**:
 - Add "Not Interested" suppression for YMBI (7-day local storage)
@@ -291,15 +291,47 @@ type YMBIResponse = {
 - Implement Relevance/Recent sort toggle
 
 **Tasks**:
-- [ ] 2.1: YMBI "Not Interested" with AsyncStorage (7-day TTL)
-- [ ] 2.2: YMBI "See More" button with filter navigation
-- [ ] 2.3: Relevance/Recent sort toggle with scoring algorithm
-- [ ] 2.4: Update PRD
+- [x] 2.1: YMBI "Not Interested" with AsyncStorage (7-day TTL)
+- [x] 2.2: YMBI "See More" button with filter navigation
+- [x] 2.3: Relevance/Recent sort toggle with scoring algorithm
+- [x] 2.4: Update PRD
 
 **Deliverables**:
-- Long-press "Not Interested" gesture on YMBI cards
-- "See More" quick navigation
-- Sort toggle UI with analytics
+- ✅ Long-press "Not Interested" gesture on YMBI cards (500ms delay)
+- ✅ "See More" quick navigation to filtered search results
+- ✅ Sort toggle UI with analytics tracking
+
+**Implementation Notes**:
+
+**2.1 - Not Interested Feature**:
+- Long-press gesture on YMBI cards with Alert confirmation
+- Calls `markNotInterested(eventId, categoryId)` from service
+- 7-day TTL managed by existing AsyncStorage logic
+- Triggers `ymbi_not_interested` analytics event
+- Refreshes YMBI list automatically after hiding
+
+**2.2 - See More Button**:
+- Enabled "See more" button in YMBI header
+- Navigates to search results with all user categories pre-selected
+- Clears search query to show broad category matches
+- Tracks `ymbi_see_more` analytics event
+
+**2.3 - Sort Toggle**:
+- Segmented control UI (Relevance/Recent)
+- Backend relevance scoring algorithm:
+  * Text match: 0-50 points (exact match in text/summary/tags)
+  * Category match: 0-30 points (15 per matching category)
+  * Recency boost: 0-20 points (logarithmic scale for events since 1900)
+- "Recent" mode uses existing year descending sort
+- Default: Relevance
+- Persisted per session (state-based, not AsyncStorage)
+- Tracks `explore_sort_changed` analytics event
+
+**Files Modified**:
+- `components/explore/YouMightBeInterested.tsx` - Long-press handler, See More button
+- `app/(tabs)/explore.tsx` - YMBI handlers, sort state, sort toggle UI
+- `functions/src/types.ts` - SortOption type
+- `functions/src/api/explore/search.ts` - Relevance scoring algorithm
 
 ---
 
@@ -343,7 +375,7 @@ type YMBIResponse = {
 
 ---
 
-### Current MVP Status: ~90% Complete
+### Current MVP Status: ~95% Complete
 
 **✅ Completed**:
 - Search with debouncing (350ms)
@@ -351,12 +383,14 @@ type YMBIResponse = {
 - Story of the Day (24h cache, Firestore → Wikimedia stub → Seed fallback)
 - You Might Be Interested (6h cache, diversity algorithm)
 - Conditional layout (Default: SOTD + YMBI / Active: Results)
-- Analytics (11 events tracked: +search_results_loaded, +pagination_loaded)
+- Analytics (14 events tracked: +search_results_loaded, +pagination_loaded, +ymbi_not_interested, +ymbi_see_more, +explore_sort_changed)
 - Accessibility (≥44pt targets, VO labels, AA contrast)
 - **Backend pagination with infinite scroll (Sprint 1 ✅)**
+- **YMBI "Not Interested" with 7-day TTL (Sprint 2.1 ✅)**
+- **YMBI "See More" navigation (Sprint 2.2 ✅)**
+- **Relevance/Recent sort toggle (Sprint 2.3 ✅)**
 
 **⚪ Planned**:
-- UX improvements (Sprint 2)
 - Wikimedia integration (Sprint 3)
 - Backend API migration for SOTD/YMBI (future)
 
@@ -368,20 +402,13 @@ type YMBIResponse = {
 ---
 
 ### Known Issues & Workarounds
-1. **Pagination Limited to 20 Results**
-   - **Issue**: Client-side `slice(0, 20)` in explore.tsx:829
-   - **Workaround**: Sprint 1 implementing backend pagination
-   - **ETA**: Sprint 1 completion
-
-2. **Wikimedia SOTD is Stub**
+1. **Wikimedia SOTD is Stub**
    - **Issue**: `fetchSOTDFromWikimedia()` returns null
    - **Workaround**: Falls back to seed data
    - **ETA**: Sprint 3 completion
 
-3. **No "Not Interested" Feature**
-   - **Issue**: Users can't hide YMBI content
-   - **Workaround**: N/A
-   - **ETA**: Sprint 2 completion
+~~2. **Pagination Limited to 20 Results** - ✅ FIXED (Sprint 1)~~
+~~3. **No "Not Interested" Feature** - ✅ FIXED (Sprint 2.1)~~
 
 ---
 
