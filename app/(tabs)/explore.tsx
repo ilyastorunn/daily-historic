@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Modal,
   Platform,
   Pressable,
@@ -16,12 +17,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { heroEvent } from '@/constants/events';
-import { CATEGORY_LABELS, formatCategoryLabel } from '@/constants/personalization';
+import { formatCategoryLabel } from '@/constants/personalization';
 import { useUserContext } from '@/contexts/user-context';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
+import { useStoryOfTheDay } from '@/hooks/use-story-of-the-day';
+import { useYMBI } from '@/hooks/use-ymbi';
 import { fetchEventsByIds } from '@/services/content';
-import type { CategoryOption } from '@/contexts/onboarding-context';
+import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
@@ -35,6 +38,10 @@ import {
   getEventYearLabel,
 } from '@/utils/event-presentation';
 import { createLinearGradientSource } from '@/utils/gradient';
+import { FilterModal, type FilterState } from '@/components/explore/FilterModal';
+import { StoryOfTheDay } from '@/components/explore/StoryOfTheDay';
+import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
+import { trackEvent } from '@/services/analytics';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -44,15 +51,6 @@ const reactions = [
 ] as const;
 
 type ReactionOption = (typeof reactions)[number]['id'];
-type CategoryFilter = CategoryOption | 'all';
-
-const QUICK_FILTERS: { id: CategoryFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
-    id: key as CategoryOption,
-    label,
-  })),
-];
 
 type CalendarModalProps = {
   visible: boolean;
@@ -116,11 +114,21 @@ const CalendarModal = ({ visible, selectedDate, highlightedDates, onClose, onSel
       </TouchableWithoutFeedback>
       <View style={styles.modalSurface}>
         <View style={styles.modalHeader}>
-          <Pressable accessibilityRole="button" onPress={() => handleShiftMonth(-1)}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Previous month"
+            onPress={() => handleShiftMonth(-1)}
+            style={styles.monthNavButton}
+          >
             <IconSymbol name="chevron.right" size={20} color={theme.colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
           </Pressable>
           <Text style={styles.monthLabel}>{formatMonthTitle(pivot)}</Text>
-          <Pressable accessibilityRole="button" onPress={() => handleShiftMonth(1)}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Next month"
+            onPress={() => handleShiftMonth(1)}
+            style={styles.monthNavButton}
+          >
             <IconSymbol name="chevron.right" size={20} color={theme.colors.textSecondary} />
           </Pressable>
         </View>
@@ -197,6 +205,12 @@ const createCalendarStyles = (theme: ThemeDefinition) => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
+    monthNavButton: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     monthLabel: {
       fontFamily: sansFamily,
       fontSize: typography.body.fontSize,
@@ -208,7 +222,7 @@ const createCalendarStyles = (theme: ThemeDefinition) => {
       justifyContent: 'space-between',
     },
     dayLabel: {
-      width: 36,
+      width: 44,
       textAlign: 'center',
       fontFamily: sansFamily,
       fontSize: typography.helper.fontSize,
@@ -219,8 +233,8 @@ const createCalendarStyles = (theme: ThemeDefinition) => {
       justifyContent: 'space-between',
     },
     dayCell: {
-      width: 36,
-      height: 36,
+      width: 44,
+      height: 44,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
@@ -281,23 +295,61 @@ const createStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
-    searchInput: {
-      width: '100%',
-      paddingVertical: spacing.sm,
+    searchRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      alignItems: 'center',
+    },
+    searchInputContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: spacing.card,
+      paddingVertical: spacing.sm,
       borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       backgroundColor: colors.surface,
+      minHeight: 48,
+    },
+    searchInput: {
+      flex: 1,
       fontFamily: sansFamily,
       fontSize: typography.body.fontSize,
       color: colors.textPrimary,
+      marginLeft: spacing.sm,
     },
-    fieldRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
+    clearButton: {
+      padding: spacing.xs,
+      minWidth: 44,
+      minHeight: 44,
       alignItems: 'center',
+      justifyContent: 'center',
+    },
+    filterButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.surface,
+      minHeight: 48,
+    },
+    filterButtonActive: {
+      borderColor: colors.accentPrimary,
+      backgroundColor: colors.accentSoft,
+    },
+    filterLabel: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+    },
+    filterLabelActive: {
+      color: colors.accentPrimary,
+      fontWeight: '600',
     },
     dateButton: {
       flexDirection: 'row',
@@ -309,60 +361,12 @@ const createStyles = (theme: ThemeDefinition) => {
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       backgroundColor: colors.surface,
+      minHeight: 48,
     },
     dateLabel: {
       fontFamily: sansFamily,
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
-    },
-    chip: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      backgroundColor: colors.surface,
-    },
-    chipActive: {
-      borderColor: colors.accentPrimary,
-      backgroundColor: colors.accentSoft,
-    },
-    chipLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
-    },
-    chipLabelActive: {
-      color: colors.accentPrimary,
-      fontWeight: '600',
-    },
-    suggestionsSurface: {
-      gap: spacing.xs,
-    },
-    suggestionPill: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-    },
-    suggestionLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
-    },
-    randomButton: {
-      alignSelf: 'flex-start',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
     },
     resultsColumn: {
       gap: spacing.lg,
@@ -491,43 +495,16 @@ const createStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
-    collectionsSurface: {
+    emptyState: {
+      padding: spacing.xl,
+      alignItems: 'center',
       gap: spacing.sm,
     },
-    collectionCard: {
-      flex: 1,
-      height: 220,
-      borderRadius: 18,
-      overflow: 'hidden',
-      backgroundColor: colors.surface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSubtle,
-      shadowColor: colors.shadowColor,
-      shadowOpacity: 0.12,
-      shadowRadius: 24,
-      shadowOffset: { width: 0, height: 14 },
-      elevation: 6,
-    },
-    collectionOverlay: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      paddingHorizontal: spacing.card,
-      paddingVertical: spacing.lg,
-      gap: spacing.xs,
-      backgroundColor: 'rgba(12, 10, 6, 0.55)',
-    },
-    collectionTitle: {
-      fontFamily: serifFamily,
-      fontSize: typography.headingMd.fontSize,
-      lineHeight: typography.headingMd.lineHeight,
-      color: colors.surface,
-    },
-    collectionSummary: {
+    emptyStateText: {
       fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.accentMuted,
+      fontSize: typography.body.fontSize,
+      color: colors.textSecondary,
+      textAlign: 'center',
     },
   });
 };
@@ -708,25 +685,62 @@ const ExploreScreen = () => {
   const router = useRouter();
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { profile } = useUserContext();
+  const { profile, authUser } = useUserContext();
+
   const today = useMemo(
     () => getDateParts(new Date(), { timeZone: profile?.timezone }),
     [profile?.timezone]
   );
+
+  // Search state
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  // Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    categories: new Set<CategoryOption>(),
+    era: null,
+  });
+  const [tempFilters, setTempFilters] = useState<FilterState>(filters);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  // Date state
   const [selectedDate, setSelectedDate] = useState<string>(today.isoDate);
-  const [filters, setFilters] = useState<Set<CategoryFilter>>(new Set());
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [eventCache, setEventCache] = useState<Record<string, FirestoreEventDocument>>({});
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Determine if we're showing results or default layout
+  const showResults = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null;
+
   const activeDate = useMemo(() => parseIsoDate(selectedDate) ?? today, [selectedDate, today]);
 
+  // Data hooks
   const {
     events: digestEvents,
     digest,
     loading: digestLoading,
     error: digestError,
   } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day, year: activeDate.year });
+
+  const { story, loading: sotdLoading } = useStoryOfTheDay({ enabled: !showResults });
+
+  const { items: ymbiItems, loading: ymbiLoading } = useYMBI({
+    userId: authUser?.uid ?? '',
+    userCategories: profile?.categories ?? [],
+    savedEventIds: profile?.savedEventIds ?? [],
+    homeEventIds: [], // TODO: Track Home event IDs to avoid duplicates
+    limit: 8,
+    enabled: !showResults,
+  });
 
   useEffect(() => {
     if (digestError) {
@@ -809,53 +823,79 @@ const ExploreScreen = () => {
     return set;
   }, [eventCache, profile?.savedEventIds, today.year]);
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const activeFilters = useMemo(() => Array.from(filters), [filters]);
+  const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
   const results = useMemo(() => {
-    return digestEvents
-      .filter((event) => {
-        if (activeFilters.length > 0) {
-          const categories = event.categories ?? [];
-          if (!activeFilters.some((filter) => categories.includes(filter))) {
-            return false;
-          }
-        }
-        if (!normalizedQuery) {
-          return true;
-        }
-        return buildEventSearchText(event).includes(normalizedQuery);
-      })
-      .slice(0, 20);
-  }, [activeFilters, digestEvents, normalizedQuery]);
+    let filtered = digestEvents;
 
-  const suggestionPool = useMemo(() => Object.values(eventCache), [eventCache]);
-
-  const suggestions = useMemo(() => {
-    if (normalizedQuery.length < 2) {
-      return [] as FirestoreEventDocument[];
-    }
-    return suggestionPool
-      .filter((event) => getEventTitle(event).toLowerCase().includes(normalizedQuery))
-      .slice(0, 4);
-  }, [normalizedQuery, suggestionPool]);
-
-  const handleToggleFilter = useCallback((filterId: CategoryFilter) => {
-    if (filterId === 'all') {
-      setFilters(new Set());
-      return;
+    // Apply category filter
+    if (filters.categories.size > 0) {
+      const categoryArray = Array.from(filters.categories);
+      filtered = filtered.filter((event) => {
+        const categories = event.categories ?? [];
+        return categoryArray.some((filter) => categories.includes(filter));
+      });
     }
 
-    setFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(filterId)) {
-        next.delete(filterId);
-      } else {
-        next.add(filterId);
-      }
-      return next;
-    });
+    // Apply era filter
+    if (filters.era) {
+      filtered = filtered.filter((event) => event.era === filters.era);
+    }
+
+    // Apply search query
+    if (normalizedQuery) {
+      filtered = filtered.filter((event) => buildEventSearchText(event).includes(normalizedQuery));
+    }
+
+    return filtered.slice(0, 20);
+  }, [digestEvents, filters, normalizedQuery]);
+
+  const activeFilterCount = filters.categories.size + (filters.era ? 1 : 0);
+
+  // Track explore_opened on mount
+  useEffect(() => {
+    trackEvent('explore_opened', { source: 'tab' });
   }, []);
+
+  // Track search typed when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery.length > 0) {
+      trackEvent('explore_search_typed', {
+        q_len: debouncedQuery.length,
+        submitted: false, // Debounced input, not explicit submit
+      });
+    }
+  }, [debouncedQuery]);
+
+  // Track SOTD shown when story is loaded and visible
+  useEffect(() => {
+    if (story && !showResults && !sotdLoading) {
+      trackEvent('sotd_shown', {
+        source: story.source,
+        matched: story.matched ?? (story.source === 'wikimedia'),
+      });
+    }
+  }, [story, showResults, sotdLoading]);
+
+  // Track YMBI shown when items are loaded and visible
+  useEffect(() => {
+    if (ymbiItems.length > 0 && !showResults && !ymbiLoading) {
+      trackEvent('ymbi_shown', {
+        count: ymbiItems.length,
+      });
+    }
+  }, [ymbiItems, showResults, ymbiLoading]);
+
+  // Track no results when search/filters yield empty results
+  useEffect(() => {
+    if (showResults && results.length === 0 && !digestLoading) {
+      trackEvent('explore_no_results', {
+        q_len: debouncedQuery.length,
+        categories_count: filters.categories.size,
+        era_selected: filters.era ?? 'none',
+      });
+    }
+  }, [showResults, results.length, digestLoading, debouncedQuery.length, filters]);
 
   const handleOpenDetail = useCallback(
     (id: string) => {
@@ -864,20 +904,59 @@ const ExploreScreen = () => {
     [router]
   );
 
-  const handleRandomDate = useCallback(() => {
-    const datedEvents = suggestionPool.filter((event) => event.date);
-    if (datedEvents.length === 0) {
-      setSelectedDate(today.isoDate);
-      return;
+  const handleSOTDPress = useCallback(() => {
+    if (story?.eventId) {
+      trackEvent('sotd_opened', {
+        matched: story.matched ?? (story.source === 'wikimedia'),
+      });
+      handleOpenDetail(story.eventId);
     }
-    const random = datedEvents[Math.floor(Math.random() * datedEvents.length)];
-    if (random.date) {
-      const month = random.date.month.toString().padStart(2, '0');
-      const day = random.date.day.toString().padStart(2, '0');
-      setSelectedDate(`${today.year}-${month}-${day}`);
-      setQuery('');
-    }
-  }, [suggestionPool, today.year, today.isoDate]);
+  }, [story, handleOpenDetail]);
+
+  const handleYMBICardPress = useCallback(
+    (eventId: string) => {
+      const event = ymbiItems.find((e) => e.eventId === eventId);
+      if (event) {
+        trackEvent('ymbi_card_opened', {
+          card_id: eventId,
+          category_id: event.categories?.[0] ?? 'unknown',
+        });
+      }
+      handleOpenDetail(eventId);
+    },
+    [ymbiItems, handleOpenDetail]
+  );
+
+  const handleFilterOpen = () => {
+    setTempFilters(filters);
+    setFilterModalVisible(true);
+    trackEvent('explore_filters_opened');
+  };
+
+  const handleFilterReset = () => {
+    setTempFilters({
+      categories: new Set(),
+      era: null,
+    });
+  };
+
+  const handleFilterApply = () => {
+    setFilters(tempFilters);
+    setFilterModalVisible(false);
+    trackEvent('explore_filters_applied', {
+      categories_count: tempFilters.categories.size,
+      era_selected: tempFilters.era ?? 'none',
+    });
+  };
+
+  const handleClearSearch = () => {
+    setQuery('');
+    setDebouncedQuery('');
+    setFilters({
+      categories: new Set(),
+      era: null,
+    });
+  };
 
   const selectedDateDisplay = formatIsoDateLabel(digest?.date ?? selectedDate, {
     timeZone: profile?.timezone,
@@ -905,15 +984,53 @@ const ExploreScreen = () => {
             {statusMessage ? <Text style={styles.helperText}>{statusMessage}</Text> : null}
           </View>
 
-          <View style={styles.fieldRow}>
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search events, people, or themes"
-              placeholderTextColor={theme.colors.textTertiary}
-              style={styles.searchInput}
-              returnKeyType="search"
-            />
+          {/* Search Bar */}
+          <View style={styles.searchRow}>
+            <View style={styles.searchInputContainer}>
+              <IconSymbol name="magnifyingglass" size={18} color={theme.colors.textTertiary} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search events, people, or themes"
+                placeholderTextColor={theme.colors.textTertiary}
+                style={styles.searchInput}
+                returnKeyType="search"
+              />
+              {query.length > 0 && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear search"
+                  onPress={handleClearSearch}
+                  style={styles.clearButton}
+                >
+                  <IconSymbol name="xmark.circle.fill" size={18} color={theme.colors.textTertiary} />
+                </Pressable>
+              )}
+            </View>
+          </View>
+
+          {/* Filter & Date Row */}
+          <View style={styles.searchRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Filters${activeFilterCount > 0 ? ` (${activeFilterCount} active)` : ''}`}
+              onPress={handleFilterOpen}
+              style={({ pressed }) => [
+                styles.filterButton,
+                activeFilterCount > 0 && styles.filterButtonActive,
+                pressed && { opacity: 0.9 },
+              ]}
+            >
+              <IconSymbol
+                name="line.horizontal.3.decrease.circle"
+                size={18}
+                color={activeFilterCount > 0 ? theme.colors.accentPrimary : theme.colors.textSecondary}
+              />
+              <Text style={[styles.filterLabel, activeFilterCount > 0 && styles.filterLabelActive]}>
+                {activeFilterCount > 0 ? `Filters • ${activeFilterCount}` : 'Filters'}
+              </Text>
+            </Pressable>
+
             <Pressable
               accessibilityRole="button"
               onPress={() => setCalendarVisible(true)}
@@ -924,74 +1041,43 @@ const ExploreScreen = () => {
             </Pressable>
           </View>
 
-          {suggestions.length > 0 && (
-            <View style={styles.suggestionsSurface}>
-              {suggestions.map((item) => {
-                const title = getEventTitle(item);
-                return (
-                  <Pressable
-                    key={item.eventId}
-                    accessibilityRole="button"
-                    onPress={() => {
-                      setQuery(title);
-                      handleOpenDetail(item.eventId);
-                    }}
-                    style={({ pressed }) => [styles.suggestionPill, pressed && { opacity: 0.85 }]}
-                  >
-                    <Text style={styles.suggestionLabel}>{title}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-
-          <View style={styles.fieldRow}>
-            {QUICK_FILTERS.map((filter) => {
-              const isAll = filter.id === 'all';
-              const isActive = isAll ? filters.size === 0 : filters.has(filter.id);
-              return (
-                <Pressable
-                  key={filter.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isActive }}
-                  onPress={() => handleToggleFilter(filter.id)}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    isActive && styles.chipActive,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                    {filter.label}
+          {/* Conditional Rendering: Default Layout vs Results */}
+          {showResults ? (
+            // Results Layout
+            <View style={styles.resultsColumn}>
+              {results.map((event) => (
+                <EventResultCard
+                  key={event.eventId}
+                  event={event}
+                  onOpenDetail={() => handleOpenDetail(event.eventId)}
+                  styles={styles}
+                  theme={theme}
+                />
+              ))}
+              {!digestLoading && results.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>
+                    No matches found. Try fewer filters or a different search term.
                   </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleRandomDate}
-            style={({ pressed }) => [styles.randomButton, pressed && { opacity: 0.85 }]}
-          >
-            <IconSymbol name="sparkles" size={18} color={theme.colors.textSecondary} />
-            <Text style={styles.actionLabel}>I’m feeling curious</Text>
-          </Pressable>
-
-          <View style={styles.resultsColumn}>
-            {results.map((event) => (
-              <EventResultCard
-                key={event.eventId}
-                event={event}
-                onOpenDetail={() => handleOpenDetail(event.eventId)}
-                styles={styles}
-                theme={theme}
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            // Default Layout: SOTD + YMBI
+            <>
+              <StoryOfTheDay
+                story={story}
+                loading={sotdLoading}
+                onPress={handleSOTDPress}
               />
-            ))}
-            {!digestLoading && results.length === 0 ? (
-              <Text style={styles.helperText}>No moments yet—adjust filters or try another date.</Text>
-            ) : null}
-          </View>
+
+              <YouMightBeInterested
+                items={ymbiItems}
+                loading={ymbiLoading}
+                onCardPress={handleYMBICardPress}
+              />
+            </>
+          )}
         </ScrollView>
       </View>
 
@@ -1001,6 +1087,15 @@ const ExploreScreen = () => {
         highlightedDates={highlightedDates}
         onClose={() => setCalendarVisible(false)}
         onSelect={(date) => setSelectedDate(date)}
+      />
+
+      <FilterModal
+        visible={filterModalVisible}
+        filters={tempFilters}
+        onFiltersChange={setTempFilters}
+        onReset={handleFilterReset}
+        onApply={handleFilterApply}
+        onClose={() => setFilterModalVisible(false)}
       />
     </SafeAreaView>
   );
