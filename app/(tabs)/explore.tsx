@@ -840,30 +840,93 @@ const ExploreScreen = () => {
 
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
+  // Fetch search results from backend API
+  const fetchSearchResults = useCallback(
+    async (cursor?: string | null) => {
+      if (paginationState.loading) return;
+
+      try {
+        setPaginationState((prev) => ({ ...prev, loading: true }));
+
+        // Build query params
+        const params = new URLSearchParams();
+        if (normalizedQuery) params.append('q', normalizedQuery);
+        if (filters.categories.size > 0) {
+          params.append('categories', Array.from(filters.categories).join(','));
+        }
+        if (filters.era) params.append('era', filters.era);
+        if (cursor) params.append('cursor', cursor);
+        params.append('limit', '20');
+
+        const url = `${API_BASE_URL}/explore/search?${params.toString()}`;
+        console.log('[Explore] Fetching:', url);
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('[Explore] API Response:', {
+          itemCount: data.items?.length,
+          nextCursor: data.nextCursor,
+        });
+
+        // Update state
+        const newItems = data.items || [];
+        const newIds = new Set(paginationState.loadedIds);
+        newItems.forEach((item: FirestoreEventDocument) => newIds.add(item.eventId));
+
+        setPaginationState((prev) => ({
+          ...prev,
+          cursor: data.nextCursor || null,
+          hasMore: !!data.nextCursor,
+          loading: false,
+          loadedIds: newIds,
+        }));
+
+        // Append or replace results
+        setApiResults((prev) => (cursor ? [...prev, ...newItems] : newItems));
+
+        // Track analytics
+        if (!cursor) {
+          trackEvent('explore_search_results_loaded', {
+            q_len: normalizedQuery.length,
+            categories_count: filters.categories.size,
+            era_selected: filters.era || 'none',
+            results_count: newItems.length,
+          });
+        } else {
+          trackEvent('explore_pagination_loaded', {
+            page_number: Math.floor(prev.length / 20) + 1,
+            items_count: newItems.length,
+          });
+        }
+      } catch (error) {
+        console.error('[Explore] API error:', error);
+        setPaginationState((prev) => ({ ...prev, loading: false }));
+      }
+    },
+    [normalizedQuery, filters, paginationState.loading, paginationState.loadedIds]
+  );
+
+  // Fetch next page
+  const fetchNextPage = useCallback(() => {
+    if (paginationState.hasMore && !paginationState.loading && paginationState.cursor) {
+      fetchSearchResults(paginationState.cursor);
+    }
+  }, [paginationState, fetchSearchResults]);
+
+  // Determine results source (API or local filtering)
   const results = useMemo(() => {
-    let filtered = digestEvents;
-
-    // Apply category filter
-    if (filters.categories.size > 0) {
-      const categoryArray = Array.from(filters.categories);
-      filtered = filtered.filter((event) => {
-        const categories = event.categories ?? [];
-        return categoryArray.some((filter) => categories.includes(filter));
-      });
+    // If showing default layout (SOTD + YMBI), use digestEvents for date picker
+    if (!showResults) {
+      return digestEvents;
     }
 
-    // Apply era filter
-    if (filters.era) {
-      filtered = filtered.filter((event) => event.era === filters.era);
-    }
-
-    // Apply search query
-    if (normalizedQuery) {
-      filtered = filtered.filter((event) => buildEventSearchText(event).includes(normalizedQuery));
-    }
-
-    return filtered.slice(0, 20);
-  }, [digestEvents, filters, normalizedQuery]);
+    // Use API results for search/filter
+    return apiResults;
+  }, [showResults, apiResults, digestEvents]);
 
   const activeFilterCount = filters.categories.size + (filters.era ? 1 : 0);
 
@@ -901,16 +964,31 @@ const ExploreScreen = () => {
     }
   }, [ymbiItems, showResults, ymbiLoading]);
 
+  // Fetch search results when query or filters change
+  useEffect(() => {
+    if (showResults) {
+      // Reset pagination and fetch first page
+      setPaginationState({
+        cursor: null,
+        hasMore: true,
+        loading: false,
+        loadedIds: new Set(),
+      });
+      setApiResults([]);
+      fetchSearchResults(null);
+    }
+  }, [showResults, normalizedQuery, filters.categories, filters.era]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Track no results when search/filters yield empty results
   useEffect(() => {
-    if (showResults && results.length === 0 && !digestLoading) {
+    if (showResults && results.length === 0 && !paginationState.loading) {
       trackEvent('explore_no_results', {
         q_len: debouncedQuery.length,
         categories_count: filters.categories.size,
         era_selected: filters.era ?? 'none',
       });
     }
-  }, [showResults, results.length, digestLoading, debouncedQuery.length, filters]);
+  }, [showResults, results.length, paginationState.loading, debouncedQuery.length, filters]);
 
   const handleOpenDetail = useCallback(
     (id: string) => {
@@ -990,6 +1068,19 @@ const ExploreScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          onScroll={(event) => {
+            if (!showResults || !paginationState.hasMore || paginationState.loading) return;
+
+            const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+            const scrollPercentage =
+              (layoutMeasurement.height + contentOffset.y) / contentSize.height;
+
+            // Fetch next page when 70% scrolled
+            if (scrollPercentage >= 0.7) {
+              fetchNextPage();
+            }
+          }}
+          scrollEventThrottle={400}
         >
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Explore</Text>
@@ -1069,7 +1160,15 @@ const ExploreScreen = () => {
                   theme={theme}
                 />
               ))}
-              {!digestLoading && results.length === 0 ? (
+              {paginationState.loading && (
+                <View style={{ paddingVertical: theme.spacing.xl, alignItems: 'center' }}>
+                  <ActivityIndicator size="large" color={theme.colors.accentPrimary} />
+                  <Text style={{ ...styles.emptyStateText, marginTop: theme.spacing.sm }}>
+                    Loading more results...
+                  </Text>
+                </View>
+              )}
+              {!paginationState.loading && results.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateText}>
                     No matches found. Try fewer filters or a different search term.
