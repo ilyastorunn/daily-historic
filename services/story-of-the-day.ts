@@ -126,17 +126,116 @@ const fetchSOTDFromFirestore = async (): Promise<SOTDResponse | null> => {
 };
 
 /**
- * Fetch SOTD from Wikimedia Pageviews API (stub for now)
- * TODO: Implement actual Wikimedia Pageviews integration
+ * Fetch SOTD from Wikimedia Pageviews API
+ * 1. Get top viewed Wikipedia article
+ * 2. Check alias table for manual mapping
+ * 3. Try fuzzy matching against Firestore events
+ * 4. Return matched event or generic article card
  */
 const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
-  // Stub: In a real implementation, this would:
-  // 1. Fetch top viewed pages from Wikimedia Pageviews API
-  // 2. Normalize titles and attempt to match to internal event IDs
-  // 3. Return matched event or generic article card
+  try {
+    console.log('[SOTD] Fetching from Wikimedia Pageviews API');
 
-  console.log('[SOTD] Wikimedia integration not yet implemented, using fallback');
-  return null;
+    // Import lazy to avoid circular dependencies
+    const { getTopContentArticle, decodeArticleTitle } = await import(
+      '@/services/wikimedia-pageviews'
+    );
+    const { lookupAlias } = await import('@/utils/wiki-aliases');
+    const { findBestMatch } = await import('@/utils/title-matching');
+
+    // 1. Get top viewed article (yesterday's data)
+    const topArticle = await getTopContentArticle();
+
+    if (!topArticle) {
+      console.log('[SOTD] No top article found from Pageviews API');
+      return null;
+    }
+
+    const wikipediaTitle = topArticle.article;
+    const decodedTitle = decodeArticleTitle(wikipediaTitle);
+
+    console.log('[SOTD] Top article:', {
+      title: decodedTitle,
+      views: topArticle.views,
+      rank: topArticle.rank,
+    });
+
+    // 2. Check alias table first
+    const aliasEventId = lookupAlias(wikipediaTitle);
+
+    if (aliasEventId) {
+      console.log('[SOTD] Found alias mapping', { eventId: aliasEventId });
+
+      const eventDoc = await firebaseFirestore.collection('contentEvents').doc(aliasEventId).get();
+
+      if (eventDoc.exists) {
+        const event = eventDoc.data() as FirestoreEventDocument;
+        const imageUrl = event.relatedPages?.[0]?.thumbnails?.[0]?.sourceUrl;
+
+        return {
+          id: aliasEventId,
+          title: event.text || event.summary || decodedTitle,
+          blurb: event.summary,
+          imageUrl,
+          matched: true,
+          source: 'wikimedia',
+          dateISO: new Date().toISOString(),
+          eventId: aliasEventId,
+          event,
+        };
+      }
+    }
+
+    // 3. Try fuzzy matching against all events
+    console.log('[SOTD] No alias found, trying fuzzy matching');
+
+    const eventsSnapshot = await firebaseFirestore
+      .collection('contentEvents')
+      .limit(100) // Limit for performance
+      .get();
+
+    const allEvents = eventsSnapshot.docs.map((doc) => doc.data() as FirestoreEventDocument);
+
+    const bestMatch = findBestMatch(decodedTitle, allEvents, 70); // Min score: 70
+
+    if (bestMatch) {
+      console.log('[SOTD] Found fuzzy match', {
+        eventId: bestMatch.event.eventId,
+        score: bestMatch.match.score,
+        similarity: bestMatch.match.similarity,
+      });
+
+      const imageUrl = bestMatch.event.relatedPages?.[0]?.thumbnails?.[0]?.sourceUrl;
+
+      return {
+        id: bestMatch.event.eventId ?? 'unknown',
+        title: bestMatch.event.text || bestMatch.event.summary || decodedTitle,
+        blurb: bestMatch.event.summary,
+        imageUrl,
+        matched: true,
+        source: 'wikimedia',
+        dateISO: new Date().toISOString(),
+        eventId: bestMatch.event.eventId,
+        event: bestMatch.event,
+      };
+    }
+
+    // 4. No match found - return generic Wikipedia article card
+    console.log('[SOTD] No match found, returning generic article card');
+
+    return {
+      id: `wikimedia:${wikipediaTitle}`,
+      title: decodedTitle,
+      blurb: `Trending on Wikipedia with ${topArticle.views.toLocaleString()} views`,
+      imageUrl: undefined,
+      matched: false,
+      source: 'wikimedia',
+      dateISO: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('[SOTD] Wikimedia fetch failed', error);
+    return null;
+  }
 };
 
 /**
