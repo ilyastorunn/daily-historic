@@ -24,6 +24,7 @@ import { SelectableChip } from '@/components/ui/selectable-chip';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
+import { ThemeToggle } from '@/components/profile/ThemeToggle';
 
 const CATEGORY_CHOICES: { value: CategoryOption; label: string }[] = [
   { value: 'world-wars', label: 'World Wars' },
@@ -416,6 +417,14 @@ const ProfileScreen = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Preferences</Text>
             <View style={styles.sectionBody}>
+              <View style={styles.preferenceBlock}>
+                <Text style={styles.preferenceLabel}>Appearance</Text>
+                <ThemeToggle
+                  value={profile?.themePreference ?? 'system'}
+                  onChange={(preference) => void updateProfile({ themePreference: preference })}
+                />
+              </View>
+
               <View style={styles.preferenceBlock}>
                 <Text style={styles.preferenceLabel}>Themes</Text>
                 <View style={styles.chipGroup}>
