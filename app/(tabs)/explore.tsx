@@ -803,22 +803,26 @@ const ExploreScreen = () => {
       return;
     }
 
-    // Check if all events are already cached
-    const allCached = savedIds.every((id) => eventCache[id]);
-    if (allCached) {
-      const cached = savedIds.map((id) => eventCache[id]).filter(Boolean);
-      setSavedEventsData(cached);
-      return;
-    }
-
     let cancelled = false;
     const loadSavedEvents = async () => {
       setSavedEventsLoading(true);
       try {
-        const fetched = await fetchEventsByIds(savedIds);
+        // Check which events are not in cache
+        const missingIds = savedIds.filter((id) => !eventCache[id]);
+
+        // If all are cached, just update state from cache
+        if (missingIds.length === 0) {
+          const cached = savedIds.map((id) => eventCache[id]).filter(Boolean);
+          setSavedEventsData(cached);
+          setSavedEventsLoading(false);
+          return;
+        }
+
+        // Fetch only missing events
+        const fetched = await fetchEventsByIds(missingIds);
         if (cancelled) return;
 
-        // Update cache
+        // Update cache with new events only
         setEventCache((prev) => {
           const next = { ...prev };
           fetched.forEach((event) => {
@@ -827,7 +831,12 @@ const ExploreScreen = () => {
           return next;
         });
 
-        setSavedEventsData(fetched);
+        // Combine cached and newly fetched events
+        const allEvents = savedIds
+          .map((id) => eventCache[id] || fetched.find((e) => e.eventId === id))
+          .filter(Boolean) as FirestoreEventDocument[];
+
+        setSavedEventsData(allEvents);
       } catch (error) {
         console.error('Failed to load saved events', error);
       } finally {
@@ -842,7 +851,7 @@ const ExploreScreen = () => {
     return () => {
       cancelled = true;
     };
-  }, [profile?.savedEventIds, eventCache]);
+  }, [profile?.savedEventIds]);
 
   useEffect(() => {
     if (digestError) {
