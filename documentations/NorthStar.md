@@ -85,6 +85,13 @@
 - Bottom nav glow aktive olurken 150ms fade + blur animasyonu.
 - Chip seçiminde hafif (selection) haptic + 120ms scale animasyonu.
 
+## Profile & Preferences
+- **Appearance**: 3 chip (Light, Dark, System) - default System. SelectableChip kullanır; accent seçili olanda.
+- **Notifications**: Daily email digest toggle (Switch). Helper text altında açıklama.
+- **Content Preferences**: Categories ve Eras chip grupları (ileride collapsible).
+- **Workflow**: Appearance seçimi → Firestore'a `themePreference` yazılır → ThemeContext güncellenir → App re-render.
+- **Analytics**: `theme_changed` event (from, to parametreleri ile).
+
 ## Done Check
 - Her ekranda tek odak ve tek accent korunur.
 - Hero carousel, Collections grid, Time Machine blok ve Chip rail yukarıdaki token/motion kurallarını takip eder.
