@@ -41,7 +41,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     overlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(12, 10, 6, 0.35)',
+      backgroundColor: theme.mode === 'dark' ? 'rgba(0, 0, 0, 0.65)' : 'rgba(12, 10, 6, 0.40)',
       padding: spacing.xl,
       justifyContent: 'flex-end',
     },
