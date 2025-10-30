@@ -3,8 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useUserContext } from '@/contexts/user-context';
 import {
   USERS_COLLECTION,
-  firebaseFieldValue,
   firebaseFirestore,
+  doc,
+  setDoc,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
 } from '@/services/firebase';
 import type { ReactionValue } from '@/types/user';
 
@@ -58,11 +62,12 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
     const nextSaved = !defaultSaved;
     setOptimisticSave(nextSaved);
 
-    const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
+    const db = firebaseFirestore();
+    const docRef = doc(db, USERS_COLLECTION, authUser.uid);
 
     const mutation = nextSaved
-      ? docRef.set({ savedEventIds: firebaseFieldValue.arrayUnion(eventId) }, { merge: true })
-      : docRef.set({ savedEventIds: firebaseFieldValue.arrayRemove(eventId) }, { merge: true });
+      ? setDoc(docRef, { savedEventIds: arrayUnion(eventId) }, { merge: true })
+      : setDoc(docRef, { savedEventIds: arrayRemove(eventId) }, { merge: true });
 
     mutation.catch((error) => {
       console.error('Failed to toggle save state', error);
@@ -81,12 +86,13 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
       const next = current === type ? null : type;
       setOptimisticReaction(next);
 
-      const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
+      const db = firebaseFirestore();
+      const docRef = doc(db, USERS_COLLECTION, authUser.uid);
       const payload: Record<string, unknown> = {};
       const fieldPath = `reactions.${eventId}`;
-      payload[fieldPath] = next ?? firebaseFieldValue.delete();
+      payload[fieldPath] = next ?? deleteField();
 
-      docRef.set(payload, { merge: true }).catch((error) => {
+      setDoc(docRef, payload, { merge: true }).catch((error) => {
         console.error('Failed to toggle reaction', error);
         setOptimisticReaction(undefined);
       });

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firebaseFirestore } from '@/services/firebase';
+import { firebaseFirestore, doc, getDoc } from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getRandomSOTDSeed } from '@/constants/explore-seed';
 
@@ -83,27 +83,30 @@ const fetchSOTDFromFirestore = async (): Promise<SOTDResponse | null> => {
 
     console.log('[SOTD] Fetching from Firestore', { dateKey });
 
-    const doc = await firebaseFirestore.doc(`storyOfTheDay/${dateKey}`).get();
+    const db = firebaseFirestore();
+    const sotdDocRef = doc(db, 'storyOfTheDay', dateKey);
+    const sotdDocSnap = await getDoc(sotdDocRef);
 
-    if (!doc.exists) {
+    if (!sotdDocSnap.exists) {
       console.log('[SOTD] No Firestore document found for today');
       return null;
     }
 
-    const data = doc.data();
+    const data = sotdDocSnap.data();
     if (!data?.eventId) {
       console.log('[SOTD] Firestore document missing eventId');
       return null;
     }
 
     // Fetch the full event document
-    const eventDoc = await firebaseFirestore.doc(`contentEvents/${data.eventId}`).get();
-    if (!eventDoc.exists) {
+    const eventDocRef = doc(db, 'contentEvents', data.eventId);
+    const eventDocSnap = await getDoc(eventDocRef);
+    if (!eventDocSnap.exists) {
       console.log('[SOTD] Event document not found', { eventId: data.eventId });
       return null;
     }
 
-    const event = eventDoc.data() as FirestoreEventDocument;
+    const event = eventDocSnap.data() as FirestoreEventDocument;
     const imageUrl = event.relatedPages?.[0]?.thumbnails?.[0]?.sourceUrl;
 
     const response: SOTDResponse = {
@@ -166,10 +169,12 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
     if (aliasEventId) {
       console.log('[SOTD] Found alias mapping', { eventId: aliasEventId });
 
-      const eventDoc = await firebaseFirestore.doc(`contentEvents/${aliasEventId}`).get();
+      const db = firebaseFirestore();
+      const eventDocRef = doc(db, 'contentEvents', aliasEventId);
+      const eventDocSnap = await getDoc(eventDocRef);
 
-      if (eventDoc.exists) {
-        const event = eventDoc.data() as FirestoreEventDocument;
+      if (eventDocSnap.exists) {
+        const event = eventDocSnap.data() as FirestoreEventDocument;
         const imageUrl = event.relatedPages?.[0]?.thumbnails?.[0]?.sourceUrl;
 
         return {

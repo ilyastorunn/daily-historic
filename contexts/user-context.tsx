@@ -13,8 +13,12 @@ import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import {
   USERS_COLLECTION,
   firebaseAuth,
-  firebaseFieldValue,
   firebaseFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot,
+  serverTimestamp,
 } from '@/services/firebase';
 import type { OnboardingData, UserDocument, UserProfile } from '@/types/user';
 
@@ -84,9 +88,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     }
 
     setProfileLoading(true);
-    const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
+    const db = firebaseFirestore();
+    const docRef = doc(db, USERS_COLLECTION, authUser.uid);
 
-    const unsubscribe = docRef.onSnapshot(
+    const unsubscribe = onSnapshot(
+      docRef,
       (snapshot) => {
         if (!snapshot.exists) {
           setProfile(null);
@@ -137,9 +143,10 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         throw new Error('Cannot complete onboarding without an authenticated user.');
       }
 
-      const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
+      const db = firebaseFirestore();
+      const docRef = doc(db, USERS_COLLECTION, authUser.uid);
 
-      const serverTimestamp = firebaseFieldValue.serverTimestamp();
+      const timestamp = serverTimestamp();
 
       const sanitizedData = Object.fromEntries(
         Object.entries(data).filter(([, value]) => value !== undefined)
@@ -149,13 +156,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         uid: authUser.uid,
         ...sanitizedData,
         onboardingCompleted: true,
-        updatedAt: serverTimestamp,
-        ...(profile?.createdAt ? {} : { createdAt: serverTimestamp }),
+        updatedAt: timestamp,
+        ...(profile?.createdAt ? {} : { createdAt: timestamp }),
         savedEventIds: profile?.savedEventIds ?? [],
         reactions: profile?.reactions ?? {},
       };
 
-      await docRef.set(payload, { merge: true });
+      await setDoc(docRef, payload, { merge: true });
     },
     [authUser, profile]
   );
@@ -166,17 +173,19 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         throw new Error('Cannot update profile without an authenticated user.');
       }
 
-      const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
+      const db = firebaseFirestore();
+      const docRef = doc(db, USERS_COLLECTION, authUser.uid);
 
-      const serverTimestamp = firebaseFieldValue.serverTimestamp();
+      const timestamp = serverTimestamp();
       const sanitized = Object.fromEntries(
         Object.entries(data).filter(([, value]) => value !== undefined)
       );
 
-      await docRef.set(
+      await setDoc(
+        docRef,
         {
           ...sanitized,
-          updatedAt: serverTimestamp,
+          updatedAt: timestamp,
         },
         { merge: true }
       );
