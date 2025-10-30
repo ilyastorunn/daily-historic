@@ -4,6 +4,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   Share,
   StyleSheet,
@@ -24,6 +25,7 @@ import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useStoryOfTheDay } from '@/hooks/use-story-of-the-day';
 import { useYMBI } from '@/hooks/use-ymbi';
 import { fetchEventsByIds } from '@/services/content';
+import { clearSOTDCache } from '@/services/story-of-the-day';
 import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -780,7 +782,7 @@ const ExploreScreen = () => {
     error: digestError,
   } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day, year: activeDate.year });
 
-  const { story, loading: sotdLoading } = useStoryOfTheDay({ enabled: !showResults });
+  const { story, loading: sotdLoading, refresh: refreshSOTD } = useStoryOfTheDay({ enabled: !showResults });
 
   const { items: ymbiItems, loading: ymbiLoading, refresh: refreshYMBI } = useYMBI({
     userId: authUser?.uid ?? '',
@@ -790,6 +792,28 @@ const ExploreScreen = () => {
     limit: 8,
     enabled: !showResults,
   });
+
+  // Pull to refresh
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Clear SOTD cache to fetch fresh data
+      await clearSOTDCache();
+
+      // Trigger refreshes for both SOTD and YMBI
+      refreshSOTD();
+      refreshYMBI();
+
+      // Wait a bit for the data to load
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('[Explore] Refresh failed', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshSOTD, refreshYMBI]);
 
   // Saved events state (fetch from Firestore)
   const [savedEventsData, setSavedEventsData] = useState<FirestoreEventDocument[]>([]);
@@ -1182,6 +1206,13 @@ const ExploreScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.accentPrimary}
+            />
+          }
           onScroll={(event) => {
             if (!showResults || !paginationState.hasMore || paginationState.loading) return;
 

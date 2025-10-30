@@ -22,6 +22,7 @@ export type SOTDResponse = {
 
 type SOTDCache = {
   timestamp: number;
+  dateKey: string; // Format: "MM-DD" to invalidate cache when day changes
   data: SOTDResponse;
 };
 
@@ -39,9 +40,25 @@ const getCachedSOTD = async (): Promise<SOTDResponse | null> => {
     const now = Date.now();
     const age = now - parsedCache.timestamp;
 
+    // Get today's date key
+    const today = new Date();
+    const todayKey = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    // Check if cached data is from today
+    if (parsedCache.dateKey !== todayKey) {
+      console.log('[SOTD] Cache from different day', {
+        cached: parsedCache.dateKey,
+        today: todayKey,
+      });
+      return null;
+    }
+
     // Check if cache is still valid (within TTL)
     if (age < SOTD_CACHE_TTL) {
-      console.log('[SOTD] Using cached story', { age: `${Math.round(age / 1000 / 60)}min` });
+      console.log('[SOTD] Using cached story', {
+        age: `${Math.round(age / 1000 / 60)}min`,
+        date: parsedCache.dateKey,
+      });
       return parsedCache.data;
     }
 
@@ -59,12 +76,16 @@ const getCachedSOTD = async (): Promise<SOTDResponse | null> => {
  */
 const setCachedSOTD = async (data: SOTDResponse): Promise<void> => {
   try {
+    const today = new Date();
+    const dateKey = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
     const cache: SOTDCache = {
       timestamp: Date.now(),
+      dateKey,
       data,
     };
     await AsyncStorage.setItem(SOTD_CACHE_KEY, JSON.stringify(cache));
-    console.log('[SOTD] Cached story', { source: data.source });
+    console.log('[SOTD] Cached story', { source: data.source, date: dateKey });
   } catch (error) {
     console.warn('[SOTD] Failed to write cache', error);
   }
