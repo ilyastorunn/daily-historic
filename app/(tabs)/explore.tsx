@@ -16,7 +16,7 @@ import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-i
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { heroEvent } from '@/constants/events';
+import { heroEvent, EVENT_LIBRARY } from '@/constants/events';
 import { formatCategoryLabel } from '@/constants/personalization';
 import { useUserContext } from '@/contexts/user-context';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
@@ -41,6 +41,7 @@ import { createLinearGradientSource } from '@/utils/gradient';
 import { FilterModal, type FilterState } from '@/components/explore/FilterModal';
 import { StoryOfTheDay } from '@/components/explore/StoryOfTheDay';
 import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
+import { SavedStories } from '@/components/explore/SavedStories';
 import { trackEvent } from '@/services/analytics';
 
 // API Configuration
@@ -790,6 +791,20 @@ const ExploreScreen = () => {
     enabled: !showResults,
   });
 
+  // Saved events mapping
+  const eventsById = useMemo(() => {
+    const map = new Map();
+    EVENT_LIBRARY.forEach((event) => map.set(event.id, event));
+    return map;
+  }, []);
+
+  const savedEvents = useMemo(() => {
+    const ids = profile?.savedEventIds ?? [];
+    return ids
+      .map((id) => eventsById.get(id))
+      .filter((event) => Boolean(event));
+  }, [eventsById, profile?.savedEventIds]);
+
   useEffect(() => {
     if (digestError) {
       console.error('Failed to load explore digest', digestError);
@@ -1276,12 +1291,20 @@ const ExploreScreen = () => {
               ) : null}
             </View>
           ) : (
-            // Default Layout: SOTD + YMBI
+            // Default Layout: SOTD + SavedStories + YMBI
             <>
               <StoryOfTheDay
                 story={story}
                 loading={sotdLoading}
                 onPress={handleSOTDPress}
+              />
+
+              <SavedStories
+                savedEvents={savedEvents}
+                onEventPress={(eventId) => {
+                  trackEvent('explore_saved_story_opened', { event_id: eventId });
+                  handleOpenDetail(eventId);
+                }}
               />
 
               <YouMightBeInterested
