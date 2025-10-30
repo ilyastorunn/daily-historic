@@ -249,50 +249,20 @@ const ProfileScreen = () => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferences</Text>
+            <Text style={styles.sectionTitle}>Appearance</Text>
             <View style={styles.sectionBody}>
               <View style={styles.preferenceBlock}>
-                <Text style={styles.preferenceLabel}>Appearance</Text>
                 <ThemeToggle
                   value={profile?.themePreference ?? 'system'}
                   onChange={(preference) => void updateProfile({ themePreference: preference })}
                 />
               </View>
+            </View>
+          </View>
 
-              <View style={styles.preferenceBlock}>
-                <Text style={styles.preferenceLabel}>Themes</Text>
-                <View style={styles.chipGroup}>
-                  {CATEGORY_CHOICES.map((option) => {
-                    const selected = profile?.categories?.includes(option.value) ?? false;
-                    return (
-                      <SelectableChip
-                        key={option.value}
-                        label={option.label}
-                        selected={selected}
-                        onPress={() => handleToggleCategory(option.value)}
-                      />
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={styles.preferenceBlock}>
-                <Text style={styles.preferenceLabel}>Eras</Text>
-                <View style={styles.chipGroup}>
-                  {ERA_CHOICES.map((option) => {
-                    const selected = profile?.eras?.includes(option.value) ?? false;
-                    return (
-                      <SelectableChip
-                        key={option.value}
-                        label={option.label}
-                        selected={selected}
-                        onPress={() => handleToggleEra(option.value)}
-                      />
-                    );
-                  })}
-                </View>
-              </View>
-
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notifications</Text>
+            <View style={styles.sectionBody}>
               <View style={styles.preferenceBlock}>
                 <View style={styles.inlineRow}>
                   <Text style={styles.switchLabel}>Daily email digest</Text>
@@ -325,8 +295,47 @@ const ProfileScreen = () => {
                   })}
                 </View>
                 <Text style={styles.preferenceMeta}>
-                  Current: {reminderTime}. Adjusting updates tomorrow’s email.
+                  Current: {reminderTime}. Adjusting updates tomorrow's email.
                 </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Content Preferences</Text>
+            <View style={styles.sectionBody}>
+              <View style={styles.preferenceBlock}>
+                <Text style={styles.preferenceLabel}>Themes</Text>
+                <View style={styles.chipGroup}>
+                  {CATEGORY_CHOICES.map((option) => {
+                    const selected = profile?.categories?.includes(option.value) ?? false;
+                    return (
+                      <SelectableChip
+                        key={option.value}
+                        label={option.label}
+                        selected={selected}
+                        onPress={() => handleToggleCategory(option.value)}
+                      />
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.preferenceBlock}>
+                <Text style={styles.preferenceLabel}>Eras</Text>
+                <View style={styles.chipGroup}>
+                  {ERA_CHOICES.map((option) => {
+                    const selected = profile?.eras?.includes(option.value) ?? false;
+                    return (
+                      <SelectableChip
+                        key={option.value}
+                        label={option.label}
+                        selected={selected}
+                        onPress={() => handleToggleEra(option.value)}
+                      />
+                    );
+                  })}
+                </View>
               </View>
 
               <View style={styles.preferenceBlock}>
