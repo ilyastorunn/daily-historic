@@ -10,6 +10,8 @@
 
 ## Görsel Dil
 - **Palet**: Yumuşak nötr zemin (sis beyazı, kum gri, hafif kömür) + ekran başına tek accent (ör. pastel zeytin, sisli mavi, kehribar ışığı). Accent yalnızca hero CTA, aktif chip veya kritik statü için kullanılır.
+  - **Dark Mode Renk Stratejisi**: Dark mode'da accent renkleri daha açık ve soft yapılır (ör. #708C77 → #9bbb92) böylece karanlık zeminde (#24201a) gözü yormaz. Aynı hue korunur, sadece lightness/saturation ayarlanır. Kontrast oranı AA standardını korur (≥4.5:1 for text). Kullanıcı light ↔ dark geçişinde markayı tanır.
+  - **Tema Tercihi**: Kullanıcı light, dark veya system (cihazı takip et) seçebilir. Default: system.
 - **Tipografi**: Serif başlık (ör. "Cormorant Garamond") editoryal ağırlık sağlar; sans-serif gövde (ör. "Inter") okunurluğu korur. Maksimum iki ağırlık.
 - **Görsel İşleme**: Hero görsellerine hafif grain ve yumuşak vignette ekleyerek odağı güçlendir; renk tonu accent ile rezonans kurar.
 - **Ikonografi**: İnce çizgi, yuvarlatılmış uçlu ikonlar. Sadece anlamı güçlendirmek için.
