@@ -16,7 +16,7 @@ import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-i
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { heroEvent, EVENT_LIBRARY } from '@/constants/events';
+import { heroEvent } from '@/constants/events';
 import { formatCategoryLabel } from '@/constants/personalization';
 import { useUserContext } from '@/contexts/user-context';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
@@ -791,19 +791,58 @@ const ExploreScreen = () => {
     enabled: !showResults,
   });
 
-  // Saved events mapping
-  const eventsById = useMemo(() => {
-    const map = new Map();
-    EVENT_LIBRARY.forEach((event) => map.set(event.id, event));
-    return map;
-  }, []);
+  // Saved events state (fetch from Firestore)
+  const [savedEventsData, setSavedEventsData] = useState<FirestoreEventDocument[]>([]);
+  const [savedEventsLoading, setSavedEventsLoading] = useState(false);
 
-  const savedEvents = useMemo(() => {
-    const ids = profile?.savedEventIds ?? [];
-    return ids
-      .map((id) => eventsById.get(id))
-      .filter((event) => Boolean(event));
-  }, [eventsById, profile?.savedEventIds]);
+  // Fetch saved events from Firestore when savedEventIds change
+  useEffect(() => {
+    const savedIds = profile?.savedEventIds ?? [];
+    if (savedIds.length === 0) {
+      setSavedEventsData([]);
+      return;
+    }
+
+    // Check if all events are already cached
+    const allCached = savedIds.every((id) => eventCache[id]);
+    if (allCached) {
+      const cached = savedIds.map((id) => eventCache[id]).filter(Boolean);
+      setSavedEventsData(cached);
+      return;
+    }
+
+    let cancelled = false;
+    const loadSavedEvents = async () => {
+      setSavedEventsLoading(true);
+      try {
+        const fetched = await fetchEventsByIds(savedIds);
+        if (cancelled) return;
+
+        // Update cache
+        setEventCache((prev) => {
+          const next = { ...prev };
+          fetched.forEach((event) => {
+            next[event.eventId] = event;
+          });
+          return next;
+        });
+
+        setSavedEventsData(fetched);
+      } catch (error) {
+        console.error('Failed to load saved events', error);
+      } finally {
+        if (!cancelled) {
+          setSavedEventsLoading(false);
+        }
+      }
+    };
+
+    void loadSavedEvents();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.savedEventIds, eventCache]);
 
   useEffect(() => {
     if (digestError) {
@@ -1300,7 +1339,8 @@ const ExploreScreen = () => {
               />
 
               <SavedStories
-                savedEvents={savedEvents}
+                savedEvents={savedEventsData}
+                loading={savedEventsLoading}
                 onEventPress={(eventId) => {
                   trackEvent('explore_saved_story_opened', { event_id: eventId });
                   handleOpenDetail(eventId);

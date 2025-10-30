@@ -3,8 +3,45 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.exploreSearch = exploreSearch;
 const index_1 = require("../../index");
 /**
+ * Calculate relevance score for an event
+ */
+function calculateRelevanceScore(event, query, selectedCategories) {
+    var _a;
+    let score = 0;
+    // Text match scoring (0-50 points)
+    if (query.length > 0) {
+        const queryLower = query.toLowerCase();
+        const textLower = (event.text || "").toLowerCase();
+        const summaryLower = (event.summary || "").toLowerCase();
+        // Exact match in text: 50 points
+        if (textLower.includes(queryLower)) {
+            score += 50;
+        }
+        // Exact match in summary: 30 points
+        else if (summaryLower.includes(queryLower)) {
+            score += 30;
+        }
+        // Tag match: 20 points
+        else if ((_a = event.tags) === null || _a === void 0 ? void 0 : _a.some((tag) => tag.toLowerCase().includes(queryLower))) {
+            score += 20;
+        }
+    }
+    // Category match bonus (0-30 points)
+    if (selectedCategories.length > 0 && event.categories) {
+        const matchCount = event.categories.filter((cat) => selectedCategories.includes(cat)).length;
+        score += matchCount * 15; // 15 points per matching category
+    }
+    // Recency boost (0-20 points)
+    // Events from 1900+ get more points, scaled logarithmically
+    if (event.year >= 1900) {
+        const yearsSince1900 = event.year - 1900;
+        score += Math.min(20, Math.log10(yearsSince1900 + 1) * 5);
+    }
+    return score;
+}
+/**
  * Search API endpoint for Explore page
- * GET /api/explore/search?q=&categories=&era=&cursor=&limit=
+ * GET /api/explore/search?q=&categories=&era=&sort=&cursor=&limit=
  */
 async function exploreSearch(request, response) {
     try {
@@ -13,6 +50,7 @@ async function exploreSearch(request, response) {
             q: request.query.q || "",
             categories: request.query.categories || "",
             era: request.query.era || undefined,
+            sort: request.query.sort || "relevance",
             cursor: request.query.cursor || undefined,
             limit: parseInt(request.query.limit || "20", 10),
         };
@@ -74,6 +112,20 @@ async function exploreSearch(request, response) {
                 const tagsMatch = (_c = event.tags) === null || _c === void 0 ? void 0 : _c.some((tag) => tag.toLowerCase().includes(queryLower));
                 return textMatch || summaryMatch || tagsMatch;
             });
+        }
+        // Apply sorting
+        if (params.sort === "relevance") {
+            // Calculate relevance scores and sort
+            const scoredEvents = events.map((event) => ({
+                event,
+                score: calculateRelevanceScore(event, params.q || "", categoryArray),
+            }));
+            scoredEvents.sort((a, b) => b.score - a.score); // Highest score first
+            events = scoredEvents.map((item) => item.event);
+        }
+        else {
+            // "recent" mode: already sorted by year desc from Firestore
+            // No additional sorting needed
         }
         // Determine next cursor and slice results
         const hasMore = events.length > (params.limit || 20);

@@ -11,7 +11,13 @@ import { Image } from 'expo-image';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
-import type { EventRecord } from '@/constants/events';
+import type { FirestoreEventDocument } from '@/types/events';
+import { heroEvent } from '@/constants/events';
+import {
+  getEventImageUri,
+  getEventTitle,
+  getEventYearLabel,
+} from '@/utils/event-presentation';
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography } = theme;
@@ -104,12 +110,13 @@ const createStyles = (theme: ThemeDefinition) => {
   });
 };
 
-const shareEvent = async (event: EventRecord) => {
+const shareEvent = async (event: FirestoreEventDocument) => {
   try {
     const { Share } = await import('react-native');
+    const title = getEventTitle(event);
     await Share.share({
-      title: event.title,
-      message: `${event.title} — ${event.summary}`,
+      title,
+      message: title,
     });
   } catch (error) {
     console.error('Share failed', error);
@@ -117,14 +124,19 @@ const shareEvent = async (event: EventRecord) => {
 };
 
 type SavedEventCardProps = {
-  event: EventRecord;
+  event: FirestoreEventDocument;
   styles: ReturnType<typeof createStyles>;
   onOpen: () => void;
 };
 
 const SavedEventCard: React.FC<SavedEventCardProps> = ({ event, styles, onOpen }) => {
   const theme = useAppTheme();
-  const { toggleSave } = useEventEngagement(event.id);
+  const { toggleSave } = useEventEngagement(event.eventId);
+
+  const imageUri = getEventImageUri(event);
+  const imageSource = imageUri ? { uri: imageUri } : heroEvent.image;
+  const yearLabel = getEventYearLabel(event);
+  const title = getEventTitle(event);
 
   return (
     <Pressable
@@ -132,10 +144,10 @@ const SavedEventCard: React.FC<SavedEventCardProps> = ({ event, styles, onOpen }
       onPress={onOpen}
       style={({ pressed }) => [styles.savedCard, pressed && { opacity: 0.9 }]}
     >
-      <Image source={event.image} style={styles.savedImage} contentFit="cover" transition={150} />
+      <Image source={imageSource} style={styles.savedImage} contentFit="cover" transition={150} />
       <View style={styles.savedCopy}>
-        <Text style={styles.savedYear}>{event.year}</Text>
-        <Text style={styles.savedTitle}>{event.title}</Text>
+        <Text style={styles.savedYear}>{yearLabel}</Text>
+        <Text style={styles.savedTitle}>{title}</Text>
 
         <View style={styles.savedActions}>
           <Pressable
@@ -168,13 +180,18 @@ const SavedEventCard: React.FC<SavedEventCardProps> = ({ event, styles, onOpen }
 };
 
 type SavedStoriesProps = {
-  savedEvents: EventRecord[];
+  savedEvents: any[]; // Can be EventRecord or FirestoreEventDocument
+  loading?: boolean;
   onEventPress: (eventId: string) => void;
 };
 
-export const SavedStories: React.FC<SavedStoriesProps> = ({ savedEvents, onEventPress }) => {
+export const SavedStories: React.FC<SavedStoriesProps> = ({ savedEvents, loading, onEventPress }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  if (loading) {
+    return null; // Could add a loading skeleton here
+  }
 
   if (savedEvents.length === 0) {
     return null;
@@ -189,10 +206,10 @@ export const SavedStories: React.FC<SavedStoriesProps> = ({ savedEvents, onEvent
 
       {savedEvents.map((event) => (
         <SavedEventCard
-          key={event.id}
+          key={event.eventId}
           event={event}
           styles={styles}
-          onOpen={() => onEventPress(event.id)}
+          onOpen={() => onEventPress(event.eventId)}
         />
       ))}
     </View>
