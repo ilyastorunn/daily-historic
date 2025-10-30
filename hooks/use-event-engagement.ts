@@ -58,7 +58,7 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
     const nextSaved = !defaultSaved;
     setOptimisticSave(nextSaved);
 
-    const docRef = firebaseFirestore.collection(USERS_COLLECTION).doc(authUser.uid);
+    const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
 
     const mutation = nextSaved
       ? docRef.set({ savedEventIds: firebaseFieldValue.arrayUnion(eventId) }, { merge: true })
@@ -81,7 +81,7 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
       const next = current === type ? null : type;
       setOptimisticReaction(next);
 
-      const docRef = firebaseFirestore.collection(USERS_COLLECTION).doc(authUser.uid);
+      const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
       const payload: Record<string, unknown> = {};
       const fieldPath = `reactions.${eventId}`;
       payload[fieldPath] = next ?? firebaseFieldValue.delete();

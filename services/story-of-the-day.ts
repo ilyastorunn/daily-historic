@@ -83,7 +83,7 @@ const fetchSOTDFromFirestore = async (): Promise<SOTDResponse | null> => {
 
     console.log('[SOTD] Fetching from Firestore', { dateKey });
 
-    const doc = await firebaseFirestore.collection('storyOfTheDay').doc(dateKey).get();
+    const doc = await firebaseFirestore.doc(`storyOfTheDay/${dateKey}`).get();
 
     if (!doc.exists) {
       console.log('[SOTD] No Firestore document found for today');
@@ -97,7 +97,7 @@ const fetchSOTDFromFirestore = async (): Promise<SOTDResponse | null> => {
     }
 
     // Fetch the full event document
-    const eventDoc = await firebaseFirestore.collection('contentEvents').doc(data.eventId).get();
+    const eventDoc = await firebaseFirestore.doc(`contentEvents/${data.eventId}`).get();
     if (!eventDoc.exists) {
       console.log('[SOTD] Event document not found', { eventId: data.eventId });
       return null;
@@ -166,7 +166,7 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
     if (aliasEventId) {
       console.log('[SOTD] Found alias mapping', { eventId: aliasEventId });
 
-      const eventDoc = await firebaseFirestore.collection('contentEvents').doc(aliasEventId).get();
+      const eventDoc = await firebaseFirestore.doc(`contentEvents/${aliasEventId}`).get();
 
       if (eventDoc.exists) {
         const event = eventDoc.data() as FirestoreEventDocument;

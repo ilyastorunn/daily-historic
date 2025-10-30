@@ -84,7 +84,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     }
 
     setProfileLoading(true);
-    const docRef = firebaseFirestore.collection<UserDocument>(USERS_COLLECTION).doc(authUser.uid);
+    const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
 
     const unsubscribe = docRef.onSnapshot(
       (snapshot) => {
@@ -137,7 +137,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         throw new Error('Cannot complete onboarding without an authenticated user.');
       }
 
-      const docRef = firebaseFirestore.collection<UserDocument>(USERS_COLLECTION).doc(authUser.uid);
+      const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
 
       const serverTimestamp = firebaseFieldValue.serverTimestamp();
 
@@ -166,9 +166,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         throw new Error('Cannot update profile without an authenticated user.');
       }
 
-      const docRef = firebaseFirestore
-        .collection<UserDocument>(USERS_COLLECTION)
-        .doc(authUser.uid);
+      const docRef = firebaseFirestore.doc(`${USERS_COLLECTION}/${authUser.uid}`);
 
       const serverTimestamp = firebaseFieldValue.serverTimestamp();
       const sanitized = Object.fromEntries(
