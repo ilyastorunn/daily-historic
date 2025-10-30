@@ -145,6 +145,22 @@ const createStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
+    ghostButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: 'transparent',
+    },
+    ghostLabel: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+    },
     signOutButton: {
       alignSelf: 'flex-start',
       paddingHorizontal: spacing.lg,
