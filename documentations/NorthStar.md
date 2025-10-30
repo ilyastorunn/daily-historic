@@ -96,11 +96,29 @@
 - **Sıralama**: SOTD (24h cache) → SavedStories (real-time) → YMBI (6h cache, diversity algorithm)
 
 ## Profile & Preferences
-- **Appearance**: 3 chip (Light, Dark, System) - default System. SelectableChip kullanır; accent seçili olanda.
-- **Notifications**: Daily email digest toggle (Switch). Helper text altında açıklama.
-- **Content Preferences**: Categories ve Eras chip grupları (ileride collapsible).
-- **Workflow**: Appearance seçimi → Firestore'a `themePreference` yazılır → ThemeContext güncellenir → App re-render.
-- **Analytics**: `theme_changed` event (from, to parametreleri ile).
+- **Yapı**: Header → Appearance → Notifications → Content Preferences → Account
+- **Appearance Section**:
+  - 3 chip (Light, Dark, System) - default System
+  - SelectableChip kullanır; accent seçili olanda
+  - Workflow: Seçim → Firestore'a `themePreference` → ThemeContext → App re-render
+  - Analytics: `theme_changed` (from, to)
+- **Notifications Section**:
+  - Daily email digest toggle (Switch)
+  - Reminder time chip selection (09:00, 12:00, 17:00)
+  - Helper text: "Matches your notification permission"
+- **Content Preferences Section**:
+  - Themes (Categories): Multi-select chip grubu
+  - Eras: Multi-select chip grubu
+  - Timezone: Display + "Use device" button
+  - İleride collapsible yapılabilir
+- **Account Section**:
+  - Account type label (Apple/Google/Email/Anonymous)
+  - Privacy & data link
+  - Terms of use link
+  - Sign out button
+- **Spacing**: Sections arası ≥20pt (spacing.xxl), içerik kenarlara yapışmaz
+- **Typography**: Serif section başlıkları, sans-serif labels ve helper text
+- **Accent kullanımı**: Sadece aktif chip ve switch thumb'larda
 
 ## Done Check
 - Her ekranda tek odak ve tek accent korunur.
