@@ -4,22 +4,14 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Switch,
   Text,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
-import {
-  EVENT_LIBRARY,
-  type EventRecord,
-} from '@/constants/events';
 import { useUserContext } from '@/contexts/user-context';
-import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { SelectableChip } from '@/components/ui/selectable-chip';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -57,17 +49,6 @@ const accountLabels: Record<string, string> = {
   email: 'Email & password',
   anonymous: 'Guest session',
   meta: 'Sign in with Meta',
-};
-
-const shareEvent = async (event: EventRecord) => {
-  try {
-    await Share.share({
-      title: event.title,
-      message: `${event.title} — ${event.summary}`,
-    });
-  } catch (error) {
-    console.error('Share failed', error);
-  }
 };
 
 const createStyles = (theme: ThemeDefinition) => {
@@ -117,68 +98,6 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     sectionBody: {
       gap: spacing.md,
-    },
-    savedCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-      borderRadius: 16,
-      backgroundColor: colors.surface,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.borderSubtle,
-      shadowColor: colors.shadowColor,
-      shadowOpacity: 0.08,
-      shadowRadius: 18,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 4,
-    },
-    savedImage: {
-      width: 72,
-      height: 72,
-      borderRadius: 14,
-    },
-    savedCopy: {
-      flex: 1,
-      gap: spacing.xs,
-    },
-    savedYear: {
-      fontFamily: sansFamily,
-      fontSize: 12,
-      letterSpacing: 0.5,
-      color: colors.textSecondary,
-      textTransform: 'uppercase',
-    },
-    savedTitle: {
-      fontFamily: serifFamily,
-      fontSize: 18,
-      lineHeight: 22,
-      color: colors.textPrimary,
-    },
-    savedActions: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    ghostButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      backgroundColor: 'transparent',
-    },
-    ghostLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
-    },
-    emptyCopy: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
     },
     chipGroup: {
       flexDirection: 'row',
@@ -263,77 +182,10 @@ const detectTimezone = () => {
   }
 };
 
-const SavedEventCard = ({
-  event,
-  styles,
-  onOpen,
-}: {
-  event: EventRecord;
-  styles: ReturnType<typeof createStyles>;
-  onOpen: () => void;
-}) => {
-  const theme = useAppTheme();
-  const { toggleSave } = useEventEngagement(event.id);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onOpen}
-      style={({ pressed }) => [styles.savedCard, pressed && { opacity: 0.9 }]}
-    >
-      <Image source={event.image} style={styles.savedImage} contentFit="cover" transition={150} />
-      <View style={styles.savedCopy}>
-        <Text style={styles.savedYear}>{event.year}</Text>
-        <Text style={styles.savedTitle}>{event.title}</Text>
-
-        <View style={styles.savedActions}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={(pressEvent) => {
-              pressEvent.stopPropagation();
-              shareEvent(event);
-            }}
-            style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.85 }]}
-          >
-            <IconSymbol name="square.and.arrow.up" size={18} color={theme.colors.textSecondary} />
-            <Text style={styles.ghostLabel}>Share</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={(pressEvent) => {
-              pressEvent.stopPropagation();
-              toggleSave();
-            }}
-            style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.85 }]}
-          >
-            <IconSymbol name="bookmark.fill" size={18} color={theme.colors.accentPrimary} />
-            <Text style={[styles.ghostLabel, { color: theme.colors.accentPrimary }]}>Saved</Text>
-          </Pressable>
-        </View>
-      </View>
-    </Pressable>
-  );
-};
-
 const ProfileScreen = () => {
-  const router = useRouter();
   const { profile, updateProfile, signOut } = useUserContext();
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-
-  const eventsById = useMemo(() => {
-    const map = new Map<string, EventRecord>();
-    EVENT_LIBRARY.forEach((event) => map.set(event.id, event));
-    return map;
-  }, []);
-
-  const savedEvents = useMemo(() => {
-    const ids = profile?.savedEventIds ?? [];
-    return ids
-      .map((id) => eventsById.get(id))
-      .filter((event): event is EventRecord => Boolean(event));
-  }, [eventsById, profile?.savedEventIds]);
 
   const handleToggleCategory = (value: CategoryOption) => {
     if (!profile) {
@@ -393,25 +245,7 @@ const ProfileScreen = () => {
             <Text style={styles.greeting}>
               {profile?.displayName ? `Hi, ${profile.displayName}` : 'Your profile'}
             </Text>
-            <Text style={styles.helper}>Tune your daily moment and revisit what you loved.</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Saved</Text>
-            <View style={styles.sectionBody}>
-              {savedEvents.length === 0 ? (
-                <Text style={styles.emptyCopy}>Stories you save will live here for quick access.</Text>
-              ) : (
-                savedEvents.map((event) => (
-                  <SavedEventCard
-                    key={event.id}
-                    event={event}
-                    styles={styles}
-                    onOpen={() => router.push({ pathname: '/event/[id]', params: { id: event.id } })}
-                  />
-                ))
-              )}
-            </View>
+            <Text style={styles.helper}>Tune your preferences and account settings.</Text>
           </View>
 
           <View style={styles.section}>
