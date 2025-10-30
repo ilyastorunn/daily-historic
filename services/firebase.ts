@@ -3,8 +3,12 @@ import auth from '@react-native-firebase/auth';
 import firestore, {
   doc,
   getDoc,
+  getDocs,
   setDoc,
   onSnapshot,
+  collection,
+  query,
+  limit,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
@@ -15,7 +19,20 @@ export const firebaseAuth = auth();
 export const firebaseFirestore = firestore();
 
 // Modular API exports
-export { doc, getDoc, setDoc, onSnapshot, serverTimestamp, arrayUnion, arrayRemove, deleteField };
+export {
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  onSnapshot,
+  collection,
+  query,
+  limit,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+};
 
 export const USERS_COLLECTION = 'Users';
 export const CONTENT_EVENTS_COLLECTION = 'contentEvents';

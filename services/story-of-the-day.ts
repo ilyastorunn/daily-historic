@@ -1,7 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firebaseFirestore, doc, getDoc } from '@/services/firebase';
+import {
+  firebaseFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  limit,
+} from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getRandomSOTDSeed } from '@/constants/explore-seed';
+import { lookupAlias } from '@/utils/wiki-aliases';
+import { findBestMatch } from '@/utils/title-matching';
+import { getTopContentArticle, decodeArticleTitle } from '@/services/wikimedia-pageviews';
 
 const SOTD_CACHE_KEY = '@daily_historic/sotd_cache';
 const SOTD_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -159,13 +170,6 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
   try {
     console.log('[SOTD] Fetching from Wikimedia Pageviews API');
 
-    // Import lazy to avoid circular dependencies
-    const { getTopContentArticle, decodeArticleTitle } = await import(
-      '@/services/wikimedia-pageviews'
-    );
-    const { lookupAlias } = await import('@/utils/wiki-aliases');
-    const { findBestMatch } = await import('@/utils/title-matching');
-
     // 1. Get top viewed article (yesterday's data)
     const topArticle = await getTopContentArticle();
 
@@ -213,12 +217,11 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
     // 3. Try fuzzy matching against all events
     console.log('[SOTD] No alias found, trying fuzzy matching');
 
-    const eventsSnapshot = await firebaseFirestore
-      .collection('contentEvents')
-      .limit(100) // Limit for performance
-      .get();
+    const eventsCol = collection(firebaseFirestore, 'contentEvents');
+    const eventsQuery = query(eventsCol, limit(100));
+    const eventsSnapshot = await getDocs(eventsQuery);
 
-    const allEvents = eventsSnapshot.docs.map((doc) => doc.data() as FirestoreEventDocument);
+    const allEvents = eventsSnapshot.docs.map((docSnap) => docSnap.data() as FirestoreEventDocument);
 
     const bestMatch = findBestMatch(decodedTitle, allEvents, 70); // Min score: 70
 
