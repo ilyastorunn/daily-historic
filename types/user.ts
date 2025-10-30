@@ -38,6 +38,8 @@ export interface OnboardingData {
   pushPermission: PushPermission;
   /** Whether the hero preview step was marked as seen. */
   heroPreviewSeen: boolean;
+  /** User's theme preference: light, dark, or system (follows device). */
+  themePreference?: 'light' | 'dark' | 'system';
   /** Optional free-form notes or future extensions. */
   additionalNotes?: string;
 }
