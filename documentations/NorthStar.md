@@ -85,6 +85,16 @@
 - Bottom nav glow aktive olurken 150ms fade + blur animasyonu.
 - Chip seçiminde hafif (selection) haptic + 120ms scale animasyonu.
 
+## Explore Architecture
+- **Default Layout**: SOTD (Story of the Day) → SavedStories → YMBI (You Might Be Interested)
+- **SavedStories**:
+  - User'ın kaydettiği event'leri gösterir (EVENT_LIBRARY'den mapping)
+  - Conditional render: `savedEvents.length > 0` ise göster
+  - Her kart: thumbnail (72×72pt, r-14), year badge, title, share + unsave actions
+  - Analytics: `explore_saved_story_opened` event (event_id parametresi)
+  - Empty state görünmez (section tamamen gizlenir)
+- **Sıralama**: SOTD (24h cache) → SavedStories (real-time) → YMBI (6h cache, diversity algorithm)
+
 ## Profile & Preferences
 - **Appearance**: 3 chip (Light, Dark, System) - default System. SelectableChip kullanır; accent seçili olanda.
 - **Notifications**: Daily email digest toggle (Switch). Helper text altında açıklama.
