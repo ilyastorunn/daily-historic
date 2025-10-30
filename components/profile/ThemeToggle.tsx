@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 
 import { SelectableChip } from '@/components/ui/selectable-chip';
 import { useAppTheme } from '@/theme';
+import { trackEvent } from '@/services/analytics';
 
 type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -40,6 +41,14 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ value, onChange }) => 
     },
   });
 
+  const handleThemeChange = (preference: ThemePreference) => {
+    trackEvent('theme_changed', {
+      from: value,
+      to: preference,
+    });
+    onChange(preference);
+  };
+
   return (
     <View style={styles.container}>
       {THEME_OPTIONS.map((option) => (
@@ -47,7 +56,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ value, onChange }) => 
           key={option.value}
           label={option.label}
           selected={value === option.value}
-          onPress={() => onChange(option.value)}
+          onPress={() => handleThemeChange(option.value)}
           accessibilityLabel={`${option.label} theme`}
           accessibilityHint={option.accessibilityHint}
         />
