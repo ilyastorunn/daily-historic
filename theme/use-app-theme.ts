@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeContext } from '@/contexts/theme-context';
 
-import { createTheme, type ThemeDefinition, type ThemeMode } from './tokens';
+import { createTheme, type ThemeDefinition } from './tokens';
 
 export const useAppTheme = (): ThemeDefinition => {
-  const colorScheme = useColorScheme();
-  const mode: ThemeMode = colorScheme === 'dark' ? 'dark' : 'light';
+  const { mode } = useThemeContext();
 
   return useMemo(() => createTheme(mode), [mode]);
 };
