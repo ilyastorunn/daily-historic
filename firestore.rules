@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions for validation
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUserUpdate() {
+      // Prevent modification of protected fields
+      let incomingData = request.resource.data;
+      let existingData = resource.data;
+
+      // UID cannot be changed
+      return !('uid' in incomingData) || incomingData.uid == request.auth.uid
+        // createdAt cannot be changed once set
+        && (!('createdAt' in existingData) || !('createdAt' in incomingData) || incomingData.createdAt == existingData.createdAt)
+        // Validate data types
+        && (!('savedEventIds' in incomingData) || incomingData.savedEventIds is list)
+        && (!('reactions' in incomingData) || incomingData.reactions is map)
+        && (!('categories' in incomingData) || incomingData.categories is list)
+        && (!('eras' in incomingData) || incomingData.eras is list)
+        && (!('onboardingCompleted' in incomingData) || incomingData.onboardingCompleted is bool)
+        && (!('categoriesSkipped' in incomingData) || incomingData.categoriesSkipped is bool)
+        && (!('notificationEnabled' in incomingData) || incomingData.notificationEnabled is bool);
+    }
+
+    // Users collection - users can only read and write their own document with validation
+    match /Users/{userId} {
+      // Allow read only for own document
+      allow read: if isOwner(userId);
+
+      // Allow create only for own document with valid initial data
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasAll(['uid', 'onboardingCompleted']);
+
+      // Allow update only for own document with validation
+      allow update: if isOwner(userId) && isValidUserUpdate();
+
+      // Prevent deletion of user documents
+      allow delete: if false;
+    }
+
+    // Content events - readable by all authenticated users (including anonymous)
+    match /contentEvents/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server-side ingestion can write
+    }
+
+    // Daily digests - readable by all authenticated users
+    match /dailyDigests/{digestId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server-side ingestion can write
+    }
+
+    // Story of the day - readable by all authenticated users
+    match /storyOfTheDay/{sotdId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server-side processes can write
+    }
+  }
+}
