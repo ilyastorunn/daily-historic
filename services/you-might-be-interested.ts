@@ -27,6 +27,30 @@ type NotInterestedEntry = {
 };
 
 /**
+ * Get today's date key in MM-DD format for the given timezone
+ */
+const getDateKey = (timezone?: string): string => {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone || undefined,
+      month: '2-digit',
+      day: '2-digit',
+    });
+
+    const parts = formatter.formatToParts(now);
+    const month = parts.find((p) => p.type === 'month')?.value || '01';
+    const day = parts.find((p) => p.type === 'day')?.value || '01';
+
+    return `${month}-${day}`;
+  } catch (error) {
+    // Fallback to system timezone if invalid timezone
+    const now = new Date();
+    return `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+};
+
+/**
  * Get cached YMBI from AsyncStorage
  */
 const getCachedYMBI = async (userId: string, timezone?: string): Promise<YMBIResponse | null> => {
@@ -42,10 +66,7 @@ const getCachedYMBI = async (userId: string, timezone?: string): Promise<YMBIRes
     const age = now - parsedCache.timestamp;
 
     // Get today's date key in user's timezone
-    const today = timezone
-      ? new Date(new Date().toLocaleString('en-US', { timeZone: timezone }))
-      : new Date();
-    const todayKey = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayKey = getDateKey(timezone);
 
     // Check if cached data is from today
     if (parsedCache.dateKey !== todayKey) {
@@ -80,10 +101,7 @@ const getCachedYMBI = async (userId: string, timezone?: string): Promise<YMBIRes
  */
 const setCachedYMBI = async (userId: string, data: YMBIResponse, timezone?: string): Promise<void> => {
   try {
-    const today = timezone
-      ? new Date(new Date().toLocaleString('en-US', { timeZone: timezone }))
-      : new Date();
-    const dateKey = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const dateKey = getDateKey(timezone);
 
     const cacheKey = `${YMBI_CACHE_KEY_PREFIX}:${userId}`;
     const cache: YMBICache = {
