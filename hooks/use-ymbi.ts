@@ -10,6 +10,7 @@ type UseYMBIArgs = {
   homeEventIds?: string[];
   limit?: number;
   enabled?: boolean;
+  timezone?: string;
 };
 
 type YMBIState = {
@@ -33,6 +34,7 @@ export const useYMBI = ({
   homeEventIds = [],
   limit = 8,
   enabled = true,
+  timezone,
 }: UseYMBIArgs) => {
   const [state, setState] = useState<YMBIState>(() => createInitialState());
   const [reloadKey, setReloadKey] = useState(0);
@@ -66,7 +68,8 @@ export const useYMBI = ({
           userCategories,
           savedEventIds,
           homeEventIds,
-          limit
+          limit,
+          timezone
         );
         if (cancelled) {
           return;
@@ -99,7 +102,7 @@ export const useYMBI = ({
     return () => {
       cancelled = true;
     };
-  }, [userId, enabled, limit, reloadKey]);
+  }, [userId, enabled, limit, timezone, reloadKey]);
 
   return {
     ...state,

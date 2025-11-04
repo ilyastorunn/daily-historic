@@ -24,9 +24,9 @@ type PageviewsTopResponse = {
 
 type FetchTopArticlesArgs = {
   project?: string; // Default: 'en.wikipedia'
-  year?: number; // Default: yesterday
-  month?: number; // Default: yesterday
-  day?: number; // Default: yesterday
+  year?: number; // Default: 2 days ago
+  month?: number; // Default: 2 days ago
+  day?: number; // Default: 2 days ago
   signal?: AbortSignal;
   userAgent?: string;
 };
@@ -37,16 +37,16 @@ type FetchTopArticlesArgs = {
 const toTwoDigits = (value: number) => value.toString().padStart(2, '0');
 
 /**
- * Get yesterday's date (Pageviews API has ~1 day lag)
+ * Get date from 2 days ago (Pageviews API has ~2 day lag)
  */
 const getYesterday = () => {
   const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const twoDaysAgo = new Date(now);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2); // Changed from -1 to -2
   return {
-    year: yesterday.getFullYear(),
-    month: yesterday.getMonth() + 1, // JavaScript months are 0-indexed
-    day: yesterday.getDate(),
+    year: twoDaysAgo.getFullYear(),
+    month: twoDaysAgo.getMonth() + 1, // JavaScript months are 0-indexed
+    day: twoDaysAgo.getDate(),
   };
 };
 
@@ -81,7 +81,7 @@ export const fetchTopArticles = async ({
   signal,
   userAgent,
 }: FetchTopArticlesArgs = {}): Promise<PageviewsArticle[]> => {
-  // Default to yesterday (Pageviews API has ~1 day lag)
+  // Default to 2 days ago (Pageviews API has ~2 day lag)
   const yesterday = getYesterday();
   const resolvedYear = year ?? yesterday.year;
   const resolvedMonth = month ?? yesterday.month;

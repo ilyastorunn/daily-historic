@@ -791,6 +791,7 @@ const ExploreScreen = () => {
     homeEventIds: [], // TODO: Track Home event IDs to avoid duplicates
     limit: 8,
     enabled: !showResults,
+    timezone: profile?.timezone,
   });
 
   // Pull to refresh
