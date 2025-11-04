@@ -159,7 +159,7 @@ const createStyles = (theme: ThemeDefinition) => {
     ghostLabel: {
       fontFamily: sansFamily,
       fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
+      color: colors.textPrimary,
     },
     signOutButton: {
       alignSelf: 'flex-start',
@@ -365,7 +365,7 @@ const ProfileScreen = () => {
                     onPress={handleUseDeviceTimezone}
                     style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.85 }]}
                   >
-                    <IconSymbol name="location" size={18} color={theme.colors.textSecondary} />
+                    <IconSymbol name="location" size={18} color={theme.colors.textPrimary} />
                     <Text style={styles.ghostLabel}>Use device</Text>
                   </Pressable>
                 </View>

@@ -73,7 +73,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(12,10,6,0.35)',
+      backgroundColor: theme.mode === 'dark' ? 'rgba(0, 0, 0, 0.65)' : 'rgba(12, 10, 6, 0.35)',
       alignItems: 'center',
       justifyContent: 'center',
     },

@@ -1,13 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  firebaseFirestore,
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  limit,
-} from '@/services/firebase';
+import { firebaseFirestore } from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getRandomSOTDSeed } from '@/constants/explore-seed';
 import { lookupAlias } from '@/utils/wiki-aliases';
@@ -115,8 +107,8 @@ const fetchSOTDFromFirestore = async (): Promise<SOTDResponse | null> => {
 
     console.log('[SOTD] Fetching from Firestore', { dateKey });
 
-    const sotdDocRef = doc(firebaseFirestore, 'storyOfTheDay', dateKey);
-    const sotdDocSnap = await getDoc(sotdDocRef);
+    const sotdDocRef = firebaseFirestore.collection('storyOfTheDay').doc(dateKey);
+    const sotdDocSnap = await sotdDocRef.get();
 
     if (!sotdDocSnap.exists) {
       console.log('[SOTD] No Firestore document found for today');
@@ -130,8 +122,8 @@ const fetchSOTDFromFirestore = async (): Promise<SOTDResponse | null> => {
     }
 
     // Fetch the full event document
-    const eventDocRef = doc(firebaseFirestore, 'contentEvents', data.eventId);
-    const eventDocSnap = await getDoc(eventDocRef);
+    const eventDocRef = firebaseFirestore.collection('contentEvents').doc(data.eventId);
+    const eventDocSnap = await eventDocRef.get();
     if (!eventDocSnap.exists) {
       console.log('[SOTD] Event document not found', { eventId: data.eventId });
       return null;
@@ -193,8 +185,8 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
     if (aliasEventId) {
       console.log('[SOTD] Found alias mapping', { eventId: aliasEventId });
 
-      const eventDocRef = doc(firebaseFirestore, 'contentEvents', aliasEventId);
-      const eventDocSnap = await getDoc(eventDocRef);
+      const eventDocRef = firebaseFirestore.collection('contentEvents').doc(aliasEventId);
+      const eventDocSnap = await eventDocRef.get();
 
       if (eventDocSnap.exists) {
         const event = eventDocSnap.data() as FirestoreEventDocument;
@@ -217,9 +209,7 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
     // 3. Try fuzzy matching against all events
     console.log('[SOTD] No alias found, trying fuzzy matching');
 
-    const eventsCol = collection(firebaseFirestore, 'contentEvents');
-    const eventsQuery = query(eventsCol, limit(100));
-    const eventsSnapshot = await getDocs(eventsQuery);
+    const eventsSnapshot = await firebaseFirestore.collection('contentEvents').limit(100).get();
 
     const allEvents = eventsSnapshot.docs.map((docSnap) => docSnap.data() as FirestoreEventDocument);
 
