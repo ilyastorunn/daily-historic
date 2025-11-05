@@ -8,7 +8,7 @@ import { getTopContentArticle, decodeArticleTitle } from '@/services/wikimedia-p
 
 const SOTD_CACHE_KEY = '@daily_historic/sotd_cache';
 const SOTD_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-const SOTD_CACHE_VERSION = 2; // Increment to invalidate old cache
+const SOTD_CACHE_VERSION = 4; // Increment to invalidate old cache
 
 export type SOTDSource = 'firestore' | 'wikimedia' | 'seed';
 

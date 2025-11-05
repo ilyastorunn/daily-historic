@@ -27,9 +27,9 @@ export const SOTD_SEED_EVENTS: FirestoreEventDocument[] = [
         thumbnails: [
           {
             id: 'apollo-11-thumbnail',
-            sourceUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Aldrin_Apollo_11_original.jpg/400px-Aldrin_Apollo_11_original.jpg',
-            width: 400,
-            height: 500,
+            sourceUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Aldrin_Apollo_11_original.jpg',
+            width: 2349,
+            height: 3000,
             provider: 'wikimedia',
           },
         ],
@@ -56,9 +56,9 @@ export const SOTD_SEED_EVENTS: FirestoreEventDocument[] = [
         thumbnails: [
           {
             id: 'berlin-wall-thumbnail',
-            sourceUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Thefalloftheberlinwall1989.JPG/400px-Thefalloftheberlinwall1989.JPG',
-            width: 400,
-            height: 267,
+            sourceUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Bundesarchiv_Bild_183-1989-1118-028,_Berlin,_Brandenburger_Tor,_%C3%96ffnung.jpg',
+            width: 800,
+            height: 529,
             provider: 'wikimedia',
           },
         ],
@@ -85,9 +85,9 @@ export const SOTD_SEED_EVENTS: FirestoreEventDocument[] = [
         thumbnails: [
           {
             id: 'suffrage-thumbnail',
-            sourceUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Women_suffragettes_picketing_in_front_of_the_White_house.jpg/400px-Women_suffragettes_picketing_in_front_of_the_White_house.jpg',
-            width: 400,
-            height: 295,
+            sourceUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Suffrage_Parade,_New_York_City,_May_6,_1912.jpg',
+            width: 1024,
+            height: 683,
             provider: 'wikimedia',
           },
         ],

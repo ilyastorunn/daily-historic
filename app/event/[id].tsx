@@ -251,12 +251,13 @@ const EventDetailScreen = () => {
   const eventIdParam = Array.isArray(rawId) ? rawId[0] : rawId ?? null;
   const staticEvent = useMemo(() => (eventIdParam ? getEventById(eventIdParam) : null), [eventIdParam]);
   const { event: fetchedEvent, loading: remoteLoading, error: remoteError } = useEventContent(eventIdParam);
+  const [imageLoadError, setImageLoadError] = React.useState(false);
   const fallbackImageSource = staticEvent?.image ?? heroEvent.image;
   const dynamicImageUri = fetchedEvent ? getEventImageUri(fetchedEvent) : undefined;
-  const heroImageSource = dynamicImageUri ? { uri: dynamicImageUri } : fallbackImageSource;
+  const heroImageSource = imageLoadError || !dynamicImageUri ? fallbackImageSource : { uri: dynamicImageUri };
   const heroImageUri = useMemo(
-    () => (dynamicImageUri ? dynamicImageUri : getImageUri(fallbackImageSource)),
-    [dynamicImageUri, fallbackImageSource]
+    () => (dynamicImageUri && !imageLoadError ? dynamicImageUri : getImageUri(fallbackImageSource)),
+    [dynamicImageUri, fallbackImageSource, imageLoadError]
   );
   const displayEventId = fetchedEvent?.eventId ?? staticEvent?.id ?? eventIdParam ?? heroEvent.id;
   const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(displayEventId);
@@ -310,6 +311,11 @@ const EventDetailScreen = () => {
     }
   }, [remoteError]);
 
+  // Reset image error state when event changes
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [eventIdParam]);
+
   const heroOverlay = useMemo(
     () =>
       createLinearGradientSource(
@@ -338,11 +344,12 @@ const EventDetailScreen = () => {
 
   const handleHeroImageError = useCallback(
     (errorEvent: ImageErrorEventData) => {
-      console.warn('[EventDetail] hero image failed to load', {
+      console.warn('[EventDetail] hero image failed to load, using fallback', {
         eventId: displayEventId,
         uri: heroImageUri,
         error: errorEvent.error,
       });
+      setImageLoadError(true);
     },
     [displayEventId, heroImageUri]
   );
