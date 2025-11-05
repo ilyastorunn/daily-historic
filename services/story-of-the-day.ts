@@ -8,6 +8,7 @@ import { getTopContentArticle, decodeArticleTitle } from '@/services/wikimedia-p
 
 const SOTD_CACHE_KEY = '@daily_historic/sotd_cache';
 const SOTD_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const SOTD_CACHE_VERSION = 2; // Increment to invalidate old cache
 
 export type SOTDSource = 'firestore' | 'wikimedia' | 'seed';
 
@@ -24,6 +25,7 @@ export type SOTDResponse = {
 };
 
 type SOTDCache = {
+  version: number;
   timestamp: number;
   dateKey: string; // Format: "MM-DD" to invalidate cache when day changes
   data: SOTDResponse;
@@ -42,6 +44,15 @@ const getCachedSOTD = async (): Promise<SOTDResponse | null> => {
     const parsedCache: SOTDCache = JSON.parse(cached);
     const now = Date.now();
     const age = now - parsedCache.timestamp;
+
+    // Check cache version
+    if (parsedCache.version !== SOTD_CACHE_VERSION) {
+      console.log('[SOTD] Cache version mismatch', {
+        cached: parsedCache.version,
+        current: SOTD_CACHE_VERSION,
+      });
+      return null;
+    }
 
     // Get today's date key
     const today = new Date();
@@ -83,6 +94,7 @@ const setCachedSOTD = async (data: SOTDResponse): Promise<void> => {
     const dateKey = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     const cache: SOTDCache = {
+      version: SOTD_CACHE_VERSION,
       timestamp: Date.now(),
       dateKey,
       data,
@@ -237,18 +249,9 @@ const fetchSOTDFromWikimedia = async (): Promise<SOTDResponse | null> => {
       };
     }
 
-    // 4. No match found - return generic Wikipedia article card
-    console.log('[SOTD] No match found, returning generic article card');
-
-    return {
-      id: `wikimedia:${wikipediaTitle}`,
-      title: decodedTitle,
-      blurb: `Trending on Wikipedia with ${topArticle.views.toLocaleString()} views`,
-      imageUrl: undefined,
-      matched: false,
-      source: 'wikimedia',
-      dateISO: new Date().toISOString(),
-    };
+    // 4. No match found - return null to fallback to seed
+    console.log('[SOTD] No match found, falling back to seed');
+    return null;
   } catch (error) {
     console.error('[SOTD] Wikimedia fetch failed', error);
     return null;

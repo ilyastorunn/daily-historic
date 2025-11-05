@@ -189,6 +189,22 @@ export const getRandomSOTDSeed = (): FirestoreEventDocument => {
 };
 
 /**
+ * Check if an eventId belongs to explore seed data
+ */
+export const isExploreSeedEventId = (eventId: string): boolean => {
+  const allSeedEvents = [...SOTD_SEED_EVENTS, ...YMBI_SEED_EVENTS];
+  return allSeedEvents.some((event) => event.eventId === eventId);
+};
+
+/**
+ * Get explore seed event by ID
+ */
+export const getExploreSeedEventById = (eventId: string): FirestoreEventDocument | null => {
+  const allSeedEvents = [...SOTD_SEED_EVENTS, ...YMBI_SEED_EVENTS];
+  return allSeedEvents.find((event) => event.eventId === eventId) ?? null;
+};
+
+/**
  * Get YMBI seed events with diversity (at least 3 categories)
  */
 export const getYMBISeedEvents = (limit: number = 8): FirestoreEventDocument[] => {

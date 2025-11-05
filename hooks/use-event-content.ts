@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { getDevDigestEventById, isDevDigestEventId } from '@/constants/dev-digest';
+import { getExploreSeedEventById, isExploreSeedEventId } from '@/constants/explore-seed';
 import { fetchEventsByIds } from '@/services/content';
 import { isWikimediaEventId, resolveWikimediaEventById } from '@/services/wikimedia-digest';
 import type { FirestoreEventDocument } from '@/types/events';
@@ -61,6 +62,10 @@ export const useEventContent = (eventId: string | null | undefined) => {
             resolvedError = error instanceof Error ? error : new Error('Failed to load event content');
           }
         }
+      }
+
+      if (!resolvedEvent && isExploreSeedEventId(eventId)) {
+        resolvedEvent = getExploreSeedEventById(eventId);
       }
 
       if (cancelled) {
