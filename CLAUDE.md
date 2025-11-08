@@ -296,3 +296,46 @@ Media cache has TTL to avoid repeated API requests.
 3. **Cascading Fallbacks** - Primary (Firestore) → Secondary (API) → Tertiary (local)
 4. **Optimistic Updates** - Immediate UI response with async sync
 5. **Type-Safe Pipeline** - Zod validation + TypeScript throughout
+
+## Temporarily Disabled Features
+
+### Story of the Day (SOTD)
+
+**Status**: Disabled as of 2025-11-08
+**Reason**: Persistent image loading issues with Wikimedia URLs in seed events
+
+**Problem Summary**:
+- Seed events in `constants/explore-seed.ts` use Wikimedia Commons image URLs
+- URLs frequently return 404 errors even after multiple URL format changes:
+  - Direct `/commons/` URLs fail
+  - `/thumb/` URLs fail
+  - `Special:FilePath` endpoint still returns 404 for some images
+- Cache invalidation attempts (versions 2, 3, 4) did not resolve the issue
+- Fallback to astronaut image (heroEvent) is contextually irrelevant for historical events
+
+**Where Disabled**:
+- `app/(tabs)/explore.tsx`:
+  - Line ~786: `useStoryOfTheDay({ enabled: false })` - Hook disabled
+  - Line ~1378: `<StoryOfTheDay />` component commented out
+  - Line ~805: `refreshSOTD()` removed from pull-to-refresh
+  - Line ~1073: `sotd_shown` analytics tracking disabled
+
+**To Re-Enable**:
+1. Fix Wikimedia image URLs in `constants/explore-seed.ts`
+2. Test all 3 seed event images load successfully
+3. Bump `SOTD_CACHE_VERSION` in `services/story-of-the-day.ts`
+4. Uncomment code in `app/(tabs)/explore.tsx`:
+   - Set `useStoryOfTheDay({ enabled: !showResults })`
+   - Uncomment `<StoryOfTheDay />` component
+   - Uncomment `refreshSOTD()` in handleRefresh
+   - Uncomment analytics tracking
+5. Clear app cache: `npm start -- --clear`
+
+**Alternative Solutions Attempted**:
+- ❌ Updated URLs to full-resolution originals
+- ❌ Used Special:FilePath endpoint
+- ❌ Cache versioning system (v2, v3, v4)
+- ❌ Image error fallback in EventDetailScreen
+- ✅ Temporarily disabled to unblock development
+
+**Impact**: Explore page now shows SavedStories + YMBI only (no SOTD card)

@@ -782,7 +782,8 @@ const ExploreScreen = () => {
     error: digestError,
   } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day, year: activeDate.year });
 
-  const { story, loading: sotdLoading, refresh: refreshSOTD } = useStoryOfTheDay({ enabled: !showResults });
+  // SOTD temporarily disabled - set enabled to false
+  const { story, loading: sotdLoading, refresh: refreshSOTD } = useStoryOfTheDay({ enabled: false });
 
   const { items: ymbiItems, loading: ymbiLoading, refresh: refreshYMBI } = useYMBI({
     userId: authUser?.uid ?? '',
@@ -800,11 +801,11 @@ const ExploreScreen = () => {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      // Clear SOTD cache to fetch fresh data
-      await clearSOTDCache();
+      // SOTD temporarily disabled
+      // await clearSOTDCache();
+      // refreshSOTD();
 
-      // Trigger refreshes for both SOTD and YMBI
-      refreshSOTD();
+      // Trigger refresh for YMBI only
       refreshYMBI();
 
       // Wait a bit for the data to load
@@ -814,7 +815,7 @@ const ExploreScreen = () => {
     } finally {
       setRefreshing(false);
     }
-  }, [refreshSOTD, refreshYMBI]);
+  }, [refreshYMBI]);
 
   // Saved events state (fetch from Firestore)
   const [savedEventsData, setSavedEventsData] = useState<FirestoreEventDocument[]>([]);
@@ -1068,14 +1069,15 @@ const ExploreScreen = () => {
   }, [debouncedQuery]);
 
   // Track SOTD shown when story is loaded and visible
-  useEffect(() => {
-    if (story && !showResults && !sotdLoading) {
-      trackEvent('sotd_shown', {
-        source: story.source,
-        matched: story.matched ?? (story.source === 'wikimedia'),
-      });
-    }
-  }, [story, showResults, sotdLoading]);
+  // SOTD temporarily disabled
+  // useEffect(() => {
+  //   if (story && !showResults && !sotdLoading) {
+  //     trackEvent('sotd_shown', {
+  //       source: story.source,
+  //       matched: story.matched ?? (story.source === 'wikimedia'),
+  //     });
+  //   }
+  // }, [story, showResults, sotdLoading]);
 
   // Track YMBI shown when items are loaded and visible
   useEffect(() => {
@@ -1371,13 +1373,15 @@ const ExploreScreen = () => {
               ) : null}
             </View>
           ) : (
-            // Default Layout: SOTD + SavedStories + YMBI
+            // Default Layout: SavedStories + YMBI
+            // SOTD temporarily disabled due to image loading issues with seed events
+            // TODO: Re-enable SOTD when Wikimedia URL issues are resolved
             <>
-              <StoryOfTheDay
+              {/* <StoryOfTheDay
                 story={story}
                 loading={sotdLoading}
                 onPress={handleSOTDPress}
-              />
+              /> */}
 
               <SavedStories
                 savedEvents={savedEventsData}
