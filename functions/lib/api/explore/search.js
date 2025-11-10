@@ -60,8 +60,10 @@ async function exploreSearch(request, response) {
             return;
         }
         console.log("[Search API] Request params:", params);
+        // Get Firestore instance
+        const db = (0, index_1.getDb)();
         // Build Firestore query
-        let firestoreQuery = index_1.db
+        let firestoreQuery = db
             .collection("contentEvents")
             .orderBy("year", "desc");
         // Apply era filter
@@ -80,7 +82,7 @@ async function exploreSearch(request, response) {
         }
         // Apply cursor pagination
         if (params.cursor) {
-            const cursorDoc = await index_1.db
+            const cursorDoc = await db
                 .collection("contentEvents")
                 .doc(params.cursor)
                 .get();

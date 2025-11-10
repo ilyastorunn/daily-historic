@@ -1,35 +1,31 @@
 import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import {onRequest} from "firebase-functions/v2/https";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
-// Export Firestore instance for use in other modules
-export const db = admin.firestore();
+// Get Firestore instance (lazy initialization)
+export const getDb = () => admin.firestore();
 
-// Import API routes
-import {exploreSearch} from "./api/explore/search";
+// Export HTTP functions (Gen2 format with built-in CORS)
+export const api = onRequest(
+  {
+    cors: true, // Enable CORS for all origins
+    timeoutSeconds: 60,
+    memory: "256MiB",
+  },
+  async (request, response) => {
+    // Lazy import to avoid top-level initialization issues
+    const {exploreSearch} = await import("./api/explore/search");
 
-// Export HTTP functions
-export const api = functions.https.onRequest(async (request, response) => {
-  // CORS headers
-  response.set("Access-Control-Allow-Origin", "*");
-  response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  response.set("Access-Control-Allow-Headers", "Content-Type");
+    // Route requests
+    const path = request.path;
 
-  // Handle preflight
-  if (request.method === "OPTIONS") {
-    response.status(204).send("");
-    return;
+    if (path === "/explore/search") {
+      await exploreSearch(request, response);
+      return;
+    }
+
+    response.status(404).json({error: "Not found"});
   }
-
-  // Route requests
-  const path = request.path;
-
-  if (path === "/explore/search") {
-    await exploreSearch(request, response);
-    return;
-  }
-
-  response.status(404).json({error: "Not found"});
-});
+);

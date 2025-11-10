@@ -33,30 +33,26 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = exports.db = void 0;
+exports.api = exports.getDb = void 0;
 const admin = __importStar(require("firebase-admin"));
-const functions = __importStar(require("firebase-functions"));
+const https_1 = require("firebase-functions/v2/https");
 // Initialize Firebase Admin SDK
 admin.initializeApp();
-// Export Firestore instance for use in other modules
-exports.db = admin.firestore();
-// Import API routes
-const search_1 = require("./api/explore/search");
-// Export HTTP functions
-exports.api = functions.https.onRequest(async (request, response) => {
-    // CORS headers
-    response.set("Access-Control-Allow-Origin", "*");
-    response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.set("Access-Control-Allow-Headers", "Content-Type");
-    // Handle preflight
-    if (request.method === "OPTIONS") {
-        response.status(204).send("");
-        return;
-    }
+// Get Firestore instance (lazy initialization)
+const getDb = () => admin.firestore();
+exports.getDb = getDb;
+// Export HTTP functions (Gen2 format with built-in CORS)
+exports.api = (0, https_1.onRequest)({
+    cors: true, // Enable CORS for all origins
+    timeoutSeconds: 60,
+    memory: "256MiB",
+}, async (request, response) => {
+    // Lazy import to avoid top-level initialization issues
+    const { exploreSearch } = await Promise.resolve().then(() => __importStar(require("./api/explore/search")));
     // Route requests
     const path = request.path;
     if (path === "/explore/search") {
-        await (0, search_1.exploreSearch)(request, response);
+        await exploreSearch(request, response);
         return;
     }
     response.status(404).json({ error: "Not found" });

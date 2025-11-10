@@ -1,5 +1,6 @@
-import {Request, Response} from "firebase-functions";
-import {db} from "../../index";
+import type {Request} from "firebase-functions/v2/https";
+import type {Response} from "express";
+import {getDb} from "../../index";
 import {
   SearchRequest,
   SearchResponse,
@@ -82,6 +83,9 @@ export async function exploreSearch(
     }
 
     console.log("[Search API] Request params:", params);
+
+    // Get Firestore instance
+    const db = getDb();
 
     // Build Firestore query
     let firestoreQuery = db

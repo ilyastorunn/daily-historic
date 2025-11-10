@@ -49,8 +49,8 @@ import { trackEvent } from '@/services/analytics';
 // API Configuration
 // TODO: Move to environment config
 const API_BASE_URL = __DEV__
-  ? 'http://localhost:5001/daily-historic/us-central1/api'
-  : 'https://us-central1-daily-historic.cloudfunctions.net/api';
+  ? 'https://us-central1-chrono-history-b4003.cloudfunctions.net/api' // Use production for now (emulator not running)
+  : 'https://us-central1-chrono-history-b4003.cloudfunctions.net/api';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -545,6 +545,33 @@ const createStyles = (theme: ThemeDefinition) => {
       color: colors.textSecondary,
       textAlign: 'center',
     },
+    activeChipsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      paddingTop: spacing.sm,
+    },
+    activeChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      backgroundColor: colors.accentSoft,
+      borderWidth: 1,
+      borderColor: colors.accentPrimary,
+    },
+    activeChipText: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.accentPrimary,
+      fontWeight: '600',
+    },
+    activeChipButton: {
+      padding: spacing.xs,
+      marginLeft: spacing.xs,
+    },
   });
 };
 
@@ -770,7 +797,7 @@ const ExploreScreen = () => {
   }, [query]);
 
   // Determine if we're showing results or default layout
-  const showResults = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null;
+  const showResults = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null || selectedDate !== today.isoDate;
 
   const activeDate = useMemo(() => parseIsoDate(selectedDate) ?? today, [selectedDate, today]);
 
@@ -1040,16 +1067,52 @@ const ExploreScreen = () => {
     }
   }, [paginationState, fetchSearchResults]);
 
+  // Check if date is selected (different from today)
+  const isDateSelected = selectedDate !== today.isoDate;
+
+  // Check if only date is selected (no search/filter)
+  const isDateOnlySelection = isDateSelected && debouncedQuery.length === 0 && filters.categories.size === 0 && filters.era === null;
+
   // Determine results source (API or local filtering)
   const results = useMemo(() => {
-    // If showing default layout (SOTD + YMBI), use digestEvents for date picker
+    // If showing default layout (no search/filter/date), use digestEvents
     if (!showResults) {
       return digestEvents;
     }
 
-    // Use API results for search/filter
+    // If date is selected, always use digestEvents (filter client-side)
+    if (isDateSelected) {
+      let filtered = digestEvents;
+
+      // Apply category filter
+      if (filters.categories.size > 0) {
+        filtered = filtered.filter((event) =>
+          event.categories?.some((cat) => filters.categories.has(cat as CategoryOption))
+        );
+      }
+
+      // Apply era filter
+      if (filters.era) {
+        filtered = filtered.filter((event) => event.era === filters.era);
+      }
+
+      // Apply text search
+      if (debouncedQuery.length > 0) {
+        const queryLower = debouncedQuery.toLowerCase();
+        filtered = filtered.filter((event) => {
+          const textMatch = event.text?.toLowerCase().includes(queryLower);
+          const summaryMatch = event.summary?.toLowerCase().includes(queryLower);
+          const tagsMatch = event.tags?.some((tag) => tag.toLowerCase().includes(queryLower));
+          return textMatch || summaryMatch || tagsMatch;
+        });
+      }
+
+      return filtered;
+    }
+
+    // Use API results for search/filter on current date
     return apiResults;
-  }, [showResults, apiResults, digestEvents]);
+  }, [isDateSelected, showResults, apiResults, digestEvents, filters, debouncedQuery]);
 
   const activeFilterCount = filters.categories.size + (filters.era ? 1 : 0);
 
@@ -1088,9 +1151,13 @@ const ExploreScreen = () => {
     }
   }, [ymbiItems, showResults, ymbiLoading]);
 
-  // Fetch search results when query or filters change
+  // Fetch search results when query or filters change (but not when date is selected)
   useEffect(() => {
-    if (showResults) {
+    // Only fetch from API if there's search/filter AND date is today
+    const hasSearchOrFilter = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null;
+
+    // Don't fetch if date is selected (we use client-side filtering instead)
+    if (hasSearchOrFilter && !isDateSelected) {
       // Reset pagination and fetch first page
       setPaginationState({
         cursor: null,
@@ -1101,7 +1168,7 @@ const ExploreScreen = () => {
       setApiResults([]);
       fetchSearchResults(null);
     }
-  }, [showResults, normalizedQuery, filters.categories, filters.era, sortMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedQuery, filters.categories, filters.era, sortMode, isDateSelected, fetchSearchResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track no results when search/filters yield empty results
   useEffect(() => {
@@ -1190,6 +1257,22 @@ const ExploreScreen = () => {
       categories: new Set(),
       era: null,
     });
+    setSelectedDate(today.isoDate); // Reset date to today
+  };
+
+  // Individual chip removal handlers
+  const handleRemoveCategory = (category: CategoryOption) => {
+    const newCategories = new Set(filters.categories);
+    newCategories.delete(category);
+    setFilters({ ...filters, categories: newCategories });
+  };
+
+  const handleRemoveEra = () => {
+    setFilters({ ...filters, era: null });
+  };
+
+  const handleRemoveDate = () => {
+    setSelectedDate(today.isoDate);
   };
 
   const selectedDateDisplay = formatIsoDateLabel(digest?.date ?? selectedDate, {
@@ -1217,7 +1300,8 @@ const ExploreScreen = () => {
             />
           }
           onScroll={(event) => {
-            if (!showResults || !paginationState.hasMore || paginationState.loading) return;
+            // Disable pagination when date is selected (all events already loaded)
+            if (!showResults || isDateSelected || !paginationState.hasMore || paginationState.loading) return;
 
             const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
             const scrollPercentage =
@@ -1250,10 +1334,10 @@ const ExploreScreen = () => {
                 style={styles.searchInput}
                 returnKeyType="search"
               />
-              {query.length > 0 && (
+              {showResults && (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Clear search"
+                  accessibilityLabel="Clear search and filters"
                   onPress={handleClearSearch}
                   style={styles.clearButton}
                 >
@@ -1294,6 +1378,57 @@ const ExploreScreen = () => {
               <Text style={styles.dateLabel}>{selectedDateDisplay || 'Select date'}</Text>
             </Pressable>
           </View>
+
+          {/* Active Filter Chips */}
+          {showResults && (
+            <View style={styles.activeChipsContainer}>
+              {/* Category chips */}
+              {Array.from(filters.categories).map((category) => (
+                <Pressable
+                  key={category}
+                  onPress={() => handleRemoveCategory(category)}
+                  style={styles.activeChip}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${formatCategoryLabel(category)} filter`}
+                >
+                  <Text style={styles.activeChipText}>
+                    📂 {formatCategoryLabel(category)}
+                  </Text>
+                  <IconSymbol name="xmark" size={12} color={theme.colors.accentPrimary} />
+                </Pressable>
+              ))}
+
+              {/* Era chip */}
+              {filters.era && (
+                <Pressable
+                  onPress={handleRemoveEra}
+                  style={styles.activeChip}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${filters.era} era filter`}
+                >
+                  <Text style={styles.activeChipText}>
+                    🏛️ {filters.era.charAt(0).toUpperCase() + filters.era.slice(1)}
+                  </Text>
+                  <IconSymbol name="xmark" size={12} color={theme.colors.accentPrimary} />
+                </Pressable>
+              )}
+
+              {/* Date chip */}
+              {selectedDate !== today.isoDate && (
+                <Pressable
+                  onPress={handleRemoveDate}
+                  style={styles.activeChip}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove date filter: ${selectedDateDisplay}`}
+                >
+                  <Text style={styles.activeChipText}>
+                    📅 {selectedDateDisplay}
+                  </Text>
+                  <IconSymbol name="xmark" size={12} color={theme.colors.accentPrimary} />
+                </Pressable>
+              )}
+            </View>
+          )}
 
           {/* Conditional Rendering: Default Layout vs Results */}
           {showResults ? (
@@ -1356,7 +1491,7 @@ const ExploreScreen = () => {
                   theme={theme}
                 />
               ))}
-              {paginationState.loading && (
+              {!isDateSelected && paginationState.loading && (
                 <View style={{ paddingVertical: theme.spacing.xl, alignItems: 'center' }}>
                   <ActivityIndicator size="large" color={theme.colors.accentPrimary} />
                   <Text style={{ ...styles.emptyStateText, marginTop: theme.spacing.sm }}>
@@ -1373,7 +1508,7 @@ const ExploreScreen = () => {
               ) : null}
             </View>
           ) : (
-            // Default Layout: SavedStories + YMBI
+            // Default Layout: YMBI + SavedStories
             // SOTD temporarily disabled due to image loading issues with seed events
             // TODO: Re-enable SOTD when Wikimedia URL issues are resolved
             <>
@@ -1383,6 +1518,14 @@ const ExploreScreen = () => {
                 onPress={handleSOTDPress}
               /> */}
 
+              <YouMightBeInterested
+                items={ymbiItems}
+                loading={ymbiLoading}
+                onCardPress={handleYMBICardPress}
+                onRefresh={refreshYMBI}
+                onSeeMore={handleYMBISeeMore}
+              />
+
               <SavedStories
                 savedEvents={savedEventsData}
                 loading={savedEventsLoading}
@@ -1390,14 +1533,6 @@ const ExploreScreen = () => {
                   trackEvent('explore_saved_story_opened', { event_id: eventId });
                   handleOpenDetail(eventId);
                 }}
-              />
-
-              <YouMightBeInterested
-                items={ymbiItems}
-                loading={ymbiLoading}
-                onCardPress={handleYMBICardPress}
-                onRefresh={refreshYMBI}
-                onSeeMore={handleYMBISeeMore}
               />
             </>
           )}
