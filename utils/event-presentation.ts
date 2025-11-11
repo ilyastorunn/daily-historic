@@ -1,12 +1,54 @@
 import { formatCategoryLabel, formatEraLabel } from '@/constants/personalization';
 import type { FirestoreEventDocument, FirestoreRelatedPage } from '@/types/events';
 
+const decodeHtmlEntities = (text: string): string => {
+  // Common HTML entities map
+  const entities: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&#39;': "'",
+    '&#x27;': "'",
+    '&nbsp;': ' ',
+    '&mdash;': '\u2014',
+    '&ndash;': '\u2013',
+    '&ldquo;': '\u201C',
+    '&rdquo;': '\u201D',
+    '&lsquo;': '\u2018',
+    '&rsquo;': '\u2019',
+  };
+
+  return text
+    .replace(/&[a-zA-Z]+;|&#\d+;|&#x[0-9a-fA-F]+;/g, (entity) => {
+      // Check if it's in our common entities map
+      if (entities[entity]) {
+        return entities[entity];
+      }
+
+      // Decode numeric entities (&#039; or &#39;)
+      if (entity.startsWith('&#x')) {
+        const code = parseInt(entity.slice(3, -1), 16);
+        return String.fromCharCode(code);
+      }
+      if (entity.startsWith('&#')) {
+        const code = parseInt(entity.slice(2, -1), 10);
+        return String.fromCharCode(code);
+      }
+
+      // Return as-is if we can't decode
+      return entity;
+    });
+};
+
 const stripHtmlTags = (value?: string | null) => {
   if (!value) {
     return undefined;
   }
   const withoutTags = value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-  return withoutTags.length > 0 ? withoutTags : undefined;
+  const decoded = decodeHtmlEntities(withoutTags);
+  return decoded.length > 0 ? decoded : undefined;
 };
 
 export const selectPrimaryPage = (event: FirestoreEventDocument): FirestoreRelatedPage | undefined => {
