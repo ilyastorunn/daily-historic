@@ -1171,17 +1171,27 @@ const ExploreScreen = () => {
     // Only fetch from API if there's search/filter AND date is today
     const hasSearchOrFilter = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null;
 
+    console.log('[Explore] Search effect triggered:', {
+      hasSearchOrFilter,
+      isDateSelected,
+      debouncedQuery,
+      categoriesSize: filters.categories.size,
+      era: filters.era,
+    });
+
     // Don't fetch if date is selected (we use client-side filtering instead)
     if (hasSearchOrFilter && !isDateSelected) {
-      // Reset pagination and fetch first page
-      setPaginationState({
+      console.log('[Explore] Resetting pagination and fetching results');
+      // Reset pagination - don't set loading to false, let fetchSearchResults handle it
+      setPaginationState((prev) => ({
+        ...prev,
         cursor: null,
         hasMore: true,
-        loading: false,
         loadedIds: new Set(),
-      });
+      }));
       setApiResults([]);
-      fetchSearchResults(null);
+      // Call in next tick to ensure state is updated
+      setTimeout(() => fetchSearchResults(null), 0);
     }
   }, [debouncedQuery, filters.categories, filters.era, sortMode, isDateSelected, fetchSearchResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
