@@ -973,10 +973,9 @@ const ExploreScreen = () => {
   }, [profile?.savedEventIds, eventCache]);
 
   const highlightedDates = useMemo(() => {
-    const savedIds = profile?.savedEventIds ?? [];
     const set = new Set<string>();
-    savedIds.forEach((id) => {
-      const event = eventCache[id];
+    // Use savedEventsData instead of eventCache to avoid re-computing on every cache update
+    savedEventsData.forEach((event) => {
       const date = event?.date;
       if (date) {
         const month = date.month.toString().padStart(2, '0');
@@ -985,18 +984,27 @@ const ExploreScreen = () => {
       }
     });
     return set;
-  }, [eventCache, profile?.savedEventIds, today.year]);
+  }, [savedEventsData, today.year]);
 
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
   // Fetch search results from backend API
   const fetchSearchResults = useCallback(
     async (cursor?: string | null) => {
-      if (paginationState.loading) return;
+      // Check loading state via callback to avoid dependency
+      let shouldProceed = false;
+      setPaginationState((prev) => {
+        if (prev.loading) {
+          shouldProceed = false;
+          return prev;
+        }
+        shouldProceed = true;
+        return { ...prev, loading: true };
+      });
+
+      if (!shouldProceed) return;
 
       try {
-        setPaginationState((prev) => ({ ...prev, loading: true }));
-
         // Build query params
         const params = new URLSearchParams();
         if (normalizedQuery) params.append('q', normalizedQuery);
@@ -1024,16 +1032,19 @@ const ExploreScreen = () => {
 
         // Update state
         const newItems = data.items || [];
-        const newIds = new Set(paginationState.loadedIds);
-        newItems.forEach((item: FirestoreEventDocument) => newIds.add(item.eventId));
 
-        setPaginationState((prev) => ({
-          ...prev,
-          cursor: data.nextCursor || null,
-          hasMore: !!data.nextCursor,
-          loading: false,
-          loadedIds: newIds,
-        }));
+        setPaginationState((prev) => {
+          const newIds = new Set(prev.loadedIds);
+          newItems.forEach((item: FirestoreEventDocument) => newIds.add(item.eventId));
+
+          return {
+            ...prev,
+            cursor: data.nextCursor || null,
+            hasMore: !!data.nextCursor,
+            loading: false,
+            loadedIds: newIds,
+          };
+        });
 
         // Append or replace results
         setApiResults((prev) => (cursor ? [...prev, ...newItems] : newItems));
@@ -1048,7 +1059,7 @@ const ExploreScreen = () => {
           });
         } else {
           trackEvent('explore_pagination_loaded', {
-            page_number: Math.floor(prev.length / 20) + 1,
+            page_number: Math.floor((cursor ? apiResults.length : 0) / 20) + 1,
             items_count: newItems.length,
           });
         }
@@ -1057,15 +1068,19 @@ const ExploreScreen = () => {
         setPaginationState((prev) => ({ ...prev, loading: false }));
       }
     },
-    [normalizedQuery, filters, sortMode, paginationState.loading, paginationState.loadedIds]
+    [normalizedQuery, filters, sortMode, apiResults.length]
   );
 
   // Fetch next page
   const fetchNextPage = useCallback(() => {
-    if (paginationState.hasMore && !paginationState.loading && paginationState.cursor) {
-      fetchSearchResults(paginationState.cursor);
-    }
-  }, [paginationState, fetchSearchResults]);
+    setPaginationState((prev) => {
+      if (prev.hasMore && !prev.loading && prev.cursor) {
+        // Trigger fetch in next tick to avoid state update during render
+        setTimeout(() => fetchSearchResults(prev.cursor), 0);
+      }
+      return prev;
+    });
+  }, [fetchSearchResults]);
 
   // Check if date is selected (different from today)
   const isDateSelected = selectedDate !== today.isoDate;

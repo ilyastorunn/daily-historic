@@ -43,10 +43,14 @@ export const useEventContent = (eventId: string | null | undefined) => {
       let resolvedEvent: FirestoreEventDocument | null = null;
       let resolvedError: Error | null = null;
 
+      console.log('[useEventContent] Loading event:', eventId);
+
       try {
         const events = await fetchEventsByIds([eventId]);
         resolvedEvent = events[0] ?? null;
+        console.log('[useEventContent] Fetched from Firestore:', resolvedEvent ? 'found' : 'not found');
       } catch (error) {
+        console.error('[useEventContent] Firestore fetch error:', error);
         resolvedError = error instanceof Error ? error : new Error('Failed to load event content');
       }
 
@@ -69,8 +73,15 @@ export const useEventContent = (eventId: string | null | undefined) => {
       }
 
       if (cancelled) {
+        console.log('[useEventContent] Load cancelled for:', eventId);
         return;
       }
+
+      console.log('[useEventContent] Final state:', {
+        eventId,
+        found: !!resolvedEvent,
+        error: !!resolvedError
+      });
 
       setState({
         loading: false,

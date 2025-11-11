@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -112,7 +113,6 @@ const createStyles = (theme: ThemeDefinition) => {
 
 const shareEvent = async (event: FirestoreEventDocument) => {
   try {
-    const { Share } = await import('react-native');
     const title = getEventTitle(event);
     await Share.share({
       title,
