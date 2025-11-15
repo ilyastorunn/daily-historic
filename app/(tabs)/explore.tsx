@@ -993,22 +993,26 @@ const ExploreScreen = () => {
 
   // Fetch search results from backend API
   const fetchSearchResults = useCallback(
-    async (cursor?: string | null, forceFetch = false) => {
-      // Check loading state via callback to avoid dependency
-      let shouldProceed = false;
-      setPaginationState((prev) => {
-        // Allow fetch if forceFetch is true (for new searches)
-        if (prev.loading && !forceFetch) {
-          shouldProceed = false;
-          return prev;
-        }
-        shouldProceed = true;
-        return { ...prev, loading: true };
-      });
+    async (cursor?: string | null, isNewSearch = false) => {
+      // For new searches, skip loading check entirely
+      if (!isNewSearch) {
+        let shouldProceed = false;
+        setPaginationState((prev) => {
+          if (prev.loading) {
+            shouldProceed = false;
+            return prev;
+          }
+          shouldProceed = true;
+          return { ...prev, loading: true };
+        });
 
-      if (!shouldProceed) {
-        console.log('[Explore] Skipping fetch - already loading');
-        return;
+        if (!shouldProceed) {
+          console.log('[Explore] Skipping fetch - already loading');
+          return;
+        }
+      } else {
+        // New search - just set loading without checking
+        setPaginationState((prev) => ({ ...prev, loading: true }));
       }
 
       try {
