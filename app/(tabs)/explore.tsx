@@ -993,11 +993,12 @@ const ExploreScreen = () => {
 
   // Fetch search results from backend API
   const fetchSearchResults = useCallback(
-    async (cursor?: string | null) => {
+    async (cursor?: string | null, forceFetch = false) => {
       // Check loading state via callback to avoid dependency
       let shouldProceed = false;
       setPaginationState((prev) => {
-        if (prev.loading) {
+        // Allow fetch if forceFetch is true (for new searches)
+        if (prev.loading && !forceFetch) {
           shouldProceed = false;
           return prev;
         }
@@ -1005,7 +1006,10 @@ const ExploreScreen = () => {
         return { ...prev, loading: true };
       });
 
-      if (!shouldProceed) return;
+      if (!shouldProceed) {
+        console.log('[Explore] Skipping fetch - already loading');
+        return;
+      }
 
       try {
         // Build query params
@@ -1194,8 +1198,8 @@ const ExploreScreen = () => {
         loadedIds: new Set(),
       });
       setApiResults([]);
-      // Call in next tick to ensure state is updated
-      setTimeout(() => fetchSearchResults(null), 0);
+      // Use forceFetch=true to bypass loading check for new searches
+      fetchSearchResults(null, true);
     }
   }, [debouncedQuery, filters.categories, filters.era, sortMode, isDateSelected, fetchSearchResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
