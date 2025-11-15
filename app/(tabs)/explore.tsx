@@ -1185,13 +1185,14 @@ const ExploreScreen = () => {
     // Don't fetch if date is selected (we use client-side filtering instead)
     if (hasSearchOrFilter && !isDateSelected) {
       console.log('[Explore] Resetting pagination and fetching results');
-      // Reset pagination - don't set loading to false, let fetchSearchResults handle it
-      setPaginationState((prev) => ({
-        ...prev,
+      // Reset pagination and clear loading state to allow new fetch
+      setPaginationState({
+        items: [],
         cursor: null,
         hasMore: true,
+        loading: false, // Reset loading state
         loadedIds: new Set(),
-      }));
+      });
       setApiResults([]);
       // Call in next tick to ensure state is updated
       setTimeout(() => fetchSearchResults(null), 0);
