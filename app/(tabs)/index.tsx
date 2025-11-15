@@ -320,6 +320,55 @@ const buildStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
+    heroSkeleton: {
+      backgroundColor: colors.surfaceSubtle,
+      opacity: 0.65,
+    },
+    skeletonImageArea: {
+      height: 240,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    skeletonBody: {
+      paddingHorizontal: spacing.card,
+      paddingVertical: spacing.lg,
+      gap: spacing.sm,
+    },
+    skeletonPill: {
+      width: 80,
+      height: 24,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    skeletonTitle: {
+      width: '85%',
+      height: 36,
+      borderRadius: radius.sm,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    skeletonSummary: {
+      width: '100%',
+      height: 60,
+      borderRadius: radius.sm,
+      backgroundColor: colors.surfaceSubtle,
+      marginTop: spacing.xs,
+    },
+    skeletonMeta: {
+      width: '50%',
+      height: 16,
+      borderRadius: radius.sm,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    skeletonActions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    skeletonButton: {
+      flex: 1,
+      height: 48,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surfaceSubtle,
+    },
   });
 };
 
@@ -360,10 +409,11 @@ type HeroCarouselCardProps = {
   onCardOpened: (eventId: string, index: number) => void;
   onCtaPress: (eventId: string, index: number, cta: HeroCarouselCta) => void;
   onShare?: (eventId: string, index: number) => void;
+  isSkeleton?: boolean;
 };
 
 const HeroCarouselCard = React.memo(
-  ({ item, index, styles, theme, heroGradient, onOpen, onCardOpened, onCtaPress, onShare }: HeroCarouselCardProps) => {
+  ({ item, index, styles, theme, heroGradient, onOpen, onCardOpened, onCtaPress, onShare, isSkeleton }: HeroCarouselCardProps) => {
   const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(item.id);
 
   const handleOpenDetail = useCallback(() => {
@@ -417,6 +467,25 @@ const HeroCarouselCard = React.memo(
     },
     [item.id, item.imageUri]
   );
+
+  // Skeleton state
+  if (isSkeleton) {
+    return (
+      <View style={[styles.heroCard, styles.heroSkeleton]} pointerEvents="none">
+        <View style={styles.skeletonImageArea} />
+        <View style={styles.skeletonBody}>
+          <View style={styles.skeletonPill} />
+          <View style={styles.skeletonTitle} />
+          <View style={styles.skeletonSummary} />
+          <View style={styles.skeletonMeta} />
+          <View style={styles.skeletonActions}>
+            <View style={styles.skeletonButton} />
+            <View style={styles.skeletonButton} />
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <Pressable accessibilityRole="button" onPress={handleOpenDetail} style={styles.heroCard}>
@@ -659,6 +728,19 @@ const HomeScreen = () => {
     return items.slice(0, 5);
   }, [defaultHeroItem, digestEvents, preferredEvent]);
 
+  const skeletonHeroItems = useMemo<HeroCarouselItem[]>(() => {
+    return Array.from({ length: 2 }, (_, index) => ({
+      id: `hero-skeleton-${index}`,
+      title: '',
+      summary: '',
+      meta: '',
+      yearLabel: '',
+      imageSource: { uri: '' },
+      isFallback: true,
+      categories: [],
+    }));
+  }, []);
+
   const filteredHeroItems = useMemo(() => {
     if (!selectedChipId) {
       return heroCarouselItems;
@@ -666,6 +748,8 @@ const HomeScreen = () => {
     const filtered = heroCarouselItems.filter((item) => item.categories?.includes(selectedChipId));
     return filtered.length > 0 ? filtered : heroCarouselItems;
   }, [heroCarouselItems, selectedChipId]);
+
+  const displayHeroItems = digestLoading ? skeletonHeroItems : filteredHeroItems;
 
   const relatedNowItems = useMemo(() => {
     if (!selectedChipId) {
@@ -819,7 +903,7 @@ const HomeScreen = () => {
 
           <View style={styles.heroCarouselContainer} onLayout={handleHeroCarouselLayout}>
             <PeekCarousel
-              data={filteredHeroItems}
+              data={displayHeroItems}
               keyExtractor={(item) => item.id}
               onIndexChange={handleHeroIndexChange}
               itemWidth={computedHeroWidth}
@@ -835,14 +919,15 @@ const HomeScreen = () => {
                   onCardOpened={handleHeroCardOpened}
                   onCtaPress={handleHeroCtaPress}
                   onShare={handleHeroShare}
+                  isSkeleton={digestLoading}
                 />
               )}
               testID="home-hero-carousel"
             />
-            {filteredHeroItems.length > 1 ? (
+            {!digestLoading && displayHeroItems.length > 1 ? (
               <View style={styles.carouselIndicator}>
                 <Text style={styles.carouselIndicatorText}>
-                  {activeHeroIndex + 1}/{filteredHeroItems.length}
+                  {activeHeroIndex + 1}/{displayHeroItems.length}
                 </Text>
               </View>
             ) : null}

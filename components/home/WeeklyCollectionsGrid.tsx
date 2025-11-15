@@ -128,7 +128,7 @@ export const WeeklyCollectionsGrid: React.FC<WeeklyCollectionsGridProps> = ({
   const styles = useMemo(() => buildStyles(theme), [theme]);
 
   const effectiveItems: (WeeklyCollectionTile & { isSkeleton?: boolean })[] = useMemo(() => {
-    if (items.length === 0 && loading) {
+    if (loading) {
       return Array.from({ length: skeletonCount }, (_, index) => ({
         id: `weekly-collection-skeleton-${index}`,
         title: '',

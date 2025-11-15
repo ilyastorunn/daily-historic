@@ -304,6 +304,9 @@ const createStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
+    searchSection: {
+      gap: spacing.sm,
+    },
     searchRow: {
       flexDirection: 'row',
       gap: spacing.sm,
@@ -1347,33 +1350,35 @@ const ExploreScreen = () => {
             {statusMessage ? <Text style={styles.helperText}>{statusMessage}</Text> : null}
           </View>
 
-          {/* Search Bar */}
-          <View style={styles.searchRow}>
-            <View style={styles.searchInputContainer}>
-              <IconSymbol name="magnifyingglass" size={18} color={theme.colors.textTertiary} />
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Search events, people, or themes"
-                placeholderTextColor={theme.colors.textTertiary}
-                style={styles.searchInput}
-                returnKeyType="search"
-              />
-              {showResults && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear search and filters"
-                  onPress={handleClearSearch}
-                  style={styles.clearButton}
-                >
-                  <IconSymbol name="xmark.circle.fill" size={18} color={theme.colors.textTertiary} />
-                </Pressable>
-              )}
+          {/* Search Section */}
+          <View style={styles.searchSection}>
+            {/* Search Bar */}
+            <View style={styles.searchRow}>
+              <View style={styles.searchInputContainer}>
+                <IconSymbol name="magnifyingglass" size={18} color={theme.colors.textTertiary} />
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Search events, people, or themes"
+                  placeholderTextColor={theme.colors.textTertiary}
+                  style={styles.searchInput}
+                  returnKeyType="search"
+                />
+                {showResults && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear search and filters"
+                    onPress={handleClearSearch}
+                    style={styles.clearButton}
+                  >
+                    <IconSymbol name="xmark.circle.fill" size={18} color={theme.colors.textTertiary} />
+                  </Pressable>
+                )}
+              </View>
             </View>
-          </View>
 
-          {/* Filter & Date Row */}
-          <View style={styles.searchRow}>
+            {/* Filter & Date Row */}
+            <View style={styles.searchRow}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Filters${activeFilterCount > 0 ? ` (${activeFilterCount} active)` : ''}`}
@@ -1402,6 +1407,7 @@ const ExploreScreen = () => {
               <IconSymbol name="calendar" size={18} color={theme.colors.textSecondary} />
               <Text style={styles.dateLabel}>{selectedDateDisplay || 'Select date'}</Text>
             </Pressable>
+          </View>
           </View>
 
           {/* Active Filter Chips */}

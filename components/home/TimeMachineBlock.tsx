@@ -82,6 +82,33 @@ const buildStyles = (theme: ThemeDefinition) => {
       color: colors.surface,
       fontSize: typography.helper.fontSize,
     },
+    skeletonContainer: {
+      flex: 1,
+      backgroundColor: colors.surfaceSubtle,
+      opacity: 0.65,
+      padding: spacing.xl,
+      justifyContent: 'flex-end',
+    },
+    skeletonBadge: {
+      width: 80,
+      height: 24,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surfaceSubtle,
+      marginBottom: spacing.sm,
+    },
+    skeletonTitle: {
+      width: '60%',
+      height: 32,
+      borderRadius: radius.sm,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    skeletonSubtitle: {
+      width: '45%',
+      height: 16,
+      borderRadius: radius.sm,
+      backgroundColor: colors.surfaceSubtle,
+      marginTop: spacing.xs,
+    },
   });
 };
 
@@ -120,19 +147,22 @@ export const TimeMachineBlock: React.FC<TimeMachineBlockProps> = ({
 
   return (
     <View style={styles.container} testID={testID}>
-      <Pressable style={styles.pressable} accessibilityRole="button" onPress={handlePress}>
-        <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
-        <View style={styles.overlay}>
-          {!premium ? <Text style={styles.badge}>Premium</Text> : null}
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      {loading ? (
+        <View style={styles.skeletonContainer} pointerEvents="none">
+          <View style={styles.skeletonBadge} />
+          <View style={styles.skeletonTitle} />
+          {subtitle ? <View style={styles.skeletonSubtitle} /> : null}
         </View>
-        {loading ? (
-          <View style={styles.loadingOverlay} pointerEvents="none">
-            <Text style={styles.loadingText}>Preparing timeline…</Text>
+      ) : (
+        <Pressable style={styles.pressable} accessibilityRole="button" onPress={handlePress}>
+          <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+          <View style={styles.overlay}>
+            {!premium ? <Text style={styles.badge}>Premium</Text> : null}
+            <Text style={styles.title}>{title}</Text>
+            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
           </View>
-        ) : null}
-      </Pressable>
+        </Pressable>
+      )}
     </View>
   );
 };
