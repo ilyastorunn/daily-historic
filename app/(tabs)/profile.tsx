@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { useUserContext } from '@/contexts/user-context';
 import { SelectableChip } from '@/components/ui/selectable-chip';
@@ -202,6 +203,7 @@ const ProfileScreen = () => {
   const { profile, updateProfile, signOut } = useUserContext();
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const router = useRouter();
 
   const handleToggleCategory = (value: CategoryOption) => {
     if (!profile) {
@@ -399,6 +401,22 @@ const ProfileScreen = () => {
                 style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.85 }]}
               >
                 <Text style={styles.signOutLabel}>Sign out</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Development</Text>
+            <View style={styles.sectionBody}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={async () => {
+                  await updateProfile({ onboardingCompleted: false });
+                  router.replace('/onboarding');
+                }}
+                style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.85 }]}
+              >
+                <Text style={styles.signOutLabel}>Reset Onboarding (Dev)</Text>
               </Pressable>
             </View>
           </View>

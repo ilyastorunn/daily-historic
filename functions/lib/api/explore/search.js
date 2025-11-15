@@ -91,7 +91,10 @@ async function exploreSearch(request, response) {
             }
         }
         // Fetch with +1 to determine if there are more results
-        const fetchLimit = (params.limit || 20) + 1;
+        // For multi-category, fetch more to account for client-side filtering
+        const requestedLimit = params.limit || 20;
+        const fetchMultiplier = categoryArray.length > 1 ? 10 : 1;
+        const fetchLimit = (requestedLimit * fetchMultiplier) + 1;
         firestoreQuery = firestoreQuery.limit(fetchLimit);
         const snapshot = await firestoreQuery.get();
         console.log("[Search API] Fetched documents:", snapshot.size);
@@ -130,8 +133,8 @@ async function exploreSearch(request, response) {
             // No additional sorting needed
         }
         // Determine next cursor and slice results
-        const hasMore = events.length > (params.limit || 20);
-        const items = events.slice(0, params.limit || 20);
+        const hasMore = events.length > requestedLimit;
+        const items = events.slice(0, requestedLimit);
         const nextCursor = hasMore && items.length > 0
             ? items[items.length - 1].eventId
             : undefined;

@@ -1025,7 +1025,8 @@ const ExploreScreen = () => {
         if (filters.era) params.append('era', filters.era);
         params.append('sort', sortMode);
         if (cursor) params.append('cursor', cursor);
-        params.append('limit', '20');
+        // Load 5 items initially, 10 for pagination
+        params.append('limit', cursor ? '10' : '5');
 
         const url = `${API_BASE_URL}/explore/search?${params.toString()}`;
         console.log('[Explore] Fetching:', url);
@@ -1048,10 +1049,13 @@ const ExploreScreen = () => {
           const newIds = new Set(prev.loadedIds);
           newItems.forEach((item: FirestoreEventDocument) => newIds.add(item.eventId));
 
+          // hasMore = true only if we got items AND there's a nextCursor
+          const hasMore = newItems.length > 0 && !!data.nextCursor;
+
           return {
             ...prev,
             cursor: data.nextCursor || null,
-            hasMore: !!data.nextCursor,
+            hasMore,
             loading: false,
             loadedIds: newIds,
           };
