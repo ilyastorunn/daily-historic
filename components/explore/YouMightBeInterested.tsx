@@ -326,7 +326,8 @@ export const YouMightBeInterested = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.sectionLabel}>You Might Be Interested</Text>
-        {onSeeMore && (
+        {/* Temporarily hidden - See More button (infinite scroll issue) */}
+        {false && onSeeMore && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="See more recommendations"
