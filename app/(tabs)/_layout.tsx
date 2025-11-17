@@ -108,7 +108,8 @@ const createStyles = (theme: ThemeDefinition) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
+      paddingTop: spacing.xs, // Minimal top padding
+      paddingBottom: spacing.sm, // Small bottom padding for breathing room
       backgroundColor: dockBackground,
     },
     item: {

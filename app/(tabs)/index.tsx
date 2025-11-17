@@ -76,7 +76,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     scrollContent: {
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.xl,
-      paddingBottom: spacing.xxl,
+      paddingBottom: spacing.md, // Reduced to minimize gap above tab bar
       gap: spacing.xl,
     },
     sectionHeader: {
