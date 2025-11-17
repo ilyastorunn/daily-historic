@@ -1088,14 +1088,11 @@ const ExploreScreen = () => {
 
   // Fetch next page
   const fetchNextPage = useCallback(() => {
-    setPaginationState((prev) => {
-      if (prev.hasMore && !prev.loading && prev.cursor) {
-        // Trigger fetch in next tick to avoid state update during render
-        setTimeout(() => fetchSearchResults(prev.cursor), 0);
-      }
-      return prev;
-    });
-  }, [fetchSearchResults]);
+    // Check state directly to avoid multiple calls
+    if (paginationState.hasMore && !paginationState.loading && paginationState.cursor) {
+      fetchSearchResults(paginationState.cursor);
+    }
+  }, [fetchSearchResults, paginationState.hasMore, paginationState.loading, paginationState.cursor]);
 
   // Check if date is selected (different from today)
   const isDateSelected = selectedDate !== today.isoDate;
