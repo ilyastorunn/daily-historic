@@ -19,7 +19,8 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { spacing, colors } = theme;
-  const bottomInset = insets.bottom > spacing.sm ? insets.bottom : spacing.sm;
+  // Ensure minimum spacing for devices without home indicator
+  const bottomInset = Math.max(insets.bottom, spacing.sm);
 
   return (
     <View style={[styles.container, { paddingBottom: bottomInset }]}>
@@ -97,33 +98,18 @@ const createStyles = (theme: ThemeDefinition) => {
 
   return StyleSheet.create({
     container: {
-      position: 'absolute',
-      left: spacing.xl,
-      right: spacing.xl,
-      bottom: 0,
-      pointerEvents: 'box-none',
+      // Flat design - no floating, attached to bottom
+      backgroundColor: dockBackground,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.borderSubtle,
     },
     dock: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       backgroundColor: dockBackground,
-      ...Platform.select({
-        ios: {
-          shadowColor: colors.shadowColor,
-          shadowOpacity: 0.16,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
-        },
-        default: {
-          elevation: 12,
-        },
-      }),
     },
     item: {
       flex: 1,
