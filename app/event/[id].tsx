@@ -216,6 +216,8 @@ const createStyles = (theme: ThemeDefinition) => {
       right: spacing.lg,
       flexDirection: 'row',
       justifyContent: 'space-between',
+      zIndex: 100,
+      elevation: 100,
     },
     navButton: {
       flexDirection: 'row',
@@ -410,23 +412,6 @@ const EventDetailScreen = () => {
                 style={styles.heroOverlay}
                 contentFit="cover"
               />
-              <View style={[styles.navBar, { top: insets.top + theme.spacing.lg }]}>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => router.back()}
-                  style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
-                >
-                  <IconSymbol name="chevron.right" size={18} color="#fff" style={{ transform: [{ rotate: '180deg' }] }} />
-                  <Text style={styles.navLabel}>Back</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={handleShare}
-                  style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
-                >
-                  <IconSymbol name="square.and.arrow.up" size={18} color="#fff" />
-                </Pressable>
-              </View>
             </View>
             <View style={styles.heroBody}>
               {yearBadge ? <Text style={styles.heroBadge}>{yearBadge}</Text> : null}
@@ -529,6 +514,24 @@ const EventDetailScreen = () => {
             ) : null}
           </View>
         </ScrollView>
+
+        <View style={[styles.navBar, { top: insets.top + theme.spacing.lg }]}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
+          >
+            <IconSymbol name="chevron.right" size={18} color="#fff" style={{ transform: [{ rotate: '180deg' }] }} />
+            <Text style={styles.navLabel}>Back</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleShare}
+            style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
+          >
+            <IconSymbol name="square.and.arrow.up" size={18} color="#fff" />
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
