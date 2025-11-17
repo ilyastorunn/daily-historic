@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { getEventById, heroEvent } from '@/constants/events';
@@ -246,6 +246,7 @@ const EventDetailScreen = () => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id?: string }>();
   const rawId = params.id;
   const eventIdParam = Array.isArray(rawId) ? rawId[0] : rawId ?? null;
@@ -356,7 +357,7 @@ const EventDetailScreen = () => {
 
   if (!hasEvent && remoteLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <View style={styles.missingSurface}>
           <Text style={styles.heroTitle}>Loading story…</Text>
         </View>
@@ -366,7 +367,7 @@ const EventDetailScreen = () => {
 
   if (!hasEvent && !remoteLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <View style={styles.missingSurface}>
           <Text style={styles.heroTitle}>We could not find that moment.</Text>
           <Pressable
@@ -390,7 +391,7 @@ const EventDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.heroHeader}>
@@ -409,7 +410,7 @@ const EventDetailScreen = () => {
                 style={styles.heroOverlay}
                 contentFit="cover"
               />
-              <View style={styles.navBar}>
+              <View style={[styles.navBar, { top: insets.top + theme.spacing.lg }]}>
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => router.back()}
