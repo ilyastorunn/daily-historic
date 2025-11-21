@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import { SelectableChip } from '@/components/ui/selectable-chip';
 import { type EraOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
@@ -19,7 +19,7 @@ const options: { value: EraOption; label: string }[] = [
 ];
 
 const createStyles = (theme: ThemeDefinition) => {
-  const { colors, spacing } = theme;
+  const { colors, spacing, radius, mode } = theme;
   const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
   const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
 
@@ -29,45 +29,67 @@ const createStyles = (theme: ThemeDefinition) => {
       paddingBottom: spacing.xxl,
       gap: spacing.xl,
     },
-    headerRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
+    header: {
+      gap: spacing.sm,
       paddingTop: spacing.md,
-    },
-    headerCopy: {
-      flex: 1,
-      paddingRight: spacing.lg,
-      gap: spacing.xs,
     },
     title: {
       fontFamily: serifFamily,
-      fontSize: 26,
-      lineHeight: 32,
-      letterSpacing: -0.5,
+      fontSize: 32,
+      lineHeight: 38,
+      letterSpacing: -0.6,
       color: colors.textPrimary,
+      fontWeight: '400',
     },
-    body: {
-      fontFamily: sansFamily,
-      fontSize: 15,
-      lineHeight: 22,
-      color: colors.textSecondary,
-    },
-    skipLink: {
-      paddingVertical: spacing.xs,
-    },
-    skipLabel: {
-      fontFamily: sansFamily,
-      fontSize: 14,
-      fontWeight: '500',
-      color: colors.textSecondary,
-      opacity: 0.55,
-      letterSpacing: 0.3,
-    },
-    chipGrid: {
+    cardGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      paddingTop: spacing.md,
+      gap: spacing.md,
+      paddingTop: spacing.lg,
+    },
+    cardWrapper: {
+      width: '47%',
+    },
+    card: {
+      backgroundColor: mode === 'dark' ? colors.surfaceElevated : colors.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      minHeight: 140,
+      position: 'relative',
+      borderWidth: 1,
+      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : colors.borderSubtle,
+    },
+    cardPressed: {
+      opacity: 0.7,
+    },
+    iconPlaceholder: {
+      width: 48,
+      height: 48,
+      marginBottom: spacing.md,
+    },
+    cardLabel: {
+      fontFamily: sansFamily,
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: '400',
+      color: colors.textPrimary,
+    },
+    checkbox: {
+      position: 'absolute',
+      top: spacing.md,
+      right: spacing.md,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+      backgroundColor: 'transparent',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxSelected: {
+      backgroundColor: '#5CB85C',
+      borderColor: '#5CB85C',
     },
   });
 };
@@ -86,48 +108,44 @@ const StepEras = ({ onNext }: StepComponentProps) => {
     updateState({ eras: next });
   };
 
-  const handleSkip = () => {
-    updateState({ eras: [] });
-    onNext();
-  };
-
   return (
     <ScrollView
       contentContainerStyle={[onboardingStyles.stepScroll, themedStyles.container]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={themedStyles.headerRow}>
-        <View style={themedStyles.headerCopy}>
-          <Text style={themedStyles.title}>Focus by era</Text>
-          <Text style={themedStyles.body}>
-            Hone in on the periods you crave, or keep the full timeline open.
-          </Text>
-        </View>
-        <Pressable
-          accessibilityLabel="Skip era focus"
-          accessibilityRole="button"
-          onPress={handleSkip}
-          style={({ pressed }) => [
-            themedStyles.skipLink,
-            pressed && { opacity: 0.6 },
-          ]}
-        >
-          <Text style={themedStyles.skipLabel}>Skip</Text>
-        </Pressable>
+      <View style={themedStyles.header}>
+        <Text style={themedStyles.title}>Which eras do you{'\n'}prefer?</Text>
       </View>
 
-      <View style={themedStyles.chipGrid}>
+      <View style={themedStyles.cardGrid}>
         {options.map((option) => {
           const selected = eras.includes(option.value);
           return (
-            <SelectableChip
-              key={option.value}
-              label={option.label}
-              selected={selected}
-              onPress={() => toggleOption(option.value)}
-              accessibilityHint={selected ? 'Double tap to remove this era' : 'Double tap to focus on this era more often'}
-              testID={`era-chip-${option.value}`}
-            />
+            <View key={option.value} style={themedStyles.cardWrapper}>
+              <Pressable
+                onPress={() => toggleOption(option.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
+                testID={`era-card-${option.value}`}
+                style={({ pressed }) => [
+                  themedStyles.card,
+                  pressed && themedStyles.cardPressed,
+                ]}
+              >
+                {/* Icon placeholder - will be replaced with illustrations later */}
+                <View style={themedStyles.iconPlaceholder} />
+
+                <Text style={themedStyles.cardLabel}>{option.label}</Text>
+
+                {/* Checkbox */}
+                <View style={[themedStyles.checkbox, selected && themedStyles.checkboxSelected]}>
+                  {selected && (
+                    <Ionicons name="checkmark" size={18} color="white" />
+                  )}
+                </View>
+              </Pressable>
+            </View>
           );
         })}
       </View>

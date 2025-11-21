@@ -1,28 +1,28 @@
 import { useMemo } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import { SelectableChip } from '@/components/ui/selectable-chip';
 import { type CategoryOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 import type { StepComponentProps } from '../types';
 import { styles as onboardingStyles } from '../styles';
 
-const categoryOptions: { value: CategoryOption; label: string }[] = [
+const categoryOptions: { value: CategoryOption; label: string; icon?: string }[] = [
   { value: 'world-wars', label: 'World Wars' },
-  { value: 'ancient-civilizations', label: 'Ancient Worlds' },
+  { value: 'ancient-civilizations', label: 'Ancient Civilizations' },
   { value: 'science-discovery', label: 'Science & Discovery' },
   { value: 'art-culture', label: 'Art & Culture' },
-  { value: 'politics', label: 'Leaders & Power' },
-  { value: 'inventions', label: 'Breakthroughs' },
-  { value: 'natural-disasters', label: 'Forces of Nature' },
-  { value: 'civil-rights', label: 'Rights & Movements' },
+  { value: 'politics', label: 'Politics' },
+  { value: 'inventions', label: 'Inventions' },
+  { value: 'natural-disasters', label: 'Natural Disasters' },
+  { value: 'civil-rights', label: 'Civil Rights' },
   { value: 'exploration', label: 'Exploration' },
-  { value: 'surprise', label: 'Surprise me' },
+  { value: 'surprise', label: 'None of these' },
 ];
 
 const createStyles = (theme: ThemeDefinition) => {
-  const { colors, spacing } = theme;
+  const { colors, spacing, radius, mode } = theme;
   const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
   const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
 
@@ -38,41 +38,61 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     title: {
       fontFamily: serifFamily,
-      fontSize: 28,
-      lineHeight: 34,
+      fontSize: 32,
+      lineHeight: 38,
       letterSpacing: -0.6,
       color: colors.textPrimary,
+      fontWeight: '400',
     },
-    body: {
-      fontFamily: sansFamily,
-      fontSize: 15,
-      lineHeight: 22,
-      color: colors.textSecondary,
-      maxWidth: 320,
-    },
-    chipGrid: {
+    cardGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      paddingTop: spacing.md,
+      gap: spacing.md,
+      paddingTop: spacing.lg,
     },
-    helper: {
-      fontFamily: sansFamily,
-      fontSize: 13,
-      lineHeight: 18,
-      color: colors.textTertiary,
+    cardWrapper: {
+      width: '47%',
     },
-    skipLink: {
-      alignSelf: 'flex-start',
-      paddingVertical: spacing.xs,
+    card: {
+      backgroundColor: mode === 'dark' ? colors.surfaceElevated : colors.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      minHeight: 140,
+      position: 'relative',
+      borderWidth: 1,
+      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : colors.borderSubtle,
     },
-    skipLabel: {
-      fontFamily: sansFamily,
-      fontSize: 15,
-      fontWeight: '500',
-      color: colors.textSecondary,
+    cardPressed: {
       opacity: 0.7,
-      textDecorationLine: 'underline',
-      letterSpacing: 0.2,
+    },
+    iconPlaceholder: {
+      width: 48,
+      height: 48,
+      marginBottom: spacing.md,
+    },
+    cardLabel: {
+      fontFamily: sansFamily,
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: '400',
+      color: colors.textPrimary,
+    },
+    checkbox: {
+      position: 'absolute',
+      top: spacing.md,
+      right: spacing.md,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
+      backgroundColor: 'transparent',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxSelected: {
+      backgroundColor: '#5CB85C',
+      borderColor: '#5CB85C',
     },
   });
 };
@@ -106,43 +126,41 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
       showsVerticalScrollIndicator={false}
     >
       <View style={themedStyles.header}>
-        <Text style={themedStyles.title}>Choose what to explore</Text>
-        <Text style={themedStyles.body}>
-          Pick a few themes for today’s digest. “Surprise me” keeps the mix broad.
-        </Text>
+        <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
       </View>
 
-      <View style={themedStyles.chipGrid}>
+      <View style={themedStyles.cardGrid}>
         {categoryOptions.map((option) => {
           const selected = state.categories.includes(option.value);
           return (
-            <SelectableChip
-              key={option.value}
-              label={option.label}
-              selected={selected}
-              onPress={() => toggleCategory(option.value)}
-              accessibilityHint={selected ? 'Double tap to remove from your digest' : 'Double tap to add to your digest'}
-              testID={`category-chip-${option.value}`}
-            />
+            <View key={option.value} style={themedStyles.cardWrapper}>
+              <Pressable
+                onPress={() => toggleCategory(option.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
+                testID={`category-card-${option.value}`}
+                style={({ pressed }) => [
+                  themedStyles.card,
+                  pressed && themedStyles.cardPressed,
+                ]}
+              >
+                {/* Icon placeholder - will be replaced with illustrations later */}
+                <View style={themedStyles.iconPlaceholder} />
+
+                <Text style={themedStyles.cardLabel}>{option.label}</Text>
+
+                {/* Checkbox */}
+                <View style={[themedStyles.checkbox, selected && themedStyles.checkboxSelected]}>
+                  {selected && (
+                    <Ionicons name="checkmark" size={18} color="white" />
+                  )}
+                </View>
+              </Pressable>
+            </View>
           );
         })}
       </View>
-
-      <Text style={themedStyles.helper}>
-        You can refine these anytime in settings. Choosing “Surprise me” clears other picks.
-      </Text>
-
-      <Pressable
-        onPress={handleSkip}
-        accessibilityRole="button"
-        accessibilityLabel="Skip category selection"
-        style={({ pressed }) => [
-          themedStyles.skipLink,
-          pressed && { opacity: 0.6 },
-        ]}
-      >
-        <Text style={themedStyles.skipLabel}>Skip for now</Text>
-      </Pressable>
     </ScrollView>
   );
 };

@@ -92,7 +92,7 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography, mode } = theme;
-  const dockBackground = mode === 'dark' ? colors.surfaceSubtle : colors.surface;
+  const dockBackground = colors.screen;
   const accentWash = mode === 'dark' ? colors.accentMuted : colors.accentSoft;
   const labelBase = typography.label;
 
@@ -108,8 +108,7 @@ const createStyles = (theme: ThemeDefinition) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xs, // Minimal top padding
-      paddingBottom: spacing.sm, // Small bottom padding for breathing room
+      paddingTop: spacing.md,
       backgroundColor: dockBackground,
     },
     item: {
@@ -125,7 +124,7 @@ const createStyles = (theme: ThemeDefinition) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.xs,
       paddingHorizontal: spacing.lg,
       borderRadius: radius.pill,
     },
