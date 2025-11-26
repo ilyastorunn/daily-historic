@@ -981,6 +981,52 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
       'first-heart-transplant',
     ],
   },
+  {
+    id: 'digital-age',
+    title: 'Digital Age',
+    summary: 'Technology revolutions that connected the world and transformed daily life.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Eniac.jpg'),
+    },
+    eventIds: [
+      'first-computer-eniac',
+      'internet-arpanet',
+      'www-invention',
+      'first-iphone',
+      'google-founding',
+      'ada-lovelace-analytical',
+    ],
+  },
+  {
+    id: 'industrial-revolution',
+    title: 'Industrial Revolution',
+    summary: 'Steam, steel, and ingenuity forge the modern world.',
+    image: {
+      uri: buildWikimediaFileUrl('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
+    },
+    eventIds: [
+      'steam-engine-watt',
+      'transcontinental-railroad',
+      'ada-lovelace-analytical',
+      'florence-nightingale-nursing',
+      'germ-theory-pasteur',
+    ],
+  },
+  {
+    id: 'american-founding',
+    title: 'American Founding & Reform',
+    summary: 'Nation-building moments that defined freedom and equality.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Emancipation_proclamation.jpg'),
+    },
+    eventIds: [
+      'emancipation-proclamation',
+      'civil-war-begins',
+      'harriet-tubman-underground',
+      'women-suffrage-usa',
+      'transcontinental-railroad',
+    ],
+  },
 ];
 
 export const QUICK_FILTERS: { id: EventCategory | 'all'; label: string }[] = [
