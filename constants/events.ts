@@ -451,21 +451,51 @@ export const EVENT_LIBRARY: EventRecord[] = [
 export const EVENT_COLLECTIONS: EventCollection[] = [
   {
     id: 'women-in-stem-week',
-    title: 'Women in STEM Week',
-    summary: 'A curated loop of pioneers who widened the lab doors.',
+    title: 'Women Who Changed the World',
+    summary: 'Pioneers who shattered glass ceilings across science, politics, and human rights.',
     image: {
       uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
     },
-    eventIds: ['women-suffrage-usa', 'ada-lovelace-analytical', 'women-in-stem-week'],
+    eventIds: [
+      'marie-curie-nobel',
+      'ada-lovelace-analytical',
+      'women-in-stem-week',
+      'florence-nightingale-nursing',
+      'amelia-earhart-atlantic',
+      'malala-nobel-peace',
+    ],
   },
   {
     id: 'voices-of-change',
     title: 'Voices of Change',
-    summary: 'Civic acts that reshaped the social contract.',
+    summary: 'Courageous acts that redefined freedom, equality, and justice.',
     image: {
       uri: buildWikimediaFileUrl('File:March_on_Washington_for_Jobs_and_Freedom,_Martin_Luther_King,_Jr._and_Joachim_Prinz_1963.jpg'),
     },
-    eventIds: ['women-suffrage-usa'], // Will expand with more civil rights events
+    eventIds: [
+      'rosa-parks-bus-boycott',
+      'women-suffrage-usa',
+      'harriet-tubman-underground',
+      'emmeline-pankhurst-suffragette',
+      'malala-nobel-peace',
+    ],
+  },
+  {
+    id: 'world-wars-defining-moments',
+    title: 'World Wars: Defining Moments',
+    summary: 'Turning points that shaped the 20th century through conflict and resolution.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
+    },
+    eventIds: [
+      'd-day-normandy-landing',
+      'pearl-harbor-attack',
+      'ww1-armistice',
+      'hiroshima-atomic-bomb',
+      'battle-of-stalingrad',
+      'treaty-of-versailles',
+      'cuban-missile-crisis',
+    ],
   },
   {
     id: 'space-race',
@@ -474,7 +504,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
     },
-    eventIds: ['apollo-11-first-footsteps'], // Will expand with more space exploration events
+    eventIds: ['apollo-11-first-footsteps'], // Will expand with space exploration events in Phase 2B
   },
   {
     id: 'ancient-innovations',
@@ -483,7 +513,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:NAMA_Machine_d%27Anticyth%C3%A8re_1.jpg'),
     },
-    eventIds: ['rosetta-stone-decode'], // Will expand with more ancient civilization events
+    eventIds: ['rosetta-stone-decode'], // Will expand with ancient events in Phase 2B
   },
 ];
 
