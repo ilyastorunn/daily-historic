@@ -845,6 +845,63 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'American Battlefield Trust', url: 'https://www.battlefields.org/learn/civil-war/battles/fort-sumter' },
     ],
   },
+  {
+    id: 'sistine-chapel-ceiling',
+    year: '1512',
+    date: '1512-10-31',
+    title: 'Michelangelo completes Sistine Chapel ceiling',
+    summary: 'Renaissance masterpiece transforms Vatican chapel.',
+    detail:
+      'After four years of grueling work, Michelangelo unveils his frescoes on the Sistine Chapel ceiling, including the iconic "Creation of Adam." The work defines High Renaissance art.',
+    location: 'Vatican City',
+    image: {
+      uri: buildWikimediaFileUrl('File:Michelangelo_Caravaggio_073.jpg'),
+    },
+    categories: ['art', 'culture'],
+    eras: ['renaissance'],
+    sources: [
+      { label: 'Vatican Museums', url: 'https://www.museivaticani.va/content/museivaticani/en/collezioni/musei/cappella-sistina.html' },
+      { label: 'Khan Academy', url: 'https://www.khanacademy.org/humanities/renaissance-reformation/high-ren-florence-rome/michelangelo/a/michelangelo-ceiling-of-the-sistine-chapel' },
+    ],
+  },
+  {
+    id: 'impressionism-monet',
+    year: '1872',
+    date: '1872-11-13',
+    title: 'Monet's "Impression, Sunrise" births Impressionism',
+    summary: 'Revolutionary painting gives name to art movement.',
+    detail:
+      'Claude Monet paints "Impression, Sunrise" in Le Havre. When exhibited in 1874, critics mock its loose brushwork, inadvertently naming Impressionism—one of history's most influential art movements.',
+    location: 'Le Havre, France',
+    image: {
+      uri: buildWikimediaFileUrl('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
+    },
+    categories: ['art', 'culture'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Musée Marmottan Monet', url: 'https://www.marmottan.fr/en/' },
+      { label: 'Tate', url: 'https://www.tate.org.uk/art/art-terms/i/impressionism' },
+    ],
+  },
+  {
+    id: 'beethoven-ninth-symphony',
+    year: '1824',
+    date: '1824-05-07',
+    title: 'Beethoven premieres Ninth Symphony',
+    summary: 'Deaf composer conducts immortal "Ode to Joy."',
+    detail:
+      'Ludwig van Beethoven, now completely deaf, conducts the premiere of his Ninth Symphony in Vienna. The revolutionary work features a choral finale that becomes an anthem of human unity.',
+    location: 'Vienna, Austria',
+    image: {
+      uri: buildWikimediaFileUrl('File:Beethoven.jpg'),
+    },
+    categories: ['art', 'culture'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Beethoven-Haus Bonn', url: 'https://www.beethoven.de/en/work/view/5293538457329664/Symphony+No.+9+in+D+minor+op.+125' },
+      { label: 'Vienna Philharmonic', url: 'https://www.wienerphilharmoniker.at/en/beethoven' },
+    ],
+  },
 ];
 
 export const EVENT_COLLECTIONS: EventCollection[] = [
