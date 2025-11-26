@@ -169,7 +169,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Sally Ride launches science camps',
     summary: 'The first American woman in space opens programs nurturing discovery.',
     detail:
-      'Sally Ride Science starts camps to sustain girls’ curiosity in STEM, extending the impact of Ride’s 1983 mission to a new generation.',
+      'Sally Ride Science starts camps to sustain girls' curiosity in STEM, extending the impact of Ride's 1983 mission to a new generation.',
     location: 'San Diego, USA',
     image: {
       uri: buildWikimediaFileUrl('File:Sally_Ride_in_1984.jpg'),
@@ -178,6 +178,139 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['contemporary'],
     sources: [
       { label: 'Sally Ride Science', url: 'https://sallyridescience.ucsd.edu/about/' },
+    ],
+  },
+  {
+    id: 'd-day-normandy-landing',
+    year: '1944',
+    date: '1944-06-06',
+    title: 'D-Day: Allied forces storm Normandy beaches',
+    summary: 'Operation Overlord marks the beginning of the end for Nazi Germany.',
+    detail:
+      'Over 150,000 Allied troops land on five beaches in Normandy, France, launching the largest amphibious invasion in history and opening a critical Western Front against Nazi occupation.',
+    location: 'Normandy, France',
+    image: {
+      uri: buildWikimediaFileUrl('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'National WWII Museum', url: 'https://www.nationalww2museum.org/war/topics/d-day' },
+      { label: 'History.com', url: 'https://www.history.com/topics/world-war-ii/d-day' },
+    ],
+  },
+  {
+    id: 'pearl-harbor-attack',
+    year: '1941',
+    date: '1941-12-07',
+    title: 'Attack on Pearl Harbor brings US into WWII',
+    summary: 'Japan's surprise strike transforms American isolationism into total war.',
+    detail:
+      'Japanese aircraft attack the US Pacific Fleet at Pearl Harbor, Hawaii, killing over 2,400 Americans and sinking battleships. The next day, President Roosevelt declares war.',
+    location: 'Pearl Harbor, Hawaii, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:The_USS_Arizona_(BB-39)_burning_after_the_Japanese_attack_on_Pearl_Harbor_-_NARA_195617_-_Edit.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Pearl Harbor National Memorial', url: 'https://www.nps.gov/perl/index.htm' },
+      { label: 'National Archives', url: 'https://www.archives.gov/publications/prologue/2001/winter/crafting-day-of-infamy-speech' },
+    ],
+  },
+  {
+    id: 'ww1-armistice',
+    year: '1918',
+    date: '1918-11-11',
+    title: 'WWI Armistice ends "War to End All Wars"',
+    summary: 'The guns fall silent on the Western Front at the eleventh hour.',
+    detail:
+      'Germany signs an armistice agreement with the Allies, ending four years of unprecedented carnage that claimed over 17 million lives and reshaped the modern world.',
+    location: 'Compiègne, France',
+    image: {
+      uri: buildWikimediaFileUrl('File:Ww1_armistice.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Imperial War Museums', url: 'https://www.iwm.org.uk/history/the-armistice' },
+      { label: 'Library of Congress', url: 'https://www.loc.gov/collections/world-war-i-rotogravures/articles-and-essays/events/armistice/' },
+    ],
+  },
+  {
+    id: 'hiroshima-atomic-bomb',
+    year: '1945',
+    date: '1945-08-06',
+    title: 'First atomic bomb dropped on Hiroshima',
+    summary: 'Nuclear age dawns with devastating force, reshaping warfare forever.',
+    detail:
+      'The B-29 bomber Enola Gay drops "Little Boy" on Hiroshima, instantly killing 70,000 and ushering in the atomic age. Japan surrenders nine days later, ending WWII.',
+    location: 'Hiroshima, Japan',
+    image: {
+      uri: buildWikimediaFileUrl('File:Atomic_bombing_of_Japan.jpg'),
+    },
+    categories: ['politics', 'science'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Atomic Heritage Foundation', url: 'https://www.atomicheritage.org/history/bombing-hiroshima-and-nagasaki-1945' },
+      { label: 'Hiroshima Peace Memorial Museum', url: 'https://hpmmuseum.jp/?lang=eng' },
+    ],
+  },
+  {
+    id: 'battle-of-stalingrad',
+    year: '1943',
+    date: '1943-02-02',
+    title: 'Battle of Stalingrad turns tide against Nazi Germany',
+    summary: 'Soviet victory marks the beginning of Hitler's retreat.',
+    detail:
+      'After months of brutal urban combat, the German Sixth Army surrenders at Stalingrad. The decisive Soviet victory shifts momentum on the Eastern Front and dooms the Nazi invasion.',
+    location: 'Stalingrad (Volgograd), Soviet Union',
+    image: {
+      uri: buildWikimediaFileUrl('File:RIAN_archive_602161_Center_of_Stalingrad_after_liberation.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'History.com', url: 'https://www.history.com/topics/world-war-ii/battle-of-stalingrad' },
+      { label: 'Britannica', url: 'https://www.britannica.com/event/Battle-of-Stalingrad' },
+    ],
+  },
+  {
+    id: 'treaty-of-versailles',
+    year: '1919',
+    date: '1919-06-28',
+    title: 'Treaty of Versailles signed after WWI',
+    summary: 'Peace terms sow seeds of future conflict in Europe.',
+    detail:
+      'The Treaty of Versailles officially ends WWI, imposing harsh reparations on Germany and redrawing European borders. Its punitive terms contribute to economic collapse and the rise of extremism.',
+    location: 'Versailles, France',
+    image: {
+      uri: buildWikimediaFileUrl('File:William_Orpen_-_The_Signing_of_Peace_in_the_Hall_of_Mirrors.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'National Archives', url: 'https://www.archives.gov/milestone-documents/treaty-of-versailles' },
+      { label: 'Britannica', url: 'https://www.britannica.com/event/Treaty-of-Versailles-1919' },
+    ],
+  },
+  {
+    id: 'cuban-missile-crisis',
+    year: '1962',
+    date: '1962-10-28',
+    title: 'Cuban Missile Crisis brings world to nuclear brink',
+    summary: 'Thirteen days of tension end with Soviet withdrawal from Cuba.',
+    detail:
+      'The standoff over Soviet missiles in Cuba brings the US and USSR closest to nuclear war. President Kennedy's naval blockade and Khrushchev's decision to withdraw avert catastrophe.',
+    location: 'Cuba and Washington, D.C.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Cuban_Missile_Crisis_Quarantine_Map.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'JFK Library', url: 'https://www.jfklibrary.org/learn/about-jfk/jfk-in-history/cuban-missile-crisis' },
+      { label: 'National Security Archive', url: 'https://nsarchive.gwu.edu/briefing-book/cuba-nuclear-vault/2022-10-27/cuban-missile-crisis-60-years' },
     ],
   },
 ];
