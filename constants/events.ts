@@ -769,6 +769,82 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'Stanford', url: 'https://infolab.stanford.edu/~backrub/google.html' },
     ],
   },
+  {
+    id: 'steam-engine-watt',
+    year: '1776',
+    date: '1776-01-01',
+    title: 'James Watt perfects steam engine',
+    summary: 'Efficient engine powers the Industrial Revolution.',
+    detail:
+      'James Watt patents his improved steam engine with separate condenser, dramatically increasing efficiency. His innovations power factories, trains, and ships, driving industrialization.',
+    location: 'Birmingham, United Kingdom',
+    image: {
+      uri: buildWikimediaFileUrl('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Science Museum', url: 'https://www.sciencemuseum.org.uk/objects-and-stories/james-watt-and-our-world' },
+      { label: 'Britannica', url: 'https://www.britannica.com/biography/James-Watt' },
+    ],
+  },
+  {
+    id: 'transcontinental-railroad',
+    year: '1869',
+    date: '1869-05-10',
+    title: 'First Transcontinental Railroad completed',
+    summary: 'Golden spike unites American coasts by rail.',
+    detail:
+      'The Central Pacific and Union Pacific railroads meet at Promontory Summit, Utah, completing the first transcontinental railroad and revolutionizing American commerce and westward expansion.',
+    location: 'Promontory Summit, Utah, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:East_and_West_Shaking_hands_at_the_laying_of_last_rail_Union_Pacific_Railroad_-_Restoration.jpg'),
+    },
+    categories: ['innovation', 'politics'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'National Park Service', url: 'https://www.nps.gov/gosp/index.htm' },
+      { label: 'Union Pacific', url: 'https://www.up.com/goldenspike/index.htm' },
+    ],
+  },
+  {
+    id: 'emancipation-proclamation',
+    year: '1863',
+    date: '1863-01-01',
+    title: 'Lincoln issues Emancipation Proclamation',
+    summary: 'Presidential decree begins end of American slavery.',
+    detail:
+      'President Abraham Lincoln issues the Emancipation Proclamation, declaring all enslaved people in Confederate states free. The order transforms the Civil War into a fight for human freedom.',
+    location: 'Washington, D.C., USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Emancipation_proclamation.jpg'),
+    },
+    categories: ['human-rights', 'politics'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'National Archives', url: 'https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation' },
+      { label: 'Lincoln Papers', url: 'https://memory.loc.gov/ammem/alhtml/malhome.html' },
+    ],
+  },
+  {
+    id: 'civil-war-begins',
+    year: '1861',
+    date: '1861-04-12',
+    title: 'American Civil War begins at Fort Sumter',
+    summary: 'Confederate forces fire first shots of the Civil War.',
+    detail:
+      'Confederate artillery opens fire on Fort Sumter in Charleston Harbor, marking the start of the American Civil War. The four-year conflict will claim 600,000 lives and end slavery.',
+    location: 'Charleston, South Carolina, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Battle_of_Fort_Sumter.jpg'),
+    },
+    categories: ['politics'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'National Park Service', url: 'https://www.nps.gov/fosu/index.htm' },
+      { label: 'American Battlefield Trust', url: 'https://www.battlefields.org/learn/civil-war/battles/fort-sumter' },
+    ],
+  },
 ];
 
 export const EVENT_COLLECTIONS: EventCollection[] = [
