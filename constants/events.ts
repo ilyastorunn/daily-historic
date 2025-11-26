@@ -1084,6 +1084,64 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
       'transcontinental-railroad',
     ],
   },
+  {
+    id: 'art-through-ages',
+    title: 'Art Through the Ages',
+    summary: 'Masterpieces that captured the human spirit across centuries.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
+    },
+    eventIds: [
+      'sistine-chapel-ceiling',
+      'impressionism-monet',
+      'beethoven-ninth-symphony',
+      'harlem-renaissance-jazz',
+      'rosetta-stone-decode',
+    ],
+  },
+  {
+    id: 'jazz-age-culture',
+    title: 'Jazz Age & Cultural Revolution',
+    summary: 'The Roaring Twenties transform music, art, and society.',
+    image: {
+      uri: buildWikimediaFileUrl('Cotton Club interior, 1936 (LOC).jpg'),
+    },
+    eventIds: [
+      'harlem-renaissance-jazz',
+      'women-suffrage-usa',
+      'amelia-earhart-atlantic',
+      'emmeline-pankhurst-suffragette',
+      'impressionism-monet',
+    ],
+  },
+  {
+    id: 'lost-civilizations',
+    title: 'Lost Civilizations',
+    summary: 'Ancient mysteries preserved in stone, ash, and memory.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Rosetta_Stone.JPG'),
+    },
+    eventIds: [
+      'rosetta-stone-decode',
+      'magellan-circumnavigation',
+      'cook-pacific-voyage',
+    ],
+  },
+  {
+    id: 'renaissance-enlightenment',
+    title: 'Renaissance & Enlightenment',
+    summary: 'Revival of learning, art, and humanist ideals.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Michelangelo_Caravaggio_073.jpg'),
+    },
+    eventIds: [
+      'sistine-chapel-ceiling',
+      'magellan-circumnavigation',
+      'rosetta-stone-decode',
+      'ada-lovelace-analytical',
+      'beethoven-ninth-symphony',
+    ],
+  },
 ];
 
 export const QUICK_FILTERS: { id: EventCategory | 'all'; label: string }[] = [
