@@ -52,19 +52,66 @@ const fetchJson = async <T>(input: RequestInfo | URL) => {
   return (await response.json()) as T;
 };
 
-const getFallbackCollections = () => {
-  return EVENT_COLLECTIONS.map((collection) => ({
+/**
+ * Rotates collections based on ISO week number for weekly variation
+ * @param weekKey ISO week key (e.g., "2025-47")
+ * @param limit Number of collections to return
+ * @returns Rotated collection subset
+ */
+const rotateCollections = (weekKey: string | null | undefined, limit: number): HomeCollectionSummary[] => {
+  const allCollections = EVENT_COLLECTIONS.map((collection) => ({
     id: collection.id,
     title: collection.title,
     coverUrl: getImageUri(collection.image) ?? '',
     blurb: collection.summary,
     previewCount: collection.eventIds.length,
   }));
+
+  // If no weekKey provided, return first N collections
+  if (!weekKey) {
+    return allCollections.slice(0, limit);
+  }
+
+  // Extract week number from weekKey (format: "YYYY-WW")
+  const weekNumber = parseInt(weekKey.split('-')[1], 10);
+  if (isNaN(weekNumber)) {
+    console.warn('Invalid weekKey format, falling back to default rotation');
+    return allCollections.slice(0, limit);
+  }
+
+  // Calculate starting index using modulo for wraparound
+  const startIndex = (weekNumber * limit) % allCollections.length;
+
+  // Select N consecutive collections with wraparound
+  const selected: HomeCollectionSummary[] = [];
+  for (let i = 0; i < limit; i++) {
+    selected.push(allCollections[(startIndex + i) % allCollections.length]);
+  }
+
+  return selected;
+};
+
+const getFallbackCollections = (weekKey?: string | null, limit?: number) => {
+  const allCollections = EVENT_COLLECTIONS.map((collection) => ({
+    id: collection.id,
+    title: collection.title,
+    coverUrl: getImageUri(collection.image) ?? '',
+    blurb: collection.summary,
+    previewCount: collection.eventIds.length,
+  }));
+
+  // Apply rotation if weekKey and limit provided
+  if (weekKey && typeof limit === 'number') {
+    return rotateCollections(weekKey, limit);
+  }
+
+  // Otherwise return all or limited subset
+  return typeof limit === 'number' ? allCollections.slice(0, limit) : allCollections;
 };
 
 export const fetchWeeklyCollections = async ({
   weekKey,
-  limit,
+  limit = 4,
 }: FetchWeeklyCollectionsArgs): Promise<{ items: HomeCollectionSummary[]; generatedAt: string }> => {
   try {
     const result = await fetchJson<{ items: HomeCollectionSummary[]; generatedAt: string }>(
@@ -75,11 +122,10 @@ export const fetchWeeklyCollections = async ({
     );
     return result;
   } catch (error) {
-    console.warn('Falling back to local weekly collections', error);
-    const items = getFallbackCollections();
-    const sliced = typeof limit === 'number' ? items.slice(0, limit) : items;
+    console.warn('Falling back to local weekly collections with rotation', error);
+    const items = getFallbackCollections(weekKey, limit);
     return {
-      items: sliced,
+      items,
       generatedAt: new Date().toISOString(),
     };
   }
