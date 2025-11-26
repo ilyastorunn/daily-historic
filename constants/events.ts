@@ -732,7 +732,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
     },
-    eventIds: ['apollo-11-first-footsteps'], // Will expand with space exploration events in Phase 2B
+    eventIds: ['apollo-11-first-footsteps', 'women-in-stem-week', 'amelia-earhart-atlantic'],
   },
   {
     id: 'ancient-innovations',
@@ -741,7 +741,74 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:NAMA_Machine_d%27Anticyth%C3%A8re_1.jpg'),
     },
-    eventIds: ['rosetta-stone-decode'], // Will expand with ancient events in Phase 2B
+    eventIds: [
+      'rosetta-stone-decode',
+      'ada-lovelace-analytical',
+      'harlem-renaissance-jazz',
+    ],
+  },
+  {
+    id: 'age-of-exploration',
+    title: 'Age of Exploration',
+    summary: 'Intrepid voyages that mapped the unknown and conquered new frontiers.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Magellan_Elcano_Circumnavigation-en.svg'),
+    },
+    eventIds: [
+      'magellan-circumnavigation',
+      'lewis-clark-expedition',
+      'amundsen-south-pole',
+      'hillary-everest',
+      'cook-pacific-voyage',
+      'shackleton-endurance',
+    ],
+  },
+  {
+    id: 'medical-miracles',
+    title: 'Medical Miracles',
+    summary: 'Breakthroughs that conquered disease and transformed human health.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Jonas_Salk_seated.jpg'),
+    },
+    eventIds: [
+      'salk-polio-vaccine',
+      'dna-structure-discovery',
+      'first-heart-transplant',
+      'xray-discovery',
+      'germ-theory-pasteur',
+      'anesthesia-first-use',
+      'florence-nightingale-nursing',
+    ],
+  },
+  {
+    id: 'scientific-breakthroughs',
+    title: 'Scientific Breakthroughs',
+    summary: 'Discoveries that redefined our understanding of the universe.',
+    image: {
+      uri: buildWikimediaFileUrl('File:James_Watson_Francis_Crick_1953.jpg'),
+    },
+    eventIds: [
+      'dna-structure-discovery',
+      'marie-curie-nobel',
+      'ada-lovelace-analytical',
+      'xray-discovery',
+      'germ-theory-pasteur',
+    ],
+  },
+  {
+    id: 'inventors-visionaries',
+    title: 'Inventors & Visionaries',
+    summary: 'Bold minds who imagined the impossible and made it real.',
+    image: {
+      uri: buildWikimediaFileUrl('File:Ada_Lovelace_portrait.jpg'),
+    },
+    eventIds: [
+      'ada-lovelace-analytical',
+      'marie-curie-nobel',
+      'amelia-earhart-atlantic',
+      'salk-polio-vaccine',
+      'first-heart-transplant',
+    ],
   },
 ];
 
