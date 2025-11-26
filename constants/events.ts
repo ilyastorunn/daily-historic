@@ -674,6 +674,101 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'Wood Library-Museum', url: 'https://www.woodlibrarymuseum.org/' },
     ],
   },
+  {
+    id: 'first-computer-eniac',
+    year: '1946',
+    date: '1946-02-14',
+    title: 'ENIAC: First electronic computer unveiled',
+    summary: 'Electronic brain launches the digital age.',
+    detail:
+      'The ENIAC (Electronic Numerical Integrator and Computer) is unveiled at the University of Pennsylvania, weighing 30 tons and performing calculations 1,000 times faster than previous machines.',
+    location: 'Philadelphia, Pennsylvania, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Eniac.jpg'),
+    },
+    categories: ['innovation', 'science'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Computer History Museum', url: 'https://www.computerhistory.org/revolution/birth-of-the-computer/4/78' },
+      { label: 'University of Pennsylvania', url: 'https://www.library.upenn.edu/exhibits/online/eniac/' },
+    ],
+  },
+  {
+    id: 'internet-arpanet',
+    year: '1969',
+    date: '1969-10-29',
+    title: 'ARPANET sends first internet message',
+    summary: 'Birth of the internet connects two computers.',
+    detail:
+      'UCLA sends the first message over ARPANET to Stanford Research Institute, transmitting "LO" before the system crashes. This moment marks the birth of the internet.',
+    location: 'Los Angeles, California, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Arpanet_logical_map,_march_1977.png'),
+    },
+    categories: ['innovation'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Internet Hall of Fame', url: 'https://www.internethalloffame.org/inductees/lawrence-roberts' },
+      { label: 'UCLA', url: 'https://www.lk.cs.ucla.edu/internet_first_words.html' },
+    ],
+  },
+  {
+    id: 'www-invention',
+    year: '1989',
+    date: '1989-03-12',
+    title: 'Tim Berners-Lee invents World Wide Web',
+    summary: 'Proposal creates the web we know today.',
+    detail:
+      'Tim Berners-Lee submits his proposal for a "World Wide Web" at CERN, envisioning a system of linked documents accessible via the internet that would revolutionize information sharing.',
+    location: 'Geneva, Switzerland',
+    image: {
+      uri: buildWikimediaFileUrl('File:Tim_Berners-Lee_CP_2_head_crop.jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['contemporary'],
+    sources: [
+      { label: 'CERN', url: 'https://home.cern/science/computing/birth-web' },
+      { label: 'W3C', url: 'https://www.w3.org/History.html' },
+    ],
+  },
+  {
+    id: 'first-iphone',
+    year: '2007',
+    date: '2007-01-09',
+    title: 'Steve Jobs unveils iPhone',
+    summary: 'Revolutionary device puts the internet in our pockets.',
+    detail:
+      'Steve Jobs introduces the iPhone at Macworld, combining a phone, iPod, and internet communicator. The touchscreen device transforms mobile computing and launches the smartphone era.',
+    location: 'San Francisco, California, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Steve_Jobs_Headshot_2010-CROP_(cropped_2).jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['contemporary'],
+    sources: [
+      { label: 'Apple', url: 'https://www.apple.com/newsroom/2007/01/09Apple-Reinvents-the-Phone-with-iPhone/' },
+      { label: 'Macworld Keynote', url: 'https://www.youtube.com/watch?v=MnrJzXM7a6o' },
+    ],
+  },
+  {
+    id: 'google-founding',
+    year: '1998',
+    date: '1998-09-04',
+    title: 'Google founded by Page and Brin',
+    summary: 'Search engine organizes the world's information.',
+    detail:
+      'Larry Page and Sergey Brin incorporate Google Inc. in a Menlo Park garage. Their PageRank algorithm revolutionizes web search and builds one of the world's most valuable companies.',
+    location: 'Menlo Park, California, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Googleplex-Patio-Aug-2014.JPG'),
+    },
+    categories: ['innovation'],
+    eras: ['contemporary'],
+    sources: [
+      { label: 'Google About', url: 'https://about.google/our-story/' },
+      { label: 'Stanford', url: 'https://infolab.stanford.edu/~backrub/google.html' },
+    ],
+  },
 ];
 
 export const EVENT_COLLECTIONS: EventCollection[] = [
