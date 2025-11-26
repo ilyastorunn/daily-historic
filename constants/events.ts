@@ -313,6 +313,139 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'National Security Archive', url: 'https://nsarchive.gwu.edu/briefing-book/cuba-nuclear-vault/2022-10-27/cuban-missile-crisis-60-years' },
     ],
   },
+  {
+    id: 'marie-curie-nobel',
+    year: '1903',
+    date: '1903-12-10',
+    title: 'Marie Curie wins Nobel Prize in Physics',
+    summary: 'First woman Nobel laureate breaks barriers in science.',
+    detail:
+      'Marie Curie shares the Nobel Prize in Physics with Pierre Curie and Henri Becquerel for their work on radioactivity, becoming the first woman to receive a Nobel Prize.',
+    location: 'Stockholm, Sweden',
+    image: {
+      uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
+    },
+    categories: ['science', 'human-rights'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Nobel Prize', url: 'https://www.nobelprize.org/prizes/physics/1903/marie-curie/biographical/' },
+      { label: 'American Institute of Physics', url: 'https://www.aip.org/history-programs/niels-bohr-library/ex hibitions/curie' },
+    ],
+  },
+  {
+    id: 'rosa-parks-bus-boycott',
+    year: '1955',
+    date: '1955-12-01',
+    title: 'Rosa Parks sparks Montgomery Bus Boycott',
+    summary: 'Refusal to give up seat ignites civil rights movement.',
+    detail:
+      'Rosa Parks refuses to surrender her bus seat to a white passenger in Montgomery, Alabama. Her arrest sparks a 381-day boycott that catapults Martin Luther King Jr. to prominence and desegregates public transit.',
+    location: 'Montgomery, Alabama, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Rosa_Parks_Booking.jpg'),
+    },
+    categories: ['human-rights', 'politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'National Archives', url: 'https://www.archives.gov/education/lessons/rosa-parks' },
+      { label: 'Rosa Parks Museum', url: 'https://www.troy.edu/rosaparks/' },
+    ],
+  },
+  {
+    id: 'amelia-earhart-atlantic',
+    year: '1932',
+    date: '1932-05-20',
+    title: 'Amelia Earhart flies solo across Atlantic',
+    summary: 'First woman to complete the perilous transatlantic solo flight.',
+    detail:
+      'Amelia Earhart lands in Northern Ireland after flying solo from Newfoundland, becoming the first woman to fly solo across the Atlantic Ocean and cementing her place as an aviation pioneer.',
+    location: 'Culmore, Northern Ireland',
+    image: {
+      uri: buildWikimediaFileUrl('File:Amelia_Earhart_standing_under_nose_of_her_Lockheed_Model_10-E_Electra.jpg'),
+    },
+    categories: ['innovation', 'human-rights'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Smithsonian Air & Space', url: 'https://airandspace.si.edu/explore-and-learn/topics/women-in-aviation/earhart.cfm' },
+      { label: 'Amelia Earhart Museum', url: 'https://www.ameliaearhartmuseum.org/' },
+    ],
+  },
+  {
+    id: 'florence-nightingale-nursing',
+    year: '1854',
+    date: '1854-11-05',
+    title: 'Florence Nightingale establishes modern nursing',
+    summary: 'The "Lady with the Lamp" transforms military medicine.',
+    detail:
+      'Florence Nightingale arrives in Crimea with 38 nurses, introducing sanitary reforms that dramatically reduce death rates. Her work establishes nursing as a respected profession.',
+    location: 'Scutari (Üsküdar), Ottoman Empire',
+    image: {
+      uri: buildWikimediaFileUrl('File:Florence_Nightingale_(H_Hering_NPG_x82368).jpg'),
+    },
+    categories: ['science', 'human-rights'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Florence Nightingale Museum', url: 'https://www.florence-nightingale.co.uk/' },
+      { label: 'British Library', url: 'https://www.bl.uk/people/florence-nightingale' },
+    ],
+  },
+  {
+    id: 'harriet-tubman-underground',
+    year: '1850',
+    date: '1850-01-01',
+    title: 'Harriet Tubman leads hundreds to freedom',
+    summary: 'The "Moses of her people" risks everything to free the enslaved.',
+    detail:
+      'Harriet Tubman makes over a dozen dangerous trips into slave states via the Underground Railroad, personally leading approximately 70 enslaved people to freedom and never losing a passenger.',
+    location: 'Eastern Shore, Maryland to Northern States',
+    image: {
+      uri: buildWikimediaFileUrl('File:Harriet_Tubman_by_Squyer,_NPG,_c1885.jpg'),
+    },
+    categories: ['human-rights'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'National Park Service', url: 'https://www.nps.gov/people/harriet-tubman.htm' },
+      { label: 'Harriet Tubman Underground Railroad National Historical Park', url: 'https://www.nps.gov/hatu/index.htm' },
+    ],
+  },
+  {
+    id: 'malala-nobel-peace',
+    year: '2014',
+    date: '2014-10-10',
+    title: 'Malala Yousafzai wins Nobel Peace Prize',
+    summary: 'Youngest-ever Nobel laureate champions education for all.',
+    detail:
+      'At 17, Malala becomes the youngest Nobel Prize winner, recognized for her courageous advocacy for girls' education after surviving a Taliban assassination attempt in Pakistan.',
+    location: 'Oslo, Norway',
+    image: {
+      uri: buildWikimediaFileUrl('File:Malala_Yousafzai_at_Girl_Summit_2014.jpg'),
+    },
+    categories: ['human-rights'],
+    eras: ['contemporary'],
+    sources: [
+      { label: 'Nobel Prize', url: 'https://www.nobelprize.org/prizes/peace/2014/yousafzai/facts/' },
+      { label: 'Malala Fund', url: 'https://malala.org/' },
+    ],
+  },
+  {
+    id: 'emmeline-pankhurst-suffragette',
+    year: '1903',
+    date: '1903-10-10',
+    title: 'Emmeline Pankhurst founds Suffragette Movement',
+    summary: 'Militant tactics energize the fight for women's votes.',
+    detail:
+      'Emmeline Pankhurst founds the Women's Social and Political Union in Manchester, adopting the motto "Deeds not Words" and launching militant tactics that accelerate the suffrage movement.',
+    location: 'Manchester, United Kingdom',
+    image: {
+      uri: buildWikimediaFileUrl('File:Emmeline_Pankhurst_addresses_crowd.jpg'),
+    },
+    categories: ['human-rights', 'politics'],
+    eras: ['modern'],
+    sources: [
+      { label: 'UK Parliament', url: 'https://www.parliament.uk/about/living-heritage/transformingsociety/electionsvoting/womenvote/overview/thepankhursts/' },
+      { label: 'The National Archives UK', url: 'https://www.nationalarchives.gov.uk/education/resources/suffragettes-on-file/' },
+    ],
+  },
 ];
 
 export const EVENT_COLLECTIONS: EventCollection[] = [
