@@ -560,6 +560,120 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'Royal Geographical Society', url: 'https://www.rgs.org/CMSPages/GetFile.aspx?nodeguid=a1b1b1c1' },
     ],
   },
+  {
+    id: 'salk-polio-vaccine',
+    year: '1955',
+    date: '1955-04-12',
+    title: 'Jonas Salk develops polio vaccine',
+    summary: 'Vaccine eradicates one of history's most feared diseases.',
+    detail:
+      'Jonas Salk announces the successful trial of his polio vaccine, protecting millions of children from paralysis and death. He refuses to patent it, saying "Could you patent the sun?"',
+    location: 'Pittsburgh, Pennsylvania, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:Jonas_Salk_seated.jpg'),
+    },
+    categories: ['science'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Salk Institute', url: 'https://www.salk.edu/about/history-of-salk/jonas-salk/' },
+      { label: 'CDC', url: 'https://www.cdc.gov/polio/what-is-polio/polio-us.html' },
+    ],
+  },
+  {
+    id: 'dna-structure-discovery',
+    year: '1953',
+    date: '1953-04-25',
+    title: 'Watson & Crick discover DNA structure',
+    summary: 'Double helix unlocks the secret of life.',
+    detail:
+      'James Watson and Francis Crick publish their model of DNA's double helix structure in Nature, revolutionizing biology and launching the era of molecular genetics.',
+    location: 'Cambridge, United Kingdom',
+    image: {
+      uri: buildWikimediaFileUrl('File:James_Watson_Francis_Crick_1953.jpg'),
+    },
+    categories: ['science'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Nature Journal', url: 'https://www.nature.com/articles/171737a0' },
+      { label: 'Nobel Prize', url: 'https://www.nobelprize.org/prizes/medicine/1962/summary/' },
+    ],
+  },
+  {
+    id: 'first-heart-transplant',
+    year: '1967',
+    date: '1967-12-03',
+    title: 'First successful human heart transplant',
+    summary: 'Christiaan Barnard pioneers cardiac surgery.',
+    detail:
+      'South African surgeon Christiaan Barnard performs the first successful human-to-human heart transplant, opening a new frontier in organ transplantation and extending countless lives.',
+    location: 'Cape Town, South Africa',
+    image: {
+      uri: buildWikimediaFileUrl('File:Christiaan_Barnard_(1968).jpg'),
+    },
+    categories: ['science'],
+    eras: ['modern'],
+    sources: [
+      { label: 'American Heart Association', url: 'https://www.heart.org/en/health-topics/heart-transplant' },
+      { label: 'SA History', url: 'https://www.sahistory.org.za/article/first-human-heart-transplant' },
+    ],
+  },
+  {
+    id: 'xray-discovery',
+    year: '1895',
+    date: '1895-11-08',
+    title: 'Wilhelm Röntgen discovers X-rays',
+    summary: 'Mysterious rays revolutionize medical diagnosis.',
+    detail:
+      'German physicist Wilhelm Röntgen accidentally discovers X-rays while experimenting with cathode rays, creating the first X-ray image of his wife's hand and founding medical imaging.',
+    location: 'Würzburg, Germany',
+    image: {
+      uri: buildWikimediaFileUrl('File:Wilhelm_R%C3%B6ntgen_(1845%E2%80%931923).jpg'),
+    },
+    categories: ['science'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Nobel Prize', url: 'https://www.nobelprize.org/prizes/physics/1901/rontgen/facts/' },
+      { label: 'American College of Radiology', url: 'https://www.acr.org/About-Us/History-of-Radiology' },
+    ],
+  },
+  {
+    id: 'germ-theory-pasteur',
+    year: '1861',
+    date: '1861-01-01',
+    title: 'Louis Pasteur proves germ theory',
+    summary: 'Microorganisms identified as cause of disease.',
+    detail:
+      'Louis Pasteur's experiments definitively prove that microorganisms cause fermentation and disease, revolutionizing medicine and leading to antiseptic practices that save millions.',
+    location: 'Paris, France',
+    image: {
+      uri: buildWikimediaFileUrl('File:Louis_Pasteur.jpg'),
+    },
+    categories: ['science'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Pasteur Institute', url: 'https://www.pasteur.fr/en/institut-pasteur/history' },
+      { label: 'Science History Institute', url: 'https://www.sciencehistory.org/historical-profile/louis-pasteur' },
+    ],
+  },
+  {
+    id: 'anesthesia-first-use',
+    year: '1846',
+    date: '1846-10-16',
+    title: 'First use of anesthesia in surgery',
+    summary: 'Ether demonstration ends surgical agony.',
+    detail:
+      'William T.G. Morton publicly demonstrates ether anesthesia during surgery at Massachusetts General Hospital, transforming medicine by eliminating the horrific pain of operations.',
+    location: 'Boston, Massachusetts, USA',
+    image: {
+      uri: buildWikimediaFileUrl('File:The_first_use_of_ether_in_dental_surgery.jpg'),
+    },
+    categories: ['science'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'Mass General Hospital', url: 'https://www.massgeneral.org/history/ether-dome' },
+      { label: 'Wood Library-Museum', url: 'https://www.woodlibrarymuseum.org/' },
+    ],
+  },
 ];
 
 export const EVENT_COLLECTIONS: EventCollection[] = [
