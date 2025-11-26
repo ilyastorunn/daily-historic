@@ -197,27 +197,27 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Voices of Change',
     summary: 'Civic acts that reshaped the social contract.',
     image: {
-      uri: buildWikimediaFileUrl('March on Washington (August 28, 1963).jpg'),
+      uri: buildWikimediaFileUrl('File:March_on_Washington_for_Jobs_and_Freedom,_Martin_Luther_King,_Jr._and_Joachim_Prinz_1963.jpg'),
     },
-    eventIds: ['women-suffrage-usa'],
+    eventIds: ['women-suffrage-usa'], // Will expand with more civil rights events
   },
   {
     id: 'space-race',
     title: 'Sprint to the Stars',
     summary: 'Cold War rivalries that pushed human ingenuity beyond Earth.',
     image: {
-      uri: buildWikimediaFileUrl('File:Saturn_V.jpg'),
+      uri: buildWikimediaFileUrl('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
     },
-    eventIds: ['apollo-11-first-footsteps'],
+    eventIds: ['apollo-11-first-footsteps'], // Will expand with more space exploration events
   },
   {
     id: 'ancient-innovations',
     title: 'Ancient Inventions',
     summary: 'Engineering leaps that shaped early civilizations.',
     image: {
-      uri: buildWikimediaFileUrl('File:Antikythera_mechanism_(Replica)_01.jpg'),
+      uri: buildWikimediaFileUrl('File:NAMA_Machine_d%27Anticyth%C3%A8re_1.jpg'),
     },
-    eventIds: ['rosetta-stone-decode'],
+    eventIds: ['rosetta-stone-decode'], // Will expand with more ancient civilization events
   },
 ];
 
