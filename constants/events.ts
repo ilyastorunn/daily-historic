@@ -446,6 +446,120 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'The National Archives UK', url: 'https://www.nationalarchives.gov.uk/education/resources/suffragettes-on-file/' },
     ],
   },
+  {
+    id: 'magellan-circumnavigation',
+    year: '1522',
+    date: '1522-09-06',
+    title: 'Magellan's expedition circumnavigates globe',
+    summary: 'First voyage around the world proves Earth's roundness.',
+    detail:
+      'The Victoria returns to Spain, completing the first circumnavigation of Earth. Though Magellan died in the Philippines, his expedition proves the world is round and opens new trade routes.',
+    location: 'Seville, Spain',
+    image: {
+      uri: buildWikimediaFileUrl('File:Magellan_Elcano_Circumnavigation-en.svg'),
+    },
+    categories: ['innovation'],
+    eras: ['renaissance'],
+    sources: [
+      { label: 'Britannica', url: 'https://www.britannica.com/biography/Ferdinand-Magellan' },
+      { label: 'National Geographic', url: 'https://www.nationalgeographic.org/encyclopedia/magellan/' },
+    ],
+  },
+  {
+    id: 'lewis-clark-expedition',
+    year: '1805',
+    date: '1805-11-15',
+    title: 'Lewis & Clark reach Pacific Ocean',
+    summary: 'Corps of Discovery opens the American West.',
+    detail:
+      'After 18 months of arduous travel, the Lewis and Clark Expedition reaches the Pacific coast, mapping unknown territory and establishing American claims to the western frontier.',
+    location: 'Pacific Coast, Oregon',
+    image: {
+      uri: buildWikimediaFileUrl('File:Lewis_and_clark-expedition.jpg'),
+    },
+    categories: ['innovation', 'politics'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'National Park Service', url: 'https://www.nps.gov/lecl/index.htm' },
+      { label: 'Lewis & Clark Trail Heritage Foundation', url: 'https://lewisandclark.org/' },
+    ],
+  },
+  {
+    id: 'amundsen-south-pole',
+    year: '1911',
+    date: '1911-12-14',
+    title: 'Roald Amundsen reaches South Pole',
+    summary: 'Norwegian explorer wins race to Earth's southernmost point.',
+    detail:
+      'Roald Amundsen and his team become the first humans to reach the geographic South Pole, beating Robert Scott's British expedition by 34 days in the heroic age of Antarctic exploration.',
+    location: 'South Pole, Antarctica',
+    image: {
+      uri: buildWikimediaFileUrl('File:Amundsen_Expedition_at_South_Pole.jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['modern'],
+    sources: [
+      { label: 'South Pole Station', url: 'https://www.nsf.gov/geo/opp/support/southp.jsp' },
+      { label: 'Polar Museum', url: 'https://en.uit.no/tmu' },
+    ],
+  },
+  {
+    id: 'hillary-everest',
+    year: '1953',
+    date: '1953-05-29',
+    title: 'Hillary & Tenzing summit Everest',
+    summary: 'First confirmed ascent of world's highest peak.',
+    detail:
+      'Edmund Hillary and Tenzing Norgay reach the 29,029-foot summit of Mount Everest, conquering the world's highest mountain after decades of failed attempts.',
+    location: 'Mount Everest, Nepal-Tibet border',
+    image: {
+      uri: buildWikimediaFileUrl('File:Tenzing_Norgay_and_Edmund_Hillary.jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Royal Geographical Society', url: 'https://www.rgs.org/in-the-field/in-the-field-conservation/mount-everest/' },
+      { label: 'National Geographic', url: 'https://www.nationalgeographic.com/adventure/article/everest' },
+    ],
+  },
+  {
+    id: 'cook-pacific-voyage',
+    year: '1770',
+    date: '1770-04-29',
+    title: 'Captain Cook maps Pacific Ocean',
+    summary: 'British navigator charts Australia and New Zealand.',
+    detail:
+      'Captain James Cook lands at Botany Bay, Australia, during his first Pacific voyage. His meticulous charts and observations transform European knowledge of the Southern Hemisphere.',
+    location: 'Botany Bay, Australia',
+    image: {
+      uri: buildWikimediaFileUrl('File:Captain_James_Cook,_oil_on_canvas_by_Nathaniel_Dance-Holland.jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['industrial'],
+    sources: [
+      { label: 'British Library', url: 'https://www.bl.uk/people/captain-james-cook' },
+      { label: 'National Maritime Museum', url: 'https://www.rmg.co.uk/stories/topics/captain-james-cook' },
+    ],
+  },
+  {
+    id: 'shackleton-endurance',
+    year: '1916',
+    date: '1916-08-30',
+    title: 'Shackleton's epic Antarctic survival',
+    summary: 'All crew saved after ship crushed by ice.',
+    detail:
+      'Ernest Shackleton completes one of history's greatest survival stories, rescuing his entire crew after the Endurance was crushed by Antarctic ice, enduring 22 months of extreme conditions.',
+    location: 'Elephant Island, Antarctica',
+    image: {
+      uri: buildWikimediaFileUrl('File:Endurance_trapped_in_pack_ice.jpg'),
+    },
+    categories: ['innovation'],
+    eras: ['modern'],
+    sources: [
+      { label: 'Scott Polar Research Institute', url: 'https://www.spri.cam.ac.uk/' },
+      { label: 'Royal Geographical Society', url: 'https://www.rgs.org/CMSPages/GetFile.aspx?nodeguid=a1b1b1c1' },
+    ],
+  },
 ];
 
 export const EVENT_COLLECTIONS: EventCollection[] = [
