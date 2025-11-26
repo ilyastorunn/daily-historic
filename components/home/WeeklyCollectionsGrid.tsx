@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -103,6 +103,20 @@ const buildStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
     },
+    imagePlaceholder: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    placeholderText: {
+      fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
+      fontSize: typography.helper.fontSize,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      paddingHorizontal: spacing.sm,
+    },
   });
 };
 
@@ -126,6 +140,7 @@ export const WeeklyCollectionsGrid: React.FC<WeeklyCollectionsGridProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   const effectiveItems: (WeeklyCollectionTile & { isSkeleton?: boolean })[] = useMemo(() => {
     if (loading) {
@@ -138,6 +153,11 @@ export const WeeklyCollectionsGrid: React.FC<WeeklyCollectionsGridProps> = ({
     }
     return items;
   }, [items, loading, skeletonCount]);
+
+  const handleImageError = (id: string, coverUrl: string) => {
+    console.warn(`Collection image failed to load: ${id}`, coverUrl);
+    setFailedImages((prev) => new Set(prev).add(id));
+  };
 
   const handleOpen = (id: string, index: number) => (event: GestureResponderEvent) => {
     event.preventDefault();
@@ -187,7 +207,18 @@ export const WeeklyCollectionsGrid: React.FC<WeeklyCollectionsGridProps> = ({
                         onPress={handleOpen(item.id, globalIndex)}
                         style={styles.tile}
                       >
-                        <Image source={{ uri: item.coverUrl }} style={styles.tileImage} contentFit="cover" />
+                        {failedImages.has(item.id) ? (
+                          <View style={styles.imagePlaceholder}>
+                            <Text style={styles.placeholderText}>Image unavailable</Text>
+                          </View>
+                        ) : (
+                          <Image
+                            source={{ uri: item.coverUrl }}
+                            style={styles.tileImage}
+                            contentFit="cover"
+                            onError={() => handleImageError(item.id, item.coverUrl)}
+                          />
+                        )}
                         <View style={styles.tileOverlay}>
                           <Text style={styles.tileTitle} numberOfLines={1}>
                             {item.title}
