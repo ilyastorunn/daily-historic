@@ -513,7 +513,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Edmund Hillary and Tenzing Norgay reach the 29,029-foot summit of Mount Everest, conquering the world\'s highest mountain after decades of failed attempts.',
     location: 'Mount Everest, Nepal-Tibet border',
     image: {
-      uri: buildWikimediaFileUrl('File:Tenzing_Norgay_and_Edmund_Hillary.jpg'),
+      uri: buildWikimediaFileUrl('File:Tenzing_Norgay.jpg'),
     },
     categories: ['innovation'],
     eras: ['modern'],
@@ -532,7 +532,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Captain James Cook lands at Botany Bay, Australia, during his first Pacific voyage. His meticulous charts and observations transform European knowledge of the Southern Hemisphere.',
     location: 'Botany Bay, Australia',
     image: {
-      uri: buildWikimediaFileUrl('File:Captain_James_Cook,_oil_on_canvas_by_Nathaniel_Dance-Holland.jpg'),
+      uri: buildWikimediaFileUrl('File:Captainjamescookportrait.jpg'),
     },
     categories: ['innovation'],
     eras: ['industrial'],
@@ -570,7 +570,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Jonas Salk announces the successful trial of his polio vaccine, protecting millions of children from paralysis and death. He refuses to patent it, saying "Could you patent the sun?"',
     location: 'Pittsburgh, Pennsylvania, USA',
     image: {
-      uri: buildWikimediaFileUrl('File:Jonas_Salk_seated.jpg'),
+      uri: buildWikimediaFileUrl('File:Jonas_Salk_candid.jpg'),
     },
     categories: ['science'],
     eras: ['modern'],
@@ -589,7 +589,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'James Watson and Francis Crick publish their model of DNA\'s double helix structure in Nature, revolutionizing biology and launching the era of molecular genetics.',
     location: 'Cambridge, United Kingdom',
     image: {
-      uri: buildWikimediaFileUrl('File:James_Watson_Francis_Crick_1953.jpg'),
+      uri: buildWikimediaFileUrl('File:DNA_Model_Crick-Watson.jpg'),
     },
     categories: ['science'],
     eras: ['modern'],
@@ -627,7 +627,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'German physicist Wilhelm Röntgen accidentally discovers X-rays while experimenting with cathode rays, creating the first X-ray image of his wife\'s hand and founding medical imaging.',
     location: 'Würzburg, Germany',
     image: {
-      uri: buildWikimediaFileUrl('File:Wilhelm_R%C3%B6ntgen_(1845%E2%80%931923).jpg'),
+      uri: buildWikimediaFileUrl('File:WilhelmRöntgen.JPG'),
     },
     categories: ['science'],
     eras: ['industrial'],
@@ -665,7 +665,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'William T.G. Morton publicly demonstrates ether anesthesia during surgery at Massachusetts General Hospital, transforming medicine by eliminating the horrific pain of operations.',
     location: 'Boston, Massachusetts, USA',
     image: {
-      uri: buildWikimediaFileUrl('File:The_first_use_of_ether_in_dental_surgery.jpg'),
+      uri: buildWikimediaFileUrl('File:The_first_use_of_ether_in_dental_surgery,_1846._Ernest_Board._Wellcome_V0018140.jpg'),
     },
     categories: ['science'],
     eras: ['industrial'],
@@ -836,7 +836,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Confederate artillery opens fire on Fort Sumter in Charleston Harbor, marking the start of the American Civil War. The four-year conflict will claim 600,000 lives and end slavery.',
     location: 'Charleston, South Carolina, USA',
     image: {
-      uri: buildWikimediaFileUrl('File:Battle_of_Fort_Sumter.jpg'),
+      uri: buildWikimediaFileUrl('File:Bombardment_of_Fort_Sumter_Charleston_Harbor_1863.jpeg'),
     },
     categories: ['politics'],
     eras: ['industrial'],
@@ -855,7 +855,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'After four years of grueling work, Michelangelo unveils his frescoes on the Sistine Chapel ceiling, including the iconic "Creation of Adam." The work defines High Renaissance art.',
     location: 'Vatican City',
     image: {
-      uri: buildWikimediaFileUrl('File:Michelangelo_Caravaggio_073.jpg'),
+      uri: buildWikimediaFileUrl('File:Creación_de_Adán.jpg'),
     },
     categories: ['art', 'culture'],
     eras: ['renaissance'],
@@ -967,7 +967,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Ancient Inventions',
     summary: 'Engineering leaps that shaped early civilizations.',
     image: {
-      uri: buildWikimediaFileUrl('File:NAMA_Machine_d%27Anticyth%C3%A8re_1.jpg'),
+      uri: buildWikimediaFileUrl('File:NAMA_Machine_d\'Anticythère_1.jpg'),
     },
     eventIds: [
       'rosetta-stone-decode',
@@ -996,7 +996,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Medical Miracles',
     summary: 'Breakthroughs that conquered disease and transformed human health.',
     image: {
-      uri: buildWikimediaFileUrl('File:Jonas_Salk_seated.jpg'),
+      uri: buildWikimediaFileUrl('File:Jonas_Salk_candid.jpg'),
     },
     eventIds: [
       'salk-polio-vaccine',
@@ -1013,7 +1013,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Scientific Breakthroughs',
     summary: 'Discoveries that redefined our understanding of the universe.',
     image: {
-      uri: buildWikimediaFileUrl('File:James_Watson_Francis_Crick_1953.jpg'),
+      uri: buildWikimediaFileUrl('File:DNA_Model_Crick-Watson.jpg'),
     },
     eventIds: [
       'dna-structure-discovery',
@@ -1132,7 +1132,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Renaissance & Enlightenment',
     summary: 'Revival of learning, art, and humanist ideals.',
     image: {
-      uri: buildWikimediaFileUrl('File:Michelangelo_Caravaggio_073.jpg'),
+      uri: buildWikimediaFileUrl('File:Creación_de_Adán.jpg'),
     },
     eventIds: [
       'sistine-chapel-ceiling',
