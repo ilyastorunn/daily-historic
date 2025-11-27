@@ -26,7 +26,7 @@ const CollectionDetailScreen = () => {
   }, [id]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Hero Section */}
@@ -72,8 +72,11 @@ const CollectionDetailScreen = () => {
             <Text style={styles.navLabel}>Back</Text>
           </Pressable>
         </View>
+
+        {/* Bottom Safe Area */}
+        <View style={[styles.bottomSafeArea, { height: insets.bottom }]} />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -133,6 +136,9 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     cardList: {
       paddingHorizontal: 20, // Minimum 20pt margin per NorthStar
       gap: 16, // Minimum 16pt between cards per NorthStar
+    },
+    bottomSafeArea: {
+      backgroundColor: theme.colors.screen,
     },
   });
 };
