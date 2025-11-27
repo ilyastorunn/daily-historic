@@ -82,7 +82,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'U.S. Secretary of State Bainbridge Colby certifies the 19th Amendment, granting women the right to vote nationwide after decades of activism.',
     location: 'Washington, D.C., USA',
     image: {
-      uri: buildWikimediaFileUrl('Tennessee ratifies the Nineteenth Amendment.jpg'),
+      uri: buildWikimediaFileUrl('File:Suffrage_parade,_New_York_City,_May_6,_1912.jpg'),
     },
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
@@ -129,7 +129,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Speakeasies and theaters across Harlem popularize jazz legends like Duke Ellington, broadcasting a transformative sound to the entire country.',
     location: 'Harlem, New York City, USA',
     image: {
-      uri: buildWikimediaFileUrl('Cotton Club interior, 1936 (LOC).jpg'),
+      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_Hurricane_Club_1943.jpg'),
     },
     categories: ['culture', 'art'],
     eras: ['modern'],
@@ -169,7 +169,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Sally Ride launches science camps',
     summary: 'The first American woman in space opens programs nurturing discovery.',
     detail:
-      'Sally Ride Science starts camps to sustain girls' curiosity in STEM, extending the impact of Ride's 1983 mission to a new generation.',
+      'Sally Ride Science starts camps to sustain girls\' curiosity in STEM, extending the impact of Ride\'s 1983 mission to a new generation.',
     location: 'San Diego, USA',
     image: {
       uri: buildWikimediaFileUrl('File:Sally_Ride_in_1984.jpg'),
@@ -204,7 +204,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1941',
     date: '1941-12-07',
     title: 'Attack on Pearl Harbor brings US into WWII',
-    summary: 'Japan's surprise strike transforms American isolationism into total war.',
+    summary: 'Japan\'s surprise strike transforms American isolationism into total war.',
     detail:
       'Japanese aircraft attack the US Pacific Fleet at Pearl Harbor, Hawaii, killing over 2,400 Americans and sinking battleships. The next day, President Roosevelt declares war.',
     location: 'Pearl Harbor, Hawaii, USA',
@@ -261,7 +261,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1943',
     date: '1943-02-02',
     title: 'Battle of Stalingrad turns tide against Nazi Germany',
-    summary: 'Soviet victory marks the beginning of Hitler's retreat.',
+    summary: 'Soviet victory marks the beginning of Hitler\'s retreat.',
     detail:
       'After months of brutal urban combat, the German Sixth Army surrenders at Stalingrad. The decisive Soviet victory shifts momentum on the Eastern Front and dooms the Nazi invasion.',
     location: 'Stalingrad (Volgograd), Soviet Union',
@@ -301,7 +301,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Cuban Missile Crisis brings world to nuclear brink',
     summary: 'Thirteen days of tension end with Soviet withdrawal from Cuba.',
     detail:
-      'The standoff over Soviet missiles in Cuba brings the US and USSR closest to nuclear war. President Kennedy's naval blockade and Khrushchev's decision to withdraw avert catastrophe.',
+      'The standoff over Soviet missiles in Cuba brings the US and USSR closest to nuclear war. President Kennedy\'s naval blockade and Khrushchev\'s decision to withdraw avert catastrophe.',
     location: 'Cuba and Washington, D.C.',
     image: {
       uri: buildWikimediaFileUrl('File:Cuban_Missile_Crisis_Quarantine_Map.jpg'),
@@ -415,7 +415,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Malala Yousafzai wins Nobel Peace Prize',
     summary: 'Youngest-ever Nobel laureate champions education for all.',
     detail:
-      'At 17, Malala becomes the youngest Nobel Prize winner, recognized for her courageous advocacy for girls' education after surviving a Taliban assassination attempt in Pakistan.',
+      'At 17, Malala becomes the youngest Nobel Prize winner, recognized for her courageous advocacy for girls\' education after surviving a Taliban assassination attempt in Pakistan.',
     location: 'Oslo, Norway',
     image: {
       uri: buildWikimediaFileUrl('File:Malala_Yousafzai_at_Girl_Summit_2014.jpg'),
@@ -432,9 +432,9 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1903',
     date: '1903-10-10',
     title: 'Emmeline Pankhurst founds Suffragette Movement',
-    summary: 'Militant tactics energize the fight for women's votes.',
+    summary: 'Militant tactics energize the fight for women\'s votes.',
     detail:
-      'Emmeline Pankhurst founds the Women's Social and Political Union in Manchester, adopting the motto "Deeds not Words" and launching militant tactics that accelerate the suffrage movement.',
+      'Emmeline Pankhurst founds the Women\'s Social and Political Union in Manchester, adopting the motto "Deeds not Words" and launching militant tactics that accelerate the suffrage movement.',
     location: 'Manchester, United Kingdom',
     image: {
       uri: buildWikimediaFileUrl('File:Emmeline_Pankhurst_addresses_crowd.jpg'),
@@ -450,8 +450,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     id: 'magellan-circumnavigation',
     year: '1522',
     date: '1522-09-06',
-    title: 'Magellan's expedition circumnavigates globe',
-    summary: 'First voyage around the world proves Earth's roundness.',
+    title: 'Magellan\'s expedition circumnavigates globe',
+    summary: 'First voyage around the world proves Earth\'s roundness.',
     detail:
       'The Victoria returns to Spain, completing the first circumnavigation of Earth. Though Magellan died in the Philippines, his expedition proves the world is round and opens new trade routes.',
     location: 'Seville, Spain',
@@ -489,9 +489,9 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1911',
     date: '1911-12-14',
     title: 'Roald Amundsen reaches South Pole',
-    summary: 'Norwegian explorer wins race to Earth's southernmost point.',
+    summary: 'Norwegian explorer wins race to Earth\'s southernmost point.',
     detail:
-      'Roald Amundsen and his team become the first humans to reach the geographic South Pole, beating Robert Scott's British expedition by 34 days in the heroic age of Antarctic exploration.',
+      'Roald Amundsen and his team become the first humans to reach the geographic South Pole, beating Robert Scott\'s British expedition by 34 days in the heroic age of Antarctic exploration.',
     location: 'South Pole, Antarctica',
     image: {
       uri: buildWikimediaFileUrl('File:Amundsen_Expedition_at_South_Pole.jpg'),
@@ -508,9 +508,9 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1953',
     date: '1953-05-29',
     title: 'Hillary & Tenzing summit Everest',
-    summary: 'First confirmed ascent of world's highest peak.',
+    summary: 'First confirmed ascent of world\'s highest peak.',
     detail:
-      'Edmund Hillary and Tenzing Norgay reach the 29,029-foot summit of Mount Everest, conquering the world's highest mountain after decades of failed attempts.',
+      'Edmund Hillary and Tenzing Norgay reach the 29,029-foot summit of Mount Everest, conquering the world\'s highest mountain after decades of failed attempts.',
     location: 'Mount Everest, Nepal-Tibet border',
     image: {
       uri: buildWikimediaFileUrl('File:Tenzing_Norgay_and_Edmund_Hillary.jpg'),
@@ -545,10 +545,10 @@ export const EVENT_LIBRARY: EventRecord[] = [
     id: 'shackleton-endurance',
     year: '1916',
     date: '1916-08-30',
-    title: 'Shackleton's epic Antarctic survival',
+    title: 'Shackleton\'s epic Antarctic survival',
     summary: 'All crew saved after ship crushed by ice.',
     detail:
-      'Ernest Shackleton completes one of history's greatest survival stories, rescuing his entire crew after the Endurance was crushed by Antarctic ice, enduring 22 months of extreme conditions.',
+      'Ernest Shackleton completes one of history\'s greatest survival stories, rescuing his entire crew after the Endurance was crushed by Antarctic ice, enduring 22 months of extreme conditions.',
     location: 'Elephant Island, Antarctica',
     image: {
       uri: buildWikimediaFileUrl('File:Endurance_trapped_in_pack_ice.jpg'),
@@ -565,7 +565,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1955',
     date: '1955-04-12',
     title: 'Jonas Salk develops polio vaccine',
-    summary: 'Vaccine eradicates one of history's most feared diseases.',
+    summary: 'Vaccine eradicates one of history\'s most feared diseases.',
     detail:
       'Jonas Salk announces the successful trial of his polio vaccine, protecting millions of children from paralysis and death. He refuses to patent it, saying "Could you patent the sun?"',
     location: 'Pittsburgh, Pennsylvania, USA',
@@ -586,7 +586,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Watson & Crick discover DNA structure',
     summary: 'Double helix unlocks the secret of life.',
     detail:
-      'James Watson and Francis Crick publish their model of DNA's double helix structure in Nature, revolutionizing biology and launching the era of molecular genetics.',
+      'James Watson and Francis Crick publish their model of DNA\'s double helix structure in Nature, revolutionizing biology and launching the era of molecular genetics.',
     location: 'Cambridge, United Kingdom',
     image: {
       uri: buildWikimediaFileUrl('File:James_Watson_Francis_Crick_1953.jpg'),
@@ -624,7 +624,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Wilhelm Röntgen discovers X-rays',
     summary: 'Mysterious rays revolutionize medical diagnosis.',
     detail:
-      'German physicist Wilhelm Röntgen accidentally discovers X-rays while experimenting with cathode rays, creating the first X-ray image of his wife's hand and founding medical imaging.',
+      'German physicist Wilhelm Röntgen accidentally discovers X-rays while experimenting with cathode rays, creating the first X-ray image of his wife\'s hand and founding medical imaging.',
     location: 'Würzburg, Germany',
     image: {
       uri: buildWikimediaFileUrl('File:Wilhelm_R%C3%B6ntgen_(1845%E2%80%931923).jpg'),
@@ -643,7 +643,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     title: 'Louis Pasteur proves germ theory',
     summary: 'Microorganisms identified as cause of disease.',
     detail:
-      'Louis Pasteur's experiments definitively prove that microorganisms cause fermentation and disease, revolutionizing medicine and leading to antiseptic practices that save millions.',
+      'Louis Pasteur\'s experiments definitively prove that microorganisms cause fermentation and disease, revolutionizing medicine and leading to antiseptic practices that save millions.',
     location: 'Paris, France',
     image: {
       uri: buildWikimediaFileUrl('File:Louis_Pasteur.jpg'),
@@ -755,9 +755,9 @@ export const EVENT_LIBRARY: EventRecord[] = [
     year: '1998',
     date: '1998-09-04',
     title: 'Google founded by Page and Brin',
-    summary: 'Search engine organizes the world's information.',
+    summary: 'Search engine organizes the world\'s information.',
     detail:
-      'Larry Page and Sergey Brin incorporate Google Inc. in a Menlo Park garage. Their PageRank algorithm revolutionizes web search and builds one of the world's most valuable companies.',
+      'Larry Page and Sergey Brin incorporate Google Inc. in a Menlo Park garage. Their PageRank algorithm revolutionizes web search and builds one of the world\'s most valuable companies.',
     location: 'Menlo Park, California, USA',
     image: {
       uri: buildWikimediaFileUrl('File:Googleplex-Patio-Aug-2014.JPG'),
@@ -868,10 +868,10 @@ export const EVENT_LIBRARY: EventRecord[] = [
     id: 'impressionism-monet',
     year: '1872',
     date: '1872-11-13',
-    title: 'Monet's "Impression, Sunrise" births Impressionism',
+    title: 'Monet\'s "Impression, Sunrise" births Impressionism',
     summary: 'Revolutionary painting gives name to art movement.',
     detail:
-      'Claude Monet paints "Impression, Sunrise" in Le Havre. When exhibited in 1874, critics mock its loose brushwork, inadvertently naming Impressionism—one of history's most influential art movements.',
+      'Claude Monet paints "Impression, Sunrise" in Le Havre. When exhibited in 1874, critics mock its loose brushwork, inadvertently naming Impressionism—one of history\'s most influential art movements.',
     location: 'Le Havre, France',
     image: {
       uri: buildWikimediaFileUrl('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
@@ -1104,7 +1104,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Jazz Age & Cultural Revolution',
     summary: 'The Roaring Twenties transform music, art, and society.',
     image: {
-      uri: buildWikimediaFileUrl('Cotton Club interior, 1936 (LOC).jpg'),
+      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_Hurricane_Club_1943.jpg'),
     },
     eventIds: [
       'harlem-renaissance-jazz',
