@@ -82,7 +82,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'U.S. Secretary of State Bainbridge Colby certifies the 19th Amendment, granting women the right to vote nationwide after decades of activism.',
     location: 'Washington, D.C., USA',
     image: {
-      uri: buildWikimediaFileUrl('File:Suffrage_parade,_New_York_City,_May_6,_1912.jpg'),
+      uri: buildWikimediaFileUrl('File:Suffragists_Parade_Down_Fifth_Avenue,_1917.JPG'),
     },
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
