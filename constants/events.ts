@@ -399,7 +399,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Harriet Tubman makes over a dozen dangerous trips into slave states via the Underground Railroad, personally leading approximately 70 enslaved people to freedom and never losing a passenger.',
     location: 'Eastern Shore, Maryland to Northern States',
     image: {
-      uri: buildWikimediaFileUrl('File:Harriet_Tubman_by_Squyer,_NPG,_c1885.jpg'),
+      uri: buildWikimediaFileUrl('File:Harriet_Tubman.jpg'),
     },
     categories: ['human-rights'],
     eras: ['industrial'],
@@ -418,7 +418,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'At 17, Malala becomes the youngest Nobel Prize winner, recognized for her courageous advocacy for girls\' education after surviving a Taliban assassination attempt in Pakistan.',
     location: 'Oslo, Norway',
     image: {
-      uri: buildWikimediaFileUrl('File:Malala_Yousafzai_at_Girl_Summit_2014.jpg'),
+      uri: buildWikimediaFileUrl('File:Malala_Yousafzai.jpg'),
     },
     categories: ['human-rights'],
     eras: ['contemporary'],
@@ -437,7 +437,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Emmeline Pankhurst founds the Women\'s Social and Political Union in Manchester, adopting the motto "Deeds not Words" and launching militant tactics that accelerate the suffrage movement.',
     location: 'Manchester, United Kingdom',
     image: {
-      uri: buildWikimediaFileUrl('File:Emmeline_Pankhurst_addresses_crowd.jpg'),
+      uri: buildWikimediaFileUrl('File:Emmeline_Pankhurst_Arrested_1914.jpg'),
     },
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
