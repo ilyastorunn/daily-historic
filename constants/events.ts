@@ -129,7 +129,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Speakeasies and theaters across Harlem popularize jazz legends like Duke Ellington, broadcasting a transformative sound to the entire country.',
     location: 'Harlem, New York City, USA',
     image: {
-      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_Hurricane_Club_1943.jpg'),
+      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_publicity.JPG'),
     },
     categories: ['culture', 'art'],
     eras: ['modern'],
@@ -228,7 +228,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Germany signs an armistice agreement with the Allies, ending four years of unprecedented carnage that claimed over 17 million lives and reshaped the modern world.',
     location: 'Compiègne, France',
     image: {
-      uri: buildWikimediaFileUrl('File:Ww1_armistice.jpg'),
+      uri: buildWikimediaFileUrl('File:American_soldiers_rejoice_at_the_Armistice,_11th_November_1918._(45780427912).jpg'),
     },
     categories: ['politics'],
     eras: ['modern'],
@@ -304,7 +304,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'The standoff over Soviet missiles in Cuba brings the US and USSR closest to nuclear war. President Kennedy\'s naval blockade and Khrushchev\'s decision to withdraw avert catastrophe.',
     location: 'Cuba and Washington, D.C.',
     image: {
-      uri: buildWikimediaFileUrl('File:Cuban_Missile_Crisis_Quarantine_Map.jpg'),
+      uri: buildWikimediaFileUrl('File:Cuban_crisis_map_missile_range.jpg'),
     },
     categories: ['politics'],
     eras: ['modern'],
@@ -342,7 +342,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Rosa Parks refuses to surrender her bus seat to a white passenger in Montgomery, Alabama. Her arrest sparks a 381-day boycott that catapults Martin Luther King Jr. to prominence and desegregates public transit.',
     location: 'Montgomery, Alabama, USA',
     image: {
-      uri: buildWikimediaFileUrl('File:Rosa_Parks_Booking.jpg'),
+      uri: buildWikimediaFileUrl('File:Rosaparks.jpg'),
     },
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
@@ -1104,7 +1104,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     title: 'Jazz Age & Cultural Revolution',
     summary: 'The Roaring Twenties transform music, art, and society.',
     image: {
-      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_Hurricane_Club_1943.jpg'),
+      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_publicity.JPG'),
     },
     eventIds: [
       'harlem-renaissance-jazz',

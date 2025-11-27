@@ -10,7 +10,8 @@ export const buildWikimediaFileUrl = (fileName: string, options: WikimediaOption
     throw new Error('buildWikimediaFileUrl requires a non-empty file name.');
   }
 
-  const normalizedName = trimmed.replace(/^file:/i, '').replace(/_/g, ' ');
+  // Remove 'File:' prefix but KEEP underscores (Wikimedia uses underscores in filenames)
+  const normalizedName = trimmed.replace(/^file:/i, '');
   const encodedName = encodeURIComponent(normalizedName);
   const params: string[] = [];
 
