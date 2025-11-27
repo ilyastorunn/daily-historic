@@ -28,7 +28,11 @@ export const TimelineCard = memo(
     <Pressable accessibilityRole="button" onPress={handlePress} style={styles.card}>
       {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" /> : null}
       <View style={styles.body}>
-        {dateISO ? <Text style={styles.date}>{dateISO}</Text> : null}
+        {dateISO ? (
+          <View style={styles.yearBadge}>
+            <Text style={styles.yearText}>{dateISO}</Text>
+          </View>
+        ) : null}
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.summary} numberOfLines={3}>
           {summary}
@@ -52,34 +56,51 @@ const getStyles = (() => {
     }
     const styles = StyleSheet.create({
       card: {
-        borderRadius: theme.radius.md,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: theme.colors.borderSubtle,
+        borderRadius: 16, // r-md per NorthStar
         overflow: 'hidden',
         backgroundColor: theme.colors.surface,
+        shadowColor: theme.colors.shadowColor,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 1,
+        shadowRadius: 32,
+        elevation: 2,
       },
       image: {
         width: '100%',
-        height: 180,
+        height: 200,
         backgroundColor: theme.colors.surfaceSubtle,
       },
       body: {
         padding: theme.spacing.md,
-        gap: theme.spacing.xs,
+        gap: theme.spacing.sm,
       },
-      date: {
+      yearBadge: {
+        alignSelf: 'flex-start',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: theme.radius.pill,
+        borderWidth: 1,
+        borderColor: theme.colors.accentPrimary,
+        backgroundColor: theme.colors.accentSoft,
+      },
+      yearText: {
         fontFamily: 'System',
         fontSize: 12,
-        color: theme.colors.textTertiary,
+        fontWeight: '600',
+        color: theme.colors.accentPrimary,
+        textTransform: 'uppercase',
       },
       title: {
-        fontFamily: 'Times New Roman',
+        fontFamily: 'serif', // Serif for editorial feel
         fontSize: 20,
+        lineHeight: 26,
+        fontWeight: '600',
         color: theme.colors.textPrimary,
       },
       summary: {
         fontFamily: 'System',
         fontSize: 14,
+        lineHeight: 20,
         color: theme.colors.textSecondary,
       },
       meta: {
