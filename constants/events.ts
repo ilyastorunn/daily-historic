@@ -42,6 +42,7 @@ export type EventCollection = {
   title: string;
   summary: string;
   image: ImageSource;
+  coverImage?: ImageSource; // Optional: dedicated cover image for collection hero
   eventIds: string[];
 };
 
@@ -912,6 +913,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Astronaut_Sally_Ride_takes_the_arm_controls_of_Challenger.jpg'),
+    },
     eventIds: [
       'marie-curie-nobel',
       'ada-lovelace-analytical',
@@ -928,6 +932,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:March_on_Washington_for_Jobs_and_Freedom,_Martin_Luther_King,_Jr._and_Joachim_Prinz_1963.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Selma_to_Montgomery_Marches.jpg'),
+    },
     eventIds: [
       'rosa-parks-bus-boycott',
       'women-suffrage-usa',
@@ -942,6 +949,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Turning points that shaped the 20th century through conflict and resolution.',
     image: {
       uri: buildWikimediaFileUrl('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Raising_the_Flag_on_Iwo_Jima,_larger_-_edit1.jpg'),
     },
     eventIds: [
       'd-day-normandy-landing',
@@ -960,6 +970,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Buzz_salutes_the_U.S._Flag.jpg'),
+    },
     eventIds: ['apollo-11-first-footsteps', 'women-in-stem-week', 'amelia-earhart-atlantic'],
   },
   {
@@ -968,6 +981,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Engineering leaps that shaped early civilizations.',
     image: {
       uri: buildWikimediaFileUrl('File:NAMA_Machine_d\'Anticythère_1.jpg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Great_Pyramid_of_Giza_-_20231108_114450.jpg'),
     },
     eventIds: [
       'rosetta-stone-decode',
@@ -981,6 +997,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Intrepid voyages that mapped the unknown and conquered new frontiers.',
     image: {
       uri: buildWikimediaFileUrl('File:Magellan_Elcano_Circumnavigation-en.svg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:The_Fighting_Temeraire,_JMW_Turner,_National_Gallery.jpg'),
     },
     eventIds: [
       'magellan-circumnavigation',
@@ -997,6 +1016,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Breakthroughs that conquered disease and transformed human health.',
     image: {
       uri: buildWikimediaFileUrl('File:Jonas_Salk_candid.jpg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Penicillin_core.svg'),
     },
     eventIds: [
       'salk-polio-vaccine',
@@ -1015,6 +1037,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:DNA_Model_Crick-Watson.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Hubble_ultra_deep_field.jpg'),
+    },
     eventIds: [
       'dna-structure-discovery',
       'marie-curie-nobel',
@@ -1030,6 +1055,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Ada_Lovelace_portrait.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Lightbulb.jpg'),
+    },
     eventIds: [
       'ada-lovelace-analytical',
       'marie-curie-nobel',
@@ -1044,6 +1072,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Technology revolutions that connected the world and transformed daily life.',
     image: {
       uri: buildWikimediaFileUrl('File:Eniac.jpg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Internet_map_1024.jpg'),
     },
     eventIds: [
       'first-computer-eniac',
@@ -1061,6 +1092,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Coalbrookdale_by_Night.jpg'),
+    },
     eventIds: [
       'steam-engine-watt',
       'transcontinental-railroad',
@@ -1075,6 +1109,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Nation-building moments that defined freedom and equality.',
     image: {
       uri: buildWikimediaFileUrl('File:Emancipation_proclamation.jpg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Declaration_independence.jpg'),
     },
     eventIds: [
       'emancipation-proclamation',
@@ -1091,6 +1128,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Michelangelo_-_Creation_of_Adam_(cropped).jpg'),
+    },
     eventIds: [
       'sistine-chapel-ceiling',
       'impressionism-monet',
@@ -1105,6 +1145,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'The Roaring Twenties transform music, art, and society.',
     image: {
       uri: buildWikimediaFileUrl('File:Duke_Ellington_-_publicity.JPG'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Louis_Armstrong_restored.jpg'),
     },
     eventIds: [
       'harlem-renaissance-jazz',
@@ -1121,6 +1164,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     image: {
       uri: buildWikimediaFileUrl('File:Rosetta_Stone.JPG'),
     },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Machu_Picchu,_Peru.jpg'),
+    },
     eventIds: [
       'rosetta-stone-decode',
       'magellan-circumnavigation',
@@ -1133,6 +1179,9 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     summary: 'Revival of learning, art, and humanist ideals.',
     image: {
       uri: buildWikimediaFileUrl('File:Creación_de_Adán.jpg'),
+    },
+    coverImage: {
+      uri: buildWikimediaFileUrl('File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'),
     },
     eventIds: [
       'sistine-chapel-ceiling',

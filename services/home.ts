@@ -62,7 +62,7 @@ const rotateCollections = (weekKey: string | null | undefined, limit: number): H
   const allCollections = EVENT_COLLECTIONS.map((collection) => ({
     id: collection.id,
     title: collection.title,
-    coverUrl: getImageUri(collection.image) ?? '',
+    coverUrl: getImageUri(collection.coverImage ?? collection.image) ?? '',
     blurb: collection.summary,
     previewCount: collection.eventIds.length,
   }));
@@ -95,7 +95,7 @@ const getFallbackCollections = (weekKey?: string | null, limit?: number) => {
   const allCollections = EVENT_COLLECTIONS.map((collection) => ({
     id: collection.id,
     title: collection.title,
-    coverUrl: getImageUri(collection.image) ?? '',
+    coverUrl: getImageUri(collection.coverImage ?? collection.image) ?? '',
     blurb: collection.summary,
     previewCount: collection.eventIds.length,
   }));
@@ -157,7 +157,7 @@ export const fetchCollectionDetail = async (collectionId: string): Promise<Colle
     return {
       id: match.id,
       title: match.title,
-      coverUrl: getImageUri(match.image) ?? '',
+      coverUrl: getImageUri(match.coverImage ?? match.image) ?? '',
       blurb: match.summary,
       items,
     };
