@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "ingest": "tsx scripts/ingest/run.ts",
     "validate:overrides": "tsx scripts/ingest/validate-overrides.ts",
-    "test:ingest": "vitest run"
+    "test:ingest": "vitest run",
+    "test:covers": "tsx scripts/test-collection-covers.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

@@ -914,7 +914,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
       uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
     },
     coverImage: {
-      uri: buildWikimediaFileUrl('File:Astronaut_Sally_Ride_takes_the_arm_controls_of_Challenger.jpg'),
+      uri: buildWikimediaFileUrl('File:Sally_Ride_in_1984.jpg'),
     },
     eventIds: [
       'marie-curie-nobel',
@@ -983,7 +983,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
       uri: buildWikimediaFileUrl('File:NAMA_Machine_d\'Anticythère_1.jpg'),
     },
     coverImage: {
-      uri: buildWikimediaFileUrl('File:Great_Pyramid_of_Giza_-_20231108_114450.jpg'),
+      uri: buildWikimediaFileUrl('File:Kheops-Pyramid.jpg'),
     },
     eventIds: [
       'rosetta-stone-decode',
@@ -1093,7 +1093,7 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
       uri: buildWikimediaFileUrl('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
     },
     coverImage: {
-      uri: buildWikimediaFileUrl('File:Coalbrookdale_by_Night.jpg'),
+      uri: buildWikimediaFileUrl('File:Spinning_jenny.jpg'),
     },
     eventIds: [
       'steam-engine-watt',
