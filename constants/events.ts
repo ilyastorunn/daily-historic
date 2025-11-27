@@ -342,7 +342,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       'Rosa Parks refuses to surrender her bus seat to a white passenger in Montgomery, Alabama. Her arrest sparks a 381-day boycott that catapults Martin Luther King Jr. to prominence and desegregates public transit.',
     location: 'Montgomery, Alabama, USA',
     image: {
-      uri: buildWikimediaFileUrl('File:Rosaparks.jpg'),
+      uri: buildWikimediaFileUrl('File:Rosa_Parks_in_Color.jpg'),
     },
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
