@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { heroEvent } from '@/constants/events';
@@ -751,6 +751,7 @@ const EventResultCard = ({
 
 const ExploreScreen = () => {
   const router = useRouter();
+  const params = useLocalSearchParams<{ category?: string }>();
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { profile, authUser } = useUserContext();
@@ -797,6 +798,19 @@ const ExploreScreen = () => {
 
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Handle category parameter from navigation
+  useEffect(() => {
+    if (params.category) {
+      const categorySet = new Set<CategoryOption>();
+      categorySet.add(params.category as CategoryOption);
+      setFilters({
+        categories: categorySet,
+        era: null,
+      });
+      trackEvent('explore_category_deeplink', { category: params.category });
+    }
+  }, [params.category]);
 
   // Determine if we're showing results or default layout
   const showResults = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null || selectedDate !== today.isoDate;

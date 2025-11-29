@@ -24,6 +24,7 @@ import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
 import { trackEvent } from '@/services/analytics';
 import { WeeklyCollectionsGrid } from '@/components/home/WeeklyCollectionsGrid';
+import { CategoryExploreGrid } from '@/components/home/CategoryExploreGrid';
 import { SavedStories } from '@/components/explore/SavedStories';
 import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
 import { fetchEventsByIds } from '@/services/content';
@@ -940,6 +941,10 @@ const HomeScreen = () => {
               loading={timeMachineLoading || timeMachineSeeding}
               testID="home-time-machine"
             />
+          </View>
+
+          <View style={styles.moduleSpacing}>
+            <CategoryExploreGrid testID="home-category-explore" />
           </View>
 
           {savedEventsData.length > 0 && (
