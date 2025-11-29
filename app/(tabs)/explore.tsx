@@ -43,7 +43,6 @@ import { createLinearGradientSource } from '@/utils/gradient';
 import { FilterModal, type FilterState } from '@/components/explore/FilterModal';
 import { StoryOfTheDay } from '@/components/explore/StoryOfTheDay';
 import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
-import { SavedStories } from '@/components/explore/SavedStories';
 import { trackEvent } from '@/services/analytics';
 
 // API Configuration
@@ -847,68 +846,6 @@ const ExploreScreen = () => {
     }
   }, [refreshYMBI]);
 
-  // Saved events state (fetch from Firestore)
-  const [savedEventsData, setSavedEventsData] = useState<FirestoreEventDocument[]>([]);
-  const [savedEventsLoading, setSavedEventsLoading] = useState(false);
-
-  // Fetch saved events from Firestore when savedEventIds change
-  useEffect(() => {
-    const savedIds = profile?.savedEventIds ?? [];
-    if (savedIds.length === 0) {
-      setSavedEventsData([]);
-      return;
-    }
-
-    let cancelled = false;
-    const loadSavedEvents = async () => {
-      setSavedEventsLoading(true);
-      try {
-        // Check which events are not in cache
-        const missingIds = savedIds.filter((id) => !eventCache[id]);
-
-        // If all are cached, just update state from cache
-        if (missingIds.length === 0) {
-          const cached = savedIds.map((id) => eventCache[id]).filter(Boolean);
-          setSavedEventsData(cached);
-          setSavedEventsLoading(false);
-          return;
-        }
-
-        // Fetch only missing events
-        const fetched = await fetchEventsByIds(missingIds);
-        if (cancelled) return;
-
-        // Update cache with new events only
-        setEventCache((prev) => {
-          const next = { ...prev };
-          fetched.forEach((event) => {
-            next[event.eventId] = event;
-          });
-          return next;
-        });
-
-        // Combine cached and newly fetched events
-        const allEvents = savedIds
-          .map((id) => eventCache[id] || fetched.find((e) => e.eventId === id))
-          .filter(Boolean) as FirestoreEventDocument[];
-
-        setSavedEventsData(allEvents);
-      } catch (error) {
-        console.error('Failed to load saved events', error);
-      } finally {
-        if (!cancelled) {
-          setSavedEventsLoading(false);
-        }
-      }
-    };
-
-    void loadSavedEvents();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [profile?.savedEventIds]);
-
   useEffect(() => {
     if (digestError) {
       console.error('Failed to load explore digest', digestError);
@@ -935,59 +872,10 @@ const ExploreScreen = () => {
     });
   }, [digestEvents]);
 
-  useEffect(() => {
-    const savedIds = profile?.savedEventIds ?? [];
-    if (savedIds.length === 0) {
-      return;
-    }
-    const missing = savedIds.filter((id) => !eventCache[id]);
-    if (missing.length === 0) {
-      return;
-    }
-
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const fetched = await fetchEventsByIds(missing);
-        if (cancelled) {
-          return;
-        }
-        setEventCache((prev) => {
-          const next = { ...prev };
-          let changed = false;
-          for (const event of fetched) {
-            if (!next[event.eventId]) {
-              next[event.eventId] = event;
-              changed = true;
-            }
-          }
-          return changed ? next : prev;
-        });
-      } catch (error) {
-        console.error('Failed to load saved events for highlights', error);
-      }
-    };
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [profile?.savedEventIds, eventCache]);
-
   const highlightedDates = useMemo(() => {
     const set = new Set<string>();
-    // Use savedEventsData instead of eventCache to avoid re-computing on every cache update
-    savedEventsData.forEach((event) => {
-      const date = event?.date;
-      if (date) {
-        const month = date.month.toString().padStart(2, '0');
-        const day = date.day.toString().padStart(2, '0');
-        set.add(`${today.year}-${month}-${day}`);
-      }
-    });
     return set;
-  }, [savedEventsData, today.year]);
+  }, []);
 
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
@@ -1565,15 +1453,6 @@ const ExploreScreen = () => {
                 onCardPress={handleYMBICardPress}
                 onRefresh={refreshYMBI}
                 onSeeMore={handleYMBISeeMore}
-              />
-
-              <SavedStories
-                savedEvents={savedEventsData}
-                loading={savedEventsLoading}
-                onEventPress={(eventId) => {
-                  trackEvent('explore_saved_story_opened', { event_id: eventId });
-                  handleOpenDetail(eventId);
-                }}
               />
             </>
           )}

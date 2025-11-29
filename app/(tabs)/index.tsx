@@ -24,9 +24,9 @@ import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
 import { trackEvent } from '@/services/analytics';
 import { WeeklyCollectionsGrid } from '@/components/home/WeeklyCollectionsGrid';
-import { CategoryChipRail } from '@/components/home/CategoryChipRail';
+import { SavedStories } from '@/components/explore/SavedStories';
 import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
-import { useHomeChips } from '@/hooks/use-home-chips';
+import { fetchEventsByIds } from '@/services/content';
 import { getDateParts, getIsoWeekKey } from '@/utils/dates';
 import { createLinearGradientSource } from '@/utils/gradient';
 import { getImageUri } from '@/utils/image-source';
@@ -643,31 +643,18 @@ const HomeScreen = () => {
     }
   }, [weeklyCollectionsError]);
 
-  const {
-    chips: homeChips,
-    loading: homeChipsLoading,
-    setPinned: setChipPinned,
-  } = useHomeChips();
-
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroCarouselWidth, setHeroCarouselWidth] = useState<number | null>(null);
   const lastViewedHeroIdRef = useRef<string | null>(null);
-  const [selectedChipId, setSelectedChipId] = useState<string | null>(null);
 
   const isPremiumUser = useMemo(() => {
     const inferredProfile = profile as { isPremium?: boolean } | null;
     return Boolean(inferredProfile?.isPremium);
   }, [profile]);
 
-  useEffect(() => {
-    if (selectedChipId) {
-      return;
-    }
-    const defaultPinned = homeChips.find((chip) => chip.pinned);
-    if (defaultPinned) {
-      setSelectedChipId(defaultPinned.id);
-    }
-  }, [homeChips, selectedChipId]);
+  // Saved events state
+  const [savedEventsData, setSavedEventsData] = useState<FirestoreEventDocument[]>([]);
+  const [savedEventsLoading, setSavedEventsLoading] = useState(false);
 
   const {
     loading: timeMachineLoading,
@@ -741,25 +728,7 @@ const HomeScreen = () => {
     }));
   }, []);
 
-  const filteredHeroItems = useMemo(() => {
-    if (!selectedChipId) {
-      return heroCarouselItems;
-    }
-    const filtered = heroCarouselItems.filter((item) => item.categories?.includes(selectedChipId));
-    return filtered.length > 0 ? filtered : heroCarouselItems;
-  }, [heroCarouselItems, selectedChipId]);
-
-  const displayHeroItems = digestLoading ? skeletonHeroItems : filteredHeroItems;
-
-  const relatedNowItems = useMemo(() => {
-    if (!selectedChipId) {
-      return [] as HeroCarouselItem[];
-    }
-    const current = filteredHeroItems[activeHeroIndex];
-    return filteredHeroItems
-      .filter((item) => item.id !== current?.id)
-      .slice(0, 3);
-  }, [activeHeroIndex, filteredHeroItems, selectedChipId]);
+  const displayHeroItems = digestLoading ? skeletonHeroItems : heroCarouselItems;
 
   const fallbackHeroWidth = useMemo(() => {
     const screenWidth = Dimensions.get('window').width;
@@ -784,22 +753,18 @@ const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (activeHeroIndex >= filteredHeroItems.length) {
+    if (activeHeroIndex >= heroCarouselItems.length) {
       setActiveHeroIndex(0);
     }
-  }, [activeHeroIndex, filteredHeroItems.length]);
+  }, [activeHeroIndex, heroCarouselItems.length]);
 
   useEffect(() => {
-    const currentItem = filteredHeroItems[activeHeroIndex];
+    const currentItem = heroCarouselItems[activeHeroIndex];
     if (currentItem && lastViewedHeroIdRef.current !== currentItem.id) {
       trackEvent('hero_card_viewed', { card_id: currentItem.id, index: activeHeroIndex });
       lastViewedHeroIdRef.current = currentItem.id;
     }
-  }, [activeHeroIndex, filteredHeroItems]);
-
-  useEffect(() => {
-    setActiveHeroIndex(0);
-  }, [selectedChipId]);
+  }, [activeHeroIndex, heroCarouselItems]);
 
   const statusMessage = digestLoading
     ? "Curating today's picks…"
@@ -812,6 +777,39 @@ const HomeScreen = () => {
       console.error('Failed to load daily digest events', digestError);
     }
   }, [digestError]);
+
+  // Fetch saved events from Firestore when savedEventIds change
+  useEffect(() => {
+    const savedIds = profile?.savedEventIds ?? [];
+    if (savedIds.length === 0) {
+      setSavedEventsData([]);
+      setSavedEventsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadSavedEvents = async () => {
+      setSavedEventsLoading(true);
+      try {
+        const fetched = await fetchEventsByIds(savedIds);
+        if (cancelled) return;
+
+        setSavedEventsData(fetched);
+      } catch (error) {
+        console.error('Failed to load saved events', error);
+      } finally {
+        if (!cancelled) {
+          setSavedEventsLoading(false);
+        }
+      }
+    };
+
+    void loadSavedEvents();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.savedEventIds]);
 
   const handleOpenEvent = useCallback(
     (eventId: string) => {
@@ -855,23 +853,12 @@ const HomeScreen = () => {
     router.push({ pathname: '/time-machine', params: { year: timeMachineYear ? String(timeMachineYear) : undefined } });
   }, [handleTimeMachineTeaser, isPremiumUser, loadTimeMachineTimeline, router, timeMachineYear]);
 
-  const handleChipSelect = useCallback((chipId: string) => {
-    setSelectedChipId((previous) => {
-      const nextValue = previous === chipId ? null : chipId;
-      trackEvent('chip_selected', { chip_id: nextValue ?? 'all' });
-      return nextValue;
-    });
-  }, []);
-
-  const handleChipPin = useCallback(
-    (chipId: string, pinned: boolean) => {
-      setChipPinned(chipId, pinned);
-      if (pinned) {
-        setSelectedChipId(chipId);
-      }
-      trackEvent('chip_pinned', { chip_id: chipId, pinned });
+  const handleSavedStoryPress = useCallback(
+    (eventId: string) => {
+      trackEvent('home_saved_story_opened', { event_id: eventId });
+      handleOpenEvent(eventId);
     },
-    [setChipPinned]
+    [handleOpenEvent]
   );
 
   const handleHeroCardOpened = useCallback((eventId: string, index: number) => {
@@ -955,47 +942,15 @@ const HomeScreen = () => {
             />
           </View>
 
-          <View style={styles.moduleSpacing}>
-            <CategoryChipRail
-              chips={homeChips}
-              selectedId={selectedChipId}
-              loading={homeChipsLoading}
-              onSelect={handleChipSelect}
-              onPin={handleChipPin}
-              testID="home-category-chips"
-            />
-            {selectedChipId && relatedNowItems.length > 0 ? (
-              <View style={styles.relatedStrip}>
-                <Text style={styles.relatedHeading}>Related now</Text>
-                <View style={styles.relatedList}>
-                  {relatedNowItems.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      accessibilityRole="button"
-                      onPress={() => handleOpenEvent(item.id)}
-                      style={styles.relatedCard}
-                    >
-                      <Image
-                        source={item.imageUri ? { uri: item.imageUri } : heroEvent.image}
-                        style={styles.relatedImage}
-                        contentFit="cover"
-                      />
-                      <View style={styles.relatedCardBody}>
-                        <Text style={styles.relatedTitle} numberOfLines={2}>
-                          {item.title}
-                        </Text>
-                        {item.meta ? (
-                          <Text style={styles.relatedMeta} numberOfLines={1}>
-                            {item.meta}
-                          </Text>
-                        ) : null}
-                      </View>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            ) : null}
-          </View>
+          {savedEventsData.length > 0 && (
+            <View style={styles.moduleSpacing}>
+              <SavedStories
+                savedEvents={savedEventsData}
+                loading={savedEventsLoading}
+                onEventPress={handleSavedStoryPress}
+              />
+            </View>
+          )}
 
           <View style={styles.bottomSpacer} />
 
