@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -799,21 +799,26 @@ const ExploreScreen = () => {
     return () => clearTimeout(timer);
   }, [query]);
 
+  // Track processed category param to avoid infinite loop
+  const processedCategoryRef = useRef<string | null>(null);
+
+  // Ref to track ongoing pagination fetch
+  const paginationFetchingRef = useRef(false);
+
   // Handle category parameter from navigation
   useEffect(() => {
-    if (params.category) {
+    if (params.category && params.category !== processedCategoryRef.current) {
+      const categoryOption = params.category as CategoryOption;
       const categorySet = new Set<CategoryOption>();
-      categorySet.add(params.category as CategoryOption);
+      categorySet.add(categoryOption);
       setFilters({
         categories: categorySet,
         era: null,
       });
       trackEvent('explore_category_deeplink', { category: params.category });
+      processedCategoryRef.current = params.category;
     }
   }, [params.category]);
-
-  // Determine if we're showing results or default layout
-  const showResults = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null || selectedDate !== today.isoDate;
 
   const activeDate = useMemo(() => parseIsoDate(selectedDate) ?? today, [selectedDate, today]);
 
@@ -893,11 +898,27 @@ const ExploreScreen = () => {
 
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
+  // Convert filters to stable primitives for dependency tracking
+  const categoriesArray = useMemo(() => Array.from(filters.categories).sort(), [filters.categories]);
+  const categoriesKey = categoriesArray.join(',');
+
+  // Determine if we're showing results or default layout
+  const showResults = debouncedQuery.length > 0 || categoriesKey.length > 0 || filters.era !== null || selectedDate !== today.isoDate;
+
   // Fetch search results from backend API
   const fetchSearchResults = useCallback(
     async (cursor?: string | null, isNewSearch = false) => {
+      // For pagination (cursor present), use ref-based guard
+      if (cursor && !isNewSearch) {
+        if (paginationFetchingRef.current) {
+          console.log('[Explore] Skipping pagination - already fetching');
+          return;
+        }
+        paginationFetchingRef.current = true;
+        setPaginationState((prev) => ({ ...prev, loading: true }));
+      }
       // For new searches, skip loading check entirely
-      if (!isNewSearch) {
+      else if (!isNewSearch) {
         let shouldProceed = false;
         setPaginationState((prev) => {
           if (prev.loading) {
@@ -921,9 +942,7 @@ const ExploreScreen = () => {
         // Build query params
         const params = new URLSearchParams();
         if (normalizedQuery) params.append('q', normalizedQuery);
-        if (filters.categories.size > 0) {
-          params.append('categories', Array.from(filters.categories).join(','));
-        }
+        if (categoriesKey) params.append('categories', categoriesKey);
         if (filters.era) params.append('era', filters.era);
         params.append('sort', sortMode);
         if (cursor) params.append('cursor', cursor);
@@ -963,44 +982,57 @@ const ExploreScreen = () => {
           };
         });
 
+        // Reset pagination fetching flag
+        if (cursor) {
+          paginationFetchingRef.current = false;
+        }
+
         // Append or replace results
         setApiResults((prev) => (cursor ? [...prev, ...newItems] : newItems));
 
         // Track analytics
-        if (!cursor) {
-          trackEvent('explore_search_results_loaded', {
-            q_len: normalizedQuery.length,
-            categories_count: filters.categories.size,
-            era_selected: filters.era || 'none',
-            results_count: newItems.length,
-          });
-        } else {
-          trackEvent('explore_pagination_loaded', {
-            page_number: Math.floor((cursor ? apiResults.length : 0) / 20) + 1,
-            items_count: newItems.length,
-          });
-        }
+        trackEvent(!cursor ? 'explore_search_results_loaded' : 'explore_pagination_loaded', {
+          q_len: normalizedQuery.length,
+          categories_count: categoriesKey ? categoriesKey.split(',').length : 0,
+          era_selected: filters.era || 'none',
+          results_count: newItems.length,
+        });
       } catch (error) {
         console.error('[Explore] API error:', error);
         setPaginationState((prev) => ({ ...prev, loading: false }));
+        // Reset pagination fetching flag on error
+        if (cursor) {
+          paginationFetchingRef.current = false;
+        }
       }
     },
-    [normalizedQuery, filters, sortMode, apiResults.length]
+    [normalizedQuery, categoriesKey, filters.era, sortMode]
   );
 
-  // Fetch next page
+  // Fetch next page - read state atomically with setPaginationState
   const fetchNextPage = useCallback(() => {
-    // Check state directly to avoid multiple calls
-    if (paginationState.hasMore && !paginationState.loading && paginationState.cursor) {
-      fetchSearchResults(paginationState.cursor);
-    }
-  }, [fetchSearchResults, paginationState.hasMore, paginationState.loading, paginationState.cursor]);
+    setPaginationState((prev) => {
+      // Atomically check conditions and trigger fetch if ready
+      if (prev.hasMore && !prev.loading && prev.cursor && !paginationFetchingRef.current) {
+        console.log('[Explore] Triggering next page fetch, cursor:', prev.cursor);
+        fetchSearchResults(prev.cursor, false);
+      } else {
+        console.log('[Explore] Skipping next page fetch:', {
+          hasMore: prev.hasMore,
+          loading: prev.loading,
+          cursor: prev.cursor,
+          alreadyFetching: paginationFetchingRef.current,
+        });
+      }
+      return prev; // Don't modify state here, fetchSearchResults will do it
+    });
+  }, [fetchSearchResults]);
 
   // Check if date is selected (different from today)
   const isDateSelected = selectedDate !== today.isoDate;
 
   // Check if only date is selected (no search/filter)
-  const isDateOnlySelection = isDateSelected && debouncedQuery.length === 0 && filters.categories.size === 0 && filters.era === null;
+  const isDateOnlySelection = isDateSelected && debouncedQuery.length === 0 && categoriesKey.length === 0 && filters.era === null;
 
   // Determine results source (API or local filtering)
   const results = useMemo(() => {
@@ -1041,9 +1073,9 @@ const ExploreScreen = () => {
 
     // Use API results for search/filter on current date
     return apiResults;
-  }, [isDateSelected, showResults, apiResults, digestEvents, filters, debouncedQuery]);
+  }, [isDateSelected, showResults, apiResults, digestEvents, filters.categories, filters.era, debouncedQuery]);
 
-  const activeFilterCount = filters.categories.size + (filters.era ? 1 : 0);
+  const activeFilterCount = (categoriesKey ? categoriesKey.split(',').length : 0) + (filters.era ? 1 : 0);
 
   // Track explore_opened on mount
   useEffect(() => {
@@ -1083,20 +1115,21 @@ const ExploreScreen = () => {
   // Fetch search results when query or filters change (but not when date is selected)
   useEffect(() => {
     // Only fetch from API if there's search/filter AND date is today
-    const hasSearchOrFilter = debouncedQuery.length > 0 || filters.categories.size > 0 || filters.era !== null;
+    const hasSearchOrFilter = debouncedQuery.length > 0 || categoriesKey.length > 0 || filters.era !== null;
 
     console.log('[Explore] Search effect triggered:', {
       hasSearchOrFilter,
       isDateSelected,
       debouncedQuery,
-      categoriesSize: filters.categories.size,
+      categoriesKey,
       era: filters.era,
     });
 
     // Don't fetch if date is selected (we use client-side filtering instead)
     if (hasSearchOrFilter && !isDateSelected) {
       console.log('[Explore] Resetting pagination and fetching results');
-      // Reset pagination and clear loading state to allow new fetch
+      // Reset pagination ref and state
+      paginationFetchingRef.current = false;
       setPaginationState({
         items: [],
         cursor: null,
@@ -1108,18 +1141,18 @@ const ExploreScreen = () => {
       // Use forceFetch=true to bypass loading check for new searches
       fetchSearchResults(null, true);
     }
-  }, [debouncedQuery, filters.categories, filters.era, sortMode, isDateSelected, fetchSearchResults]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedQuery, categoriesKey, filters.era, sortMode, isDateSelected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track no results when search/filters yield empty results
   useEffect(() => {
     if (showResults && results.length === 0 && !paginationState.loading) {
       trackEvent('explore_no_results', {
         q_len: debouncedQuery.length,
-        categories_count: filters.categories.size,
+        categories_count: categoriesKey ? categoriesKey.split(',').length : 0,
         era_selected: filters.era ?? 'none',
       });
     }
-  }, [showResults, results.length, paginationState.loading, debouncedQuery.length, filters]);
+  }, [showResults, results.length, paginationState.loading, debouncedQuery.length, categoriesKey, filters.era]);
 
   const handleOpenDetail = useCallback(
     (id: string) => {
