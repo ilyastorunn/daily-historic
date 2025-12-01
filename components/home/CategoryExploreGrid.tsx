@@ -23,6 +23,7 @@ type CategoryItem = {
 // Icon mapping based on assets/icons/
 const CATEGORY_ICONS: Partial<Record<CategoryOption, ImageSource>> = {
   'art-culture': require('@/assets/icons/Art-Culture.png'),
+  'world-wars': require('@/assets/icons/World-Wars.png'),
   'science-discovery': require('@/assets/icons/Science-Discovery.png'),
   'politics': require('@/assets/icons/Politics.png'),
   'ancient-civilizations': require('@/assets/icons/Ancient-Civilizations.png'),
@@ -31,7 +32,7 @@ const CATEGORY_ICONS: Partial<Record<CategoryOption, ImageSource>> = {
 
 const FEATURED_CATEGORIES: CategoryItem[] = [
   { id: 'art-culture', icon: CATEGORY_ICONS['art-culture'], emoji: '🎨' },
-  { id: 'world-wars', emoji: '⚔️' }, // No icon available, use emoji
+  { id: 'world-wars', icon: CATEGORY_ICONS['world-wars'], emoji: '⚔️' },
   { id: 'science-discovery', icon: CATEGORY_ICONS['science-discovery'], emoji: '🔬' },
   { id: 'politics', icon: CATEGORY_ICONS['politics'], emoji: '💼' },
   { id: 'ancient-civilizations', icon: CATEGORY_ICONS['ancient-civilizations'], emoji: '🏛️' },
