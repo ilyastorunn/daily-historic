@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useMemo, useRef } from 'react';
+import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type CategoryOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -8,18 +7,64 @@ import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { StepComponentProps } from '../types';
 import { styles as onboardingStyles } from '../styles';
 
-const categoryOptions: { value: CategoryOption; label: string; icon?: string }[] = [
-  { value: 'world-wars', label: 'World Wars' },
-  { value: 'ancient-civilizations', label: 'Ancient Civilizations' },
-  { value: 'science-discovery', label: 'Science & Discovery' },
-  { value: 'art-culture', label: 'Art & Culture' },
-  { value: 'politics', label: 'Politics' },
-  { value: 'inventions', label: 'Inventions' },
-  { value: 'natural-disasters', label: 'Natural Disasters' },
-  { value: 'civil-rights', label: 'Civil Rights' },
-  { value: 'exploration', label: 'Exploration' },
-  { value: 'surprise', label: 'None of these' },
+const categoryOptions: { value: CategoryOption; label: string; icon: any }[] = [
+  { value: 'world-wars', label: 'World Wars', icon: require('@/assets/icons/World-Wars.png') },
+  { value: 'ancient-civilizations', label: 'Ancient Civilizations', icon: require('@/assets/icons/Ancient-Civilizations.png') },
+  { value: 'science-discovery', label: 'Science & Discovery', icon: require('@/assets/icons/Science-Discovery.png') },
+  { value: 'inventions', label: 'Inventions', icon: require('@/assets/icons/Inventions.png') },
+  { value: 'natural-disasters', label: 'Natural Disasters', icon: require('@/assets/icons/Natural-Disasters.png') },
+  { value: 'art-culture', label: 'Art & Culture', icon: require('@/assets/icons/Art-Culture.png') },
+  { value: 'politics', label: 'Politics', icon: require('@/assets/icons/Politics.png') },
+  { value: 'civil-rights', label: 'Civil Rights', icon: require('@/assets/icons/Civil-Rights.png') },
+  { value: 'exploration', label: 'Exploration', icon: require('@/assets/icons/Explorations.png') },
 ];
+
+interface CategoryChipProps {
+  option: { value: CategoryOption; label: string; icon: any };
+  selected: boolean;
+  onPress: () => void;
+  themedStyles: any;
+  theme: ThemeDefinition;
+}
+
+const CategoryChip = ({ option, selected, onPress, themedStyles, theme }: CategoryChipProps) => {
+  const animatedBorderColor = useRef(new Animated.Value(selected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedBorderColor, {
+      toValue: selected ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [selected, animatedBorderColor]);
+
+  const borderColor = animatedBorderColor.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : theme.colors.borderSubtle,
+      theme.colors.accentPrimary,
+    ],
+  });
+
+  return (
+    <Animated.View style={{ borderColor, ...themedStyles.card }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
+        testID={`category-card-${option.value}`}
+        style={({ pressed }) => [
+          themedStyles.cardInner,
+          pressed && themedStyles.cardPressed,
+        ]}
+      >
+        <Image source={option.icon} style={themedStyles.cardIcon} />
+        <Text style={themedStyles.cardLabel}>{option.label}</Text>
+      </Pressable>
+    </Animated.View>
+  );
+};
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, mode } = theme;
@@ -28,7 +73,7 @@ const createStyles = (theme: ThemeDefinition) => {
 
   return StyleSheet.create({
     container: {
-      paddingHorizontal: spacing.xl,
+      paddingHorizontal: 20,
       paddingBottom: spacing.xxl,
       gap: spacing.xl,
     },
@@ -47,52 +92,36 @@ const createStyles = (theme: ThemeDefinition) => {
     cardGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: spacing.md,
-      paddingTop: spacing.lg,
-    },
-    cardWrapper: {
-      width: '47%',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingTop: spacing.md,
     },
     card: {
+      borderRadius: radius.pill,
+      borderWidth: 2,
+      overflow: 'hidden',
+    },
+    cardInner: {
       backgroundColor: mode === 'dark' ? colors.surfaceElevated : colors.surface,
-      borderRadius: radius.lg,
-      padding: spacing.lg,
-      minHeight: 140,
-      position: 'relative',
-      borderWidth: 1,
-      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : colors.borderSubtle,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
     },
     cardPressed: {
       opacity: 0.7,
     },
-    iconPlaceholder: {
-      width: 48,
-      height: 48,
-      marginBottom: spacing.md,
+    cardIcon: {
+      width: 25,
+      height: 25,
     },
     cardLabel: {
       fontFamily: sansFamily,
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: '400',
+      fontSize: 14,
+      lineHeight: 19,
+      fontWeight: '500',
       color: colors.textPrimary,
-    },
-    checkbox: {
-      position: 'absolute',
-      top: spacing.md,
-      right: spacing.md,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      borderWidth: 2,
-      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
-      backgroundColor: 'transparent',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    checkboxSelected: {
-      backgroundColor: '#5CB85C',
-      borderColor: '#5CB85C',
     },
   });
 };
@@ -121,10 +150,7 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[onboardingStyles.stepScroll, themedStyles.container]}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={[onboardingStyles.stepScroll, themedStyles.container]}>
       <View style={themedStyles.header}>
         <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
       </View>
@@ -133,35 +159,18 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
         {categoryOptions.map((option) => {
           const selected = state.categories.includes(option.value);
           return (
-            <View key={option.value} style={themedStyles.cardWrapper}>
-              <Pressable
-                onPress={() => toggleCategory(option.value)}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
-                testID={`category-card-${option.value}`}
-                style={({ pressed }) => [
-                  themedStyles.card,
-                  pressed && themedStyles.cardPressed,
-                ]}
-              >
-                {/* Icon placeholder - will be replaced with illustrations later */}
-                <View style={themedStyles.iconPlaceholder} />
-
-                <Text style={themedStyles.cardLabel}>{option.label}</Text>
-
-                {/* Checkbox */}
-                <View style={[themedStyles.checkbox, selected && themedStyles.checkboxSelected]}>
-                  {selected && (
-                    <Ionicons name="checkmark" size={18} color="white" />
-                  )}
-                </View>
-              </Pressable>
-            </View>
+            <CategoryChip
+              key={option.value}
+              option={option}
+              selected={selected}
+              onPress={() => toggleCategory(option.value)}
+              themedStyles={themedStyles}
+              theme={theme}
+            />
           );
         })}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useMemo, useRef } from 'react';
+import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type EraOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -8,15 +7,62 @@ import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { StepComponentProps } from '../types';
 import { styles as onboardingStyles } from '../styles';
 
-const options: { value: EraOption; label: string }[] = [
-  { value: 'prehistory', label: 'Prehistory' },
-  { value: 'ancient', label: 'Ancient Worlds' },
-  { value: 'medieval', label: 'Medieval' },
-  { value: 'early-modern', label: 'Early Modern' },
-  { value: 'nineteenth', label: '19th Century' },
-  { value: 'twentieth', label: '20th Century' },
-  { value: 'contemporary', label: 'Contemporary' },
+const options: { value: EraOption; label: string; icon: any }[] = [
+  { value: 'prehistory', label: 'Prehistory', icon: require('@/assets/icons/Prehistory.png') },
+  { value: 'ancient', label: 'Ancient Worlds', icon: require('@/assets/icons/Ancient-Worlds.png') },
+  { value: 'medieval', label: 'Medieval', icon: require('@/assets/icons/Medieval.png') },
+  { value: 'early-modern', label: 'Early Modern', icon: require('@/assets/icons/Early-Modern.png') },
+  { value: 'nineteenth', label: '19th Century', icon: require('@/assets/icons/19th-Century.png') },
+  { value: 'twentieth', label: '20th Century', icon: require('@/assets/icons/20th-Century.png') },
+  { value: 'contemporary', label: 'Contemporary', icon: require('@/assets/icons/Contemporary.png') },
 ];
+
+interface EraChipProps {
+  option: { value: EraOption; label: string; icon: any };
+  selected: boolean;
+  onPress: () => void;
+  themedStyles: any;
+  theme: ThemeDefinition;
+}
+
+const EraChip = ({ option, selected, onPress, themedStyles, theme }: EraChipProps) => {
+  const animatedBorderColor = useRef(new Animated.Value(selected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedBorderColor, {
+      toValue: selected ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [selected, animatedBorderColor]);
+
+  const borderColor = animatedBorderColor.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : theme.colors.borderSubtle,
+      theme.colors.accentPrimary,
+    ],
+  });
+
+  return (
+    <Animated.View style={{ borderColor, ...themedStyles.card }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
+        testID={`era-card-${option.value}`}
+        style={({ pressed }) => [
+          themedStyles.cardInner,
+          pressed && themedStyles.cardPressed,
+        ]}
+      >
+        <Image source={option.icon} style={themedStyles.cardIcon} />
+        <Text style={themedStyles.cardLabel}>{option.label}</Text>
+      </Pressable>
+    </Animated.View>
+  );
+};
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, mode } = theme;
@@ -25,13 +71,13 @@ const createStyles = (theme: ThemeDefinition) => {
 
   return StyleSheet.create({
     container: {
-      paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xxl,
-      gap: spacing.xl,
+      flex: 1,
+      paddingHorizontal: 20,
+      justifyContent: 'center',
     },
     header: {
       gap: spacing.sm,
-      paddingTop: spacing.md,
+      marginBottom: spacing.xl,
     },
     title: {
       fontFamily: serifFamily,
@@ -44,52 +90,35 @@ const createStyles = (theme: ThemeDefinition) => {
     cardGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: spacing.md,
-      paddingTop: spacing.lg,
-    },
-    cardWrapper: {
-      width: '47%',
+      justifyContent: 'center',
+      gap: spacing.sm,
     },
     card: {
+      borderRadius: radius.pill,
+      borderWidth: 2,
+      overflow: 'hidden',
+    },
+    cardInner: {
       backgroundColor: mode === 'dark' ? colors.surfaceElevated : colors.surface,
-      borderRadius: radius.lg,
-      padding: spacing.lg,
-      minHeight: 140,
-      position: 'relative',
-      borderWidth: 1,
-      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : colors.borderSubtle,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
     },
     cardPressed: {
       opacity: 0.7,
     },
-    iconPlaceholder: {
-      width: 48,
-      height: 48,
-      marginBottom: spacing.md,
+    cardIcon: {
+      width: 25,
+      height: 25,
     },
     cardLabel: {
       fontFamily: sansFamily,
-      fontSize: 17,
-      lineHeight: 22,
-      fontWeight: '400',
+      fontSize: 14,
+      lineHeight: 19,
+      fontWeight: '500',
       color: colors.textPrimary,
-    },
-    checkbox: {
-      position: 'absolute',
-      top: spacing.md,
-      right: spacing.md,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      borderWidth: 2,
-      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)',
-      backgroundColor: 'transparent',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    checkboxSelected: {
-      backgroundColor: '#5CB85C',
-      borderColor: '#5CB85C',
     },
   });
 };
@@ -109,10 +138,7 @@ const StepEras = ({ onNext }: StepComponentProps) => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[onboardingStyles.stepScroll, themedStyles.container]}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={[onboardingStyles.stepScroll, themedStyles.container]}>
       <View style={themedStyles.header}>
         <Text style={themedStyles.title}>Which eras do you{'\n'}prefer?</Text>
       </View>
@@ -121,35 +147,18 @@ const StepEras = ({ onNext }: StepComponentProps) => {
         {options.map((option) => {
           const selected = eras.includes(option.value);
           return (
-            <View key={option.value} style={themedStyles.cardWrapper}>
-              <Pressable
-                onPress={() => toggleOption(option.value)}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
-                testID={`era-card-${option.value}`}
-                style={({ pressed }) => [
-                  themedStyles.card,
-                  pressed && themedStyles.cardPressed,
-                ]}
-              >
-                {/* Icon placeholder - will be replaced with illustrations later */}
-                <View style={themedStyles.iconPlaceholder} />
-
-                <Text style={themedStyles.cardLabel}>{option.label}</Text>
-
-                {/* Checkbox */}
-                <View style={[themedStyles.checkbox, selected && themedStyles.checkboxSelected]}>
-                  {selected && (
-                    <Ionicons name="checkmark" size={18} color="white" />
-                  )}
-                </View>
-              </Pressable>
-            </View>
+            <EraChip
+              key={option.value}
+              option={option}
+              selected={selected}
+              onPress={() => toggleOption(option.value)}
+              themedStyles={themedStyles}
+              theme={theme}
+            />
           );
         })}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
