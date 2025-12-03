@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -71,6 +71,8 @@ export const PeekCarousel = <T,>({
   const spacerWidth = Math.max(sideInset - itemGap / 2, 0);
 
   const scrollX = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<Animated.FlatList<ExtendedItem<T>>>(null);
+  const isScrolling = useRef(false);
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const nextWidth = event.nativeEvent.layout.width;
@@ -79,26 +81,88 @@ export const PeekCarousel = <T,>({
     }
   }, []);
 
+  // Create infinite loop by triplicating data
   const extendedData: ExtendedItem<T>[] = useMemo(() => {
+    if (data.length === 0) return [];
+
     const items: ExtendedItem<T>[] = data.map((value, index) => ({
       type: 'item',
       key: keyExtractor ? keyExtractor(value, index) : `${index}`,
       value,
     }));
+
+    // Triplicate items for infinite scroll
+    const triplicatedItems = [
+      ...items.map((item, idx) => ({ ...item, key: `prev-${item.key}` })),
+      ...items,
+      ...items.map((item, idx) => ({ ...item, key: `next-${item.key}` })),
+    ];
+
     return [
       { type: 'spacer', key: 'peek-spacer-left' },
-      ...items,
+      ...triplicatedItems,
       { type: 'spacer', key: 'peek-spacer-right' },
     ];
   }, [data, keyExtractor]);
 
+  // Initialize scroll position to middle set
+  useEffect(() => {
+    if (data.length > 0 && flatListRef.current) {
+      const middleSetStartIndex = data.length + 1; // +1 for left spacer
+      const initialOffset = middleSetStartIndex * fullItemWidth;
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({
+          offset: initialOffset,
+          animated: false,
+        });
+      }, 100);
+    }
+  }, [data.length, fullItemWidth]);
+
   const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (data.length === 0) return;
+
     const offset = event.nativeEvent.contentOffset.x;
     const rawIndex = Math.round(offset / fullItemWidth);
-    const dataIndex = Math.min(Math.max(rawIndex - 1, 0), data.length - 1);
-    if (onIndexChange) {
-      onIndexChange(dataIndex);
+
+    // Account for left spacer
+    const indexWithinTriplicatedData = rawIndex - 1;
+
+    // Calculate which set we're in (prev, middle, next)
+    const totalItemsCount = data.length * 3;
+    const setSize = data.length;
+
+    // Get position within the triplicated items
+    let positionInSet = indexWithinTriplicatedData % setSize;
+    if (positionInSet < 0) positionInSet += setSize;
+
+    // Check if we need to jump to maintain infinite loop
+    if (indexWithinTriplicatedData < setSize / 2) {
+      // Near the start, jump to middle set
+      const newOffset = (setSize + indexWithinTriplicatedData + 1) * fullItemWidth;
+      flatListRef.current?.scrollToOffset({
+        offset: newOffset,
+        animated: false,
+      });
+    } else if (indexWithinTriplicatedData >= setSize * 2.5) {
+      // Near the end, jump to middle set
+      const newOffset = (setSize + indexWithinTriplicatedData - setSize * 2 + 1) * fullItemWidth;
+      flatListRef.current?.scrollToOffset({
+        offset: newOffset,
+        animated: false,
+      });
     }
+
+    if (onIndexChange) {
+      onIndexChange(positionInSet);
+    }
+
+    isScrolling.current = false;
+  };
+
+  const handleScrollBeginDrag = () => {
+    isScrolling.current = true;
   };
 
   const renderExtendedItem = ({ item, index }: { item: ExtendedItem<T>; index: number }) => {
@@ -131,6 +195,9 @@ export const PeekCarousel = <T,>({
       extrapolate: 'clamp',
     });
 
+    // Calculate the original data index for rendering
+    const originalDataIndex = dataIndex % data.length;
+
     return (
       <Animated.View
         style={[
@@ -142,13 +209,14 @@ export const PeekCarousel = <T,>({
           },
         ]}
       >
-        {renderItem({ item: item.value, index: dataIndex, progress })}
+        {renderItem({ item: item.value, index: originalDataIndex, progress })}
       </Animated.View>
     );
   };
 
   return (
     <Animated.FlatList
+      ref={flatListRef}
       data={extendedData}
       keyExtractor={(item) => item.key}
       renderItem={renderExtendedItem}
@@ -157,6 +225,7 @@ export const PeekCarousel = <T,>({
       snapToInterval={fullItemWidth}
       decelerationRate={Platform.OS === 'ios' ? 0 : 0.98}
       onMomentumScrollEnd={handleMomentumEnd}
+      onScrollBeginDrag={handleScrollBeginDrag}
       showsHorizontalScrollIndicator={false}
       bounces={false}
       style={{ flexGrow: 0 }}
