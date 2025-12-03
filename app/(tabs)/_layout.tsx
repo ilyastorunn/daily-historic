@@ -18,13 +18,12 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { spacing, colors } = theme;
-  // Ensure minimum spacing for devices without home indicator
+  const { spacing, colors, mode } = theme;
   const bottomInset = Math.max(insets.bottom, spacing.sm);
 
   return (
-    <View style={[styles.container, { paddingBottom: bottomInset }]}>
-      <View style={styles.dock}>
+    <View style={[styles.blurContainer, { paddingBottom: bottomInset }]}>
+      <View style={styles.contentWrapper}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const descriptor = descriptors[route.key];
@@ -65,14 +64,15 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
               key={route.key}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : undefined}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
+              accessibilityLabel={`${label}, tab ${index + 1} of ${state.routes.length}${isFocused ? ', selected' : ''}`}
               testID={options.tabBarTestID}
               onPress={onPress}
               onPressIn={handlePressIn}
               onLongPress={onLongPress}
               style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
             >
-              <View style={[styles.pill, isFocused && styles.pillActive]}>
+              {/* Icon and label - vertical stack */}
+              <View style={styles.itemContent}>
                 <IconSymbol
                   name={iconName}
                   size={22}
@@ -91,26 +91,34 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 const createStyles = (theme: ThemeDefinition) => {
-  const { colors, spacing, radius, typography, mode } = theme;
-  const dockBackground = colors.screen;
-  const accentWash = mode === 'dark' ? colors.accentMuted : colors.accentSoft;
-  const labelBase = typography.label;
+  const { colors, spacing, mode } = theme;
+  const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
 
   return StyleSheet.create({
-    container: {
-      // Flat design - no floating, attached to bottom
-      backgroundColor: dockBackground,
+    // Container with 24pt radius and translucent background
+    blurContainer: {
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      overflow: 'hidden',
+      backgroundColor:
+        mode === 'dark' ? 'rgba(27, 24, 19, 0.95)' : 'rgba(247, 244, 238, 0.95)',
+      shadowColor: colors.shadowColor,
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.borderSubtle,
+      borderTopColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
     },
-    dock: {
+    // Content wrapper with horizontal padding
+    contentWrapper: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      backgroundColor: dockBackground,
+      paddingTop: spacing.xs, // Minimal top padding (4pt)
     },
+    // Individual tab item
     item: {
       flex: 1,
       alignItems: 'center',
@@ -120,25 +128,23 @@ const createStyles = (theme: ThemeDefinition) => {
     itemPressed: {
       opacity: 0.75,
     },
-    pill: {
-      flexDirection: 'row',
+    // Vertical stack for icon and label
+    itemContent: {
+      flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      borderRadius: radius.pill,
+      gap: 2,
     },
-    pillActive: {
-      backgroundColor: accentWash,
-    },
+    // Label - compact typography (11pt)
     label: {
-      marginLeft: spacing.xs,
+      fontSize: 11,
+      lineHeight: 13,
+      fontWeight: '500',
+      letterSpacing: -0.1,
       color: colors.textSecondary,
-      fontSize: labelBase.fontSize,
-      lineHeight: labelBase.lineHeight,
-      fontWeight: labelBase.fontWeight,
+      fontFamily: sansFamily,
     },
     labelActive: {
+      fontWeight: '600',
       color: colors.accentPrimary,
     },
   });
