@@ -1,3 +1,5 @@
+import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,37 +15,31 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { Image, type ImageErrorEventData, type ImageLoadEventData } from 'expo-image';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FilterModal, type FilterState } from '@/components/explore/FilterModal';
+import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { heroEvent } from '@/constants/events';
 import { formatCategoryLabel } from '@/constants/personalization';
+import type { CategoryOption } from '@/contexts/onboarding-context';
 import { useUserContext } from '@/contexts/user-context';
-import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
+import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useStoryOfTheDay } from '@/hooks/use-story-of-the-day';
 import { useYMBI } from '@/hooks/use-ymbi';
-import { fetchEventsByIds } from '@/services/content';
-import { clearSOTDCache } from '@/services/story-of-the-day';
-import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { trackEvent } from '@/services/analytics';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
-import { getDateParts, parseIsoDate, formatIsoDateLabel } from '@/utils/dates';
+import { formatIsoDateLabel, getDateParts, parseIsoDate } from '@/utils/dates';
 import {
-  buildEventSearchText,
   getEventImageUri,
   getEventLocation,
   getEventSummary,
   getEventTitle,
-  getEventYearLabel,
+  getEventYearLabel
 } from '@/utils/event-presentation';
 import { createLinearGradientSource } from '@/utils/gradient';
-import { FilterModal, type FilterState } from '@/components/explore/FilterModal';
-import { StoryOfTheDay } from '@/components/explore/StoryOfTheDay';
-import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
-import { trackEvent } from '@/services/analytics';
 
 // API Configuration
 // TODO: Move to environment config
@@ -1259,7 +1255,7 @@ const ExploreScreen = () => {
       : undefined;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}

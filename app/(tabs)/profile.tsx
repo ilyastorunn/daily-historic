@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import {
   Linking,
@@ -10,14 +11,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
-import { useUserContext } from '@/contexts/user-context';
-import { SelectableChip } from '@/components/ui/selectable-chip';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useAppTheme, type ThemeDefinition } from '@/theme';
-import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
 import { ThemeToggle } from '@/components/profile/ThemeToggle';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { SelectableChip } from '@/components/ui/selectable-chip';
+import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
+import { useUserContext } from '@/contexts/user-context';
+import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 const CATEGORY_CHOICES: { value: CategoryOption; label: string }[] = [
   { value: 'world-wars', label: 'World Wars' },
@@ -253,7 +253,7 @@ const ProfileScreen = () => {
   const digestEnabled = profile?.notificationEnabled ?? true;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}

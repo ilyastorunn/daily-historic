@@ -1,3 +1,5 @@
+import { Image, type ImageErrorEventData, type ImageLoadEventData, type ImageSource } from 'expo-image';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
@@ -10,27 +12,25 @@ import {
   View,
   type LayoutChangeEvent,
 } from 'react-native';
-import { Image, type ImageErrorEventData, type ImageLoadEventData, type ImageSource } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
-import { heroEvent } from '@/constants/events';
+import { SavedStories } from '@/components/explore/SavedStories';
+import { CategoryExploreGrid } from '@/components/home/CategoryExploreGrid';
+import { TimeMachineBlock } from '@/components/home/TimeMachineBlock';
+import { WeeklyCollectionsGrid } from '@/components/home/WeeklyCollectionsGrid';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PeekCarousel } from '@/components/ui/peek-carousel';
+import { heroEvent } from '@/constants/events';
+import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement, type ReactionType } from '@/hooks/use-event-engagement';
-import { useUserContext } from '@/contexts/user-context';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useTimeMachine } from '@/hooks/use-time-machine';
+import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
+import { trackEvent } from '@/services/analytics';
+import { fetchEventsByIds } from '@/services/content';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
-import { trackEvent } from '@/services/analytics';
-import { WeeklyCollectionsGrid } from '@/components/home/WeeklyCollectionsGrid';
-import { CategoryExploreGrid } from '@/components/home/CategoryExploreGrid';
-import { SavedStories } from '@/components/explore/SavedStories';
-import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
-import { fetchEventsByIds } from '@/services/content';
 import { getDateParts, getIsoWeekKey } from '@/utils/dates';
-import { createLinearGradientSource } from '@/utils/gradient';
-import { getImageUri } from '@/utils/image-source';
 import {
   getEventImageUri,
   getEventLocation,
@@ -39,8 +39,8 @@ import {
   getEventTitle,
   getEventYearLabel,
 } from '@/utils/event-presentation';
-import { TimeMachineBlock } from '@/components/home/TimeMachineBlock';
-import { useTimeMachine } from '@/hooks/use-time-machine';
+import { createLinearGradientSource } from '@/utils/gradient';
+import { getImageUri } from '@/utils/image-source';
 
 const reactions: { id: ReactionType; emoji: string; label: string }[] = [
   { id: 'appreciate', emoji: '👍', label: 'Appreciate' },
@@ -875,7 +875,7 @@ const HomeScreen = () => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
