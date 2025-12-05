@@ -201,36 +201,23 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     engagementRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: spacing.xs,
+      justifyContent: 'center',
+      gap: spacing.md,
       marginTop: spacing.lg,
     },
     engagementButton: {
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       backgroundColor: 'transparent',
-      flex: 1,
     },
     engagementButtonActive: {
       borderColor: colors.accentPrimary,
       backgroundColor: colors.accentSoft,
-    },
-    engagementLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
-      fontWeight: '500',
-    },
-    engagementLabelActive: {
-      color: colors.accentPrimary,
-      fontWeight: '600',
     },
     sectionHelper: {
       fontFamily: sansFamily,
@@ -422,6 +409,7 @@ const HeroCarouselCard = React.memo(
         <View style={styles.engagementRow}>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Like"
             accessibilityState={{ selected: isLiked }}
             onPress={toggleLike}
             style={({ pressed }) => [
@@ -432,23 +420,23 @@ const HeroCarouselCard = React.memo(
           >
             <IconSymbol
               name={isLiked ? 'heart.fill' : 'heart'}
-              size={20}
+              size={22}
               color={isLiked ? theme.colors.accentPrimary : theme.colors.textSecondary}
             />
-            <Text style={[styles.engagementLabel, isLiked && styles.engagementLabelActive]}>Like</Text>
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Deep Dive"
             onPress={handleDeepDive}
             style={({ pressed }) => [styles.engagementButton, pressed && { opacity: 0.85 }]}
           >
-            <IconSymbol name="book" size={20} color={theme.colors.textSecondary} />
-            <Text style={styles.engagementLabel}>Deep Dive</Text>
+            <IconSymbol name="book" size={22} color={theme.colors.textSecondary} />
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Save"
             accessibilityState={{ selected: isSaved }}
             onPress={toggleSave}
             style={({ pressed }) => [
@@ -459,19 +447,18 @@ const HeroCarouselCard = React.memo(
           >
             <IconSymbol
               name={isSaved ? 'bookmark.fill' : 'bookmark'}
-              size={20}
+              size={22}
               color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
             />
-            <Text style={[styles.engagementLabel, isSaved && styles.engagementLabelActive]}>Save</Text>
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Share"
             onPress={handleShare}
             style={({ pressed }) => [styles.engagementButton, pressed && { opacity: 0.85 }]}
           >
-            <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
-            <Text style={styles.engagementLabel}>Share</Text>
+            <IconSymbol name="square.and.arrow.up" size={22} color={theme.colors.textSecondary} />
           </Pressable>
         </View>
       </View>
