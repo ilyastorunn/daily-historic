@@ -102,6 +102,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
             setProfile(null);
           } else {
             const savedEventIds = Array.isArray(data.savedEventIds) ? data.savedEventIds : [];
+            const likedEventIds = Array.isArray(data.likedEventIds) ? data.likedEventIds : [];
             const reactions =
               data.reactions && typeof data.reactions === 'object' ? data.reactions : {};
             const categories = Array.isArray(data.categories) ? data.categories : [];
@@ -114,6 +115,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
               categories,
               eras,
               savedEventIds,
+              likedEventIds,
               reactions,
               categoriesSkipped,
             });
@@ -157,6 +159,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         updatedAt: timestamp,
         ...(profile?.createdAt ? {} : { createdAt: timestamp }),
         savedEventIds: profile?.savedEventIds ?? [],
+        likedEventIds: profile?.likedEventIds ?? [],
         reactions: profile?.reactions ?? {},
       };
 

@@ -23,7 +23,7 @@ import { PeekCarousel } from '@/components/ui/peek-carousel';
 import { heroEvent } from '@/constants/events';
 import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
-import { useEventEngagement, type ReactionType } from '@/hooks/use-event-engagement';
+import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useTimeMachine } from '@/hooks/use-time-machine';
 import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
 import { trackEvent } from '@/services/analytics';
@@ -42,10 +42,7 @@ import {
 import { createLinearGradientSource } from '@/utils/gradient';
 import { getImageUri } from '@/utils/image-source';
 
-const reactions: { id: ReactionType; emoji: string; label: string }[] = [
-  { id: 'appreciate', emoji: '👍', label: 'Appreciate' },
-  { id: 'insight', emoji: '💡', label: 'Insight' },
-];
+// Reactions removed - using Like + Deep Dive + Save + Share instead
 
 type HeroCarouselItem = {
   id: string;
@@ -75,19 +72,19 @@ const buildStyles = (theme: ThemeDefinition) => {
       backgroundColor: colors.screen,
     },
     scrollContent: {
-      paddingHorizontal: spacing.xl,
+      paddingHorizontal: spacing.lg,
       paddingTop: spacing.xl,
       paddingBottom: spacing.md, // Reduced to minimize gap above tab bar
-      gap: spacing.xl,
+      gap: spacing.lg, // 20pt - NorthStar minimum
     },
     sectionHeader: {
       gap: spacing.xs,
     },
     heroCarouselContainer: {
-      gap: spacing.sm,
+      gap: 0,
     },
     moduleSpacing: {
-      marginTop: spacing.xl,
+      marginTop: spacing.md,
     },
     bottomSpacer: {
       height: spacing.xxl + spacing.lg,
@@ -141,19 +138,6 @@ const buildStyles = (theme: ThemeDefinition) => {
       letterSpacing: 0.6,
       textTransform: 'uppercase',
     },
-    carouselIndicator: {
-      alignSelf: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: radius.pill,
-      backgroundColor: colors.surfaceSubtle,
-    },
-    carouselIndicatorText: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
-      letterSpacing: 0.3,
-    },
     heroCard: {
       borderRadius: 16,
       overflow: 'hidden',
@@ -167,7 +151,7 @@ const buildStyles = (theme: ThemeDefinition) => {
       elevation: 8,
     },
     heroMedia: {
-      height: 240,
+      height: 360,
       position: 'relative',
     },
     heroImage: {
@@ -215,106 +199,38 @@ const buildStyles = (theme: ThemeDefinition) => {
       lineHeight: typography.helper.lineHeight,
       color: colors.textTertiary,
     },
-    actionsRow: {
+    engagementRow: {
       flexDirection: 'row',
-      gap: spacing.sm,
-      marginTop: spacing.md,
+      justifyContent: 'space-between',
+      gap: spacing.xs,
+      marginTop: spacing.lg,
     },
-    primaryAction: {
-      flex: 1,
+    engagementButton: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 14,
-      borderRadius: radius.pill,
-      backgroundColor: colors.accentPrimary,
-      shadowColor: colors.shadowColor,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.18,
-      shadowRadius: 18,
-      elevation: 4,
-    },
-    primaryPressed: {
-      opacity: 0.9,
-    },
-    primaryLabel: {
-      fontFamily: sansFamily,
-      fontSize: 15,
-      fontWeight: '600',
-      letterSpacing: 0.3,
-      color: colors.surface,
-    },
-    secondaryAction: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 14,
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       backgroundColor: 'transparent',
+      flex: 1,
     },
-    secondaryPressed: {
-      opacity: 0.85,
-    },
-    secondaryLabel: {
-      fontFamily: sansFamily,
-      fontSize: 15,
-      fontWeight: '500',
-      letterSpacing: 0.3,
-      color: colors.textPrimary,
-    },
-    engagementSurface: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-      marginTop: spacing.lg,
-    },
-    reactionGroup: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    reactionChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      minWidth: 56,
-    },
-    reactionChipActive: {
+    engagementButtonActive: {
       borderColor: colors.accentPrimary,
       backgroundColor: colors.accentSoft,
     },
-    reactionLabel: {
+    engagementLabel: {
       fontFamily: sansFamily,
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
+      fontWeight: '500',
     },
-    reactionLabelActive: {
+    engagementLabelActive: {
       color: colors.accentPrimary,
       fontWeight: '600',
-    },
-    actionIconButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-      minWidth: 56,
-    },
-    actionIconLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
     },
     sectionHelper: {
       fontFamily: sansFamily,
@@ -415,22 +331,17 @@ type HeroCarouselCardProps = {
 
 const HeroCarouselCard = React.memo(
   ({ item, index, styles, theme, heroGradient, onOpen, onCardOpened, onCtaPress, onShare, isSkeleton }: HeroCarouselCardProps) => {
-  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(item.id);
+  const { isSaved, isLiked, toggleSave, toggleLike } = useEventEngagement(item.id);
 
   const handleOpenDetail = useCallback(() => {
     onCardOpened(item.id, index);
     onOpen(item.id);
   }, [index, item.id, onCardOpened, onOpen]);
 
-  const handlePrimaryPress = useCallback(() => {
-    onCtaPress(item.id, index, 'continue');
-    onOpen(item.id);
-  }, [index, item.id, onCtaPress, onOpen]);
-
-  const handleSecondaryPress = useCallback(() => {
-    onCtaPress(item.id, index, 'preview');
-    onOpen(item.id);
-  }, [index, item.id, onCtaPress, onOpen]);
+  const handleDeepDive = useCallback(() => {
+    // TODO: Implement Deep Dive navigation after card redesign is complete
+    console.log('[Deep Dive] Placeholder for event:', item.id);
+  }, [item.id]);
 
   const handleShare = useCallback(async () => {
     try {
@@ -508,72 +419,60 @@ const HeroCarouselCard = React.memo(
         <Text style={styles.heroSummary}>{item.summary}</Text>
         {item.meta ? <Text style={styles.heroMeta}>{item.meta}</Text> : null}
 
-        <View style={styles.actionsRow}>
-          <Pressable accessibilityRole="button" onPress={handlePrimaryPress} style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryPressed]}>
-            <Text style={styles.primaryLabel}>Continue</Text>
-          </Pressable>
+        <View style={styles.engagementRow}>
           <Pressable
             accessibilityRole="button"
-            onPress={handleSecondaryPress}
-            style={({ pressed }) => [styles.secondaryAction, pressed && styles.secondaryPressed]}
+            accessibilityState={{ selected: isLiked }}
+            onPress={toggleLike}
+            style={({ pressed }) => [
+              styles.engagementButton,
+              isLiked && styles.engagementButtonActive,
+              pressed && { opacity: 0.85 },
+            ]}
           >
-            <Text style={styles.secondaryLabel}>Preview</Text>
+            <IconSymbol
+              name={isLiked ? 'heart.fill' : 'heart'}
+              size={20}
+              color={isLiked ? theme.colors.accentPrimary : theme.colors.textSecondary}
+            />
+            <Text style={[styles.engagementLabel, isLiked && styles.engagementLabelActive]}>Like</Text>
           </Pressable>
-        </View>
 
-        <View style={styles.engagementSurface}>
-          <View style={styles.reactionGroup}>
-            {reactions.map((reactionOption) => {
-              const isActive = reaction === reactionOption.id;
-              return (
-                <Pressable
-                  key={reactionOption.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isActive }}
-                  onPress={() => toggleReaction(reactionOption.id)}
-                  style={({ pressed }) => [
-                    styles.reactionChip,
-                    isActive && styles.reactionChipActive,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Text accessibilityLabel={`${reactionOption.label} reaction`}>{reactionOption.emoji}</Text>
-                  <Text style={[styles.reactionLabel, isActive && styles.reactionLabelActive]}>
-                    {reactionOption.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleDeepDive}
+            style={({ pressed }) => [styles.engagementButton, pressed && { opacity: 0.85 }]}
+          >
+            <IconSymbol name="book" size={20} color={theme.colors.textSecondary} />
+            <Text style={styles.engagementLabel}>Deep Dive</Text>
+          </Pressable>
 
-          <View style={styles.reactionGroup}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSaved }}
-              onPress={toggleSave}
-              style={({ pressed }) => [
-                styles.actionIconButton,
-                isSaved && styles.reactionChipActive,
-                pressed && { opacity: 0.85 },
-              ]}
-            >
-              <IconSymbol
-                name={isSaved ? 'bookmark.fill' : 'bookmark'}
-                size={20}
-                color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
-              />
-              <Text style={[styles.actionIconLabel, isSaved && styles.reactionLabelActive]}>Save</Text>
-            </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSaved }}
+            onPress={toggleSave}
+            style={({ pressed }) => [
+              styles.engagementButton,
+              isSaved && styles.engagementButtonActive,
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <IconSymbol
+              name={isSaved ? 'bookmark.fill' : 'bookmark'}
+              size={20}
+              color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
+            />
+            <Text style={[styles.engagementLabel, isSaved && styles.engagementLabelActive]}>Save</Text>
+          </Pressable>
 
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleShare}
-              style={({ pressed }) => [styles.actionIconButton, pressed && { opacity: 0.85 }]}
-            >
-              <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
-              <Text style={styles.actionIconLabel}>Share</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleShare}
+            style={({ pressed }) => [styles.engagementButton, pressed && { opacity: 0.85 }]}
+          >
+            <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
+            <Text style={styles.engagementLabel}>Share</Text>
+          </Pressable>
         </View>
       </View>
     </Pressable>
@@ -733,9 +632,9 @@ const HomeScreen = () => {
 
   const fallbackHeroWidth = useMemo(() => {
     const screenWidth = Dimensions.get('window').width;
-    const horizontalPadding = theme.spacing.xl * 2;
+    const horizontalPadding = theme.spacing.lg * 2;
     return Math.max(screenWidth - horizontalPadding, 320);
-  }, [theme.spacing.xl]);
+  }, [theme.spacing.lg]);
 
   const computedHeroWidth = heroCarouselWidth ?? fallbackHeroWidth;
 
@@ -885,7 +784,10 @@ const HomeScreen = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>Today’s Moment</Text>
+            <Text style={styles.sectionLabel}>Today's Moment</Text>
+            <Text style={styles.sectionHelper}>
+              {new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date(today.isoDate))}
+            </Text>
             {statusMessage ? <Text style={styles.sectionHelper}>{statusMessage}</Text> : null}
           </View>
 
@@ -912,13 +814,6 @@ const HomeScreen = () => {
               )}
               testID="home-hero-carousel"
             />
-            {!digestLoading && displayHeroItems.length > 1 ? (
-              <View style={styles.carouselIndicator}>
-                <Text style={styles.carouselIndicatorText}>
-                  {activeHeroIndex + 1}/{displayHeroItems.length}
-                </Text>
-              </View>
-            ) : null}
           </View>
 
           <View style={styles.moduleSpacing}>

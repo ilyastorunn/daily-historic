@@ -16,23 +16,29 @@ export type ReactionType = ReactionValue;
 
 type UseEventEngagementReturn = {
   isSaved: boolean;
+  isLiked: boolean;
   reaction: ReactionType | null;
   toggleSave: () => void;
+  toggleLike: () => void;
   toggleReaction: (type: ReactionType) => void;
 };
 
 export const useEventEngagement = (eventId: string): UseEventEngagementReturn => {
   const { authUser, profile } = useUserContext();
   const [optimisticSave, setOptimisticSave] = useState<boolean | null>(null);
+  const [optimisticLike, setOptimisticLike] = useState<boolean | null>(null);
   const [optimisticReaction, setOptimisticReaction] = useState<ReactionType | null | undefined>(
     undefined
   );
 
   const savedEventIds = profile?.savedEventIds ?? [];
+  const likedEventIds = profile?.likedEventIds ?? [];
   const defaultSaved = useMemo(() => savedEventIds.includes(eventId), [savedEventIds, eventId]);
+  const defaultLiked = useMemo(() => likedEventIds.includes(eventId), [likedEventIds, eventId]);
   const defaultReaction = profile?.reactions?.[eventId] ?? null;
 
   const isSaved = optimisticSave ?? defaultSaved;
+  const isLiked = optimisticLike ?? defaultLiked;
   const reaction = optimisticReaction === undefined ? defaultReaction : optimisticReaction;
 
   useEffect(() => {
@@ -43,6 +49,15 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
       setOptimisticSave(null);
     }
   }, [defaultSaved, optimisticSave]);
+
+  useEffect(() => {
+    if (optimisticLike === null) {
+      return;
+    }
+    if (defaultLiked === optimisticLike) {
+      setOptimisticLike(null);
+    }
+  }, [defaultLiked, optimisticLike]);
 
   useEffect(() => {
     if (optimisticReaction === undefined) {
@@ -74,6 +89,27 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
     });
   }, [authUser, defaultSaved, eventId]);
 
+  const toggleLike = useCallback(() => {
+    if (!authUser) {
+      console.warn('toggleLike called without an authenticated user');
+      return;
+    }
+
+    const nextLiked = !defaultLiked;
+    setOptimisticLike(nextLiked);
+
+    const docRef = doc(firebaseFirestore, USERS_COLLECTION, authUser.uid);
+
+    const mutation = nextLiked
+      ? setDoc(docRef, { likedEventIds: arrayUnion(eventId) }, { merge: true })
+      : setDoc(docRef, { likedEventIds: arrayRemove(eventId) }, { merge: true });
+
+    mutation.catch((error) => {
+      console.error('Failed to toggle like state', error);
+      setOptimisticLike(null);
+    });
+  }, [authUser, defaultLiked, eventId]);
+
   const toggleReaction = useCallback(
     (type: ReactionType) => {
       if (!authUser) {
@@ -100,8 +136,10 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
 
   return {
     isSaved,
+    isLiked,
     reaction,
     toggleSave,
+    toggleLike,
     toggleReaction,
   };
 };

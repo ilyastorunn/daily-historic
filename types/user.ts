@@ -12,6 +12,7 @@ export type ReactionMap = Record<string, ReactionValue>;
 
 export interface UserEngagementState {
   savedEventIds: string[];
+  likedEventIds: string[];
   reactions: ReactionMap;
 }
 
@@ -55,6 +56,7 @@ export interface UserDocument extends OnboardingData {
   uid: string;
   onboardingCompleted: boolean;
   savedEventIds?: string[] | FirebaseFirestoreTypes.FieldValue;
+  likedEventIds?: string[] | FirebaseFirestoreTypes.FieldValue;
   reactions?: ReactionMap | FirebaseFirestoreTypes.FieldValue;
   createdAt?: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp;
   updatedAt?: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp;
