@@ -31,10 +31,7 @@ import {
   selectPrimaryPage,
 } from '@/utils/event-presentation';
 
-const reactions = [
-  { id: 'appreciate' as const, emoji: '👍', label: 'Appreciate' },
-  { id: 'insight' as const, emoji: '💡', label: 'Insight' },
-];
+// Reactions removed - using Like + Deep Dive + Save + Share instead
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography } = theme;
@@ -147,53 +144,23 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     engagementRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: 'center',
+      gap: spacing.md,
+      marginTop: spacing.lg,
+    },
+    engagementButton: {
       alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-    },
-    reactionGroup: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-    reactionChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-    },
-    reactionActive: {
-      borderColor: colors.accentPrimary,
-      backgroundColor: colors.accentSoft,
-    },
-    reactionLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
-    },
-    reactionLabelActive: {
-      color: colors.accentPrimary,
-      fontWeight: '600',
-    },
-    actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
+      justifyContent: 'center',
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       backgroundColor: 'transparent',
     },
-    actionLabel: {
-      fontFamily: sansFamily,
-      fontSize: typography.helper.fontSize,
-      color: colors.textSecondary,
+    engagementButtonActive: {
+      borderColor: colors.accentPrimary,
+      backgroundColor: colors.accentSoft,
     },
     sourceList: {
       gap: spacing.xs,
@@ -249,9 +216,23 @@ const EventDetailScreen = () => {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    source?: string;
+    carouselIndex?: string;
+    carouselItemIds?: string;
+  }>();
   const rawId = params.id;
   const eventIdParam = Array.isArray(rawId) ? rawId[0] : rawId ?? null;
+  const source = Array.isArray(params.source) ? params.source[0] : params.source;
+  const carouselIndex = params.carouselIndex ? parseInt(Array.isArray(params.carouselIndex) ? params.carouselIndex[0] : params.carouselIndex) : undefined;
+  const carouselItemIds = params.carouselItemIds
+    ? (Array.isArray(params.carouselItemIds) ? params.carouselItemIds[0] : params.carouselItemIds).split(',')
+    : undefined;
+
+  const isFromCarousel = source === 'home-carousel';
+  const hasNext = isFromCarousel && carouselIndex !== undefined && carouselItemIds !== undefined && carouselIndex < carouselItemIds.length - 1;
+  const nextEventId = hasNext && carouselIndex !== undefined && carouselItemIds ? carouselItemIds[carouselIndex + 1] : undefined;
   const staticEvent = useMemo(() => (eventIdParam ? getEventById(eventIdParam) : null), [eventIdParam]);
   const { event: fetchedEvent, loading: remoteLoading, error: remoteError } = useEventContent(eventIdParam);
   const [imageLoadError, setImageLoadError] = React.useState(false);
@@ -263,7 +244,7 @@ const EventDetailScreen = () => {
     [dynamicImageUri, fallbackImageSource, imageLoadError]
   );
   const displayEventId = fetchedEvent?.eventId ?? staticEvent?.id ?? eventIdParam ?? heroEvent.id;
-  const { isSaved, reaction, toggleReaction, toggleSave } = useEventEngagement(displayEventId);
+  const { isSaved, isLiked, toggleSave, toggleLike } = useEventEngagement(displayEventId);
   const title = fetchedEvent ? getEventTitle(fetchedEvent) : staticEvent?.title ?? heroEvent.title;
   const summary = fetchedEvent ? getEventSummary(fetchedEvent) : staticEvent?.summary ?? heroEvent.summary;
   const yearBadge = fetchedEvent ? getEventYearLabel(fetchedEvent) : staticEvent?.year ?? '';
@@ -357,6 +338,20 @@ const EventDetailScreen = () => {
     [displayEventId, heroImageUri]
   );
 
+  const handleNext = useCallback(() => {
+    if (!nextEventId || carouselIndex === undefined || !carouselItemIds) return;
+
+    router.push({
+      pathname: '/event/[id]',
+      params: {
+        id: nextEventId,
+        source: 'home-carousel',
+        carouselIndex: String(carouselIndex + 1),
+        carouselItemIds: carouselItemIds.join(','),
+      },
+    });
+  }, [nextEventId, carouselIndex, carouselItemIds, router]);
+
   if (!hasEvent && remoteLoading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
@@ -420,60 +415,62 @@ const EventDetailScreen = () => {
               {heroMeta ? <Text style={styles.heroMeta}>{heroMeta}</Text> : null}
 
               <View style={styles.engagementRow}>
-                <View style={styles.reactionGroup}>
-                  {reactions.map((item) => {
-                    const active = reaction === item.id;
-                    return (
-                      <Pressable
-                        key={item.id}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: active }}
-                        onPress={() => toggleReaction(item.id)}
-                        style={({ pressed }) => [
-                          styles.reactionChip,
-                          active && styles.reactionActive,
-                          pressed && { opacity: 0.85 },
-                        ]}
-                      >
-                        <Text>{item.emoji}</Text>
-                        <Text style={[styles.reactionLabel, active && styles.reactionLabelActive]}>
-                          {item.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Like"
+                  accessibilityState={{ selected: isLiked }}
+                  onPress={toggleLike}
+                  style={({ pressed }) => [
+                    styles.engagementButton,
+                    isLiked && styles.engagementButtonActive,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                >
+                  <IconSymbol
+                    name={isLiked ? 'heart.fill' : 'heart'}
+                    size={22}
+                    color={isLiked ? theme.colors.accentPrimary : theme.colors.textSecondary}
+                  />
+                </Pressable>
 
-                <View style={styles.reactionGroup}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isSaved }}
-                    onPress={toggleSave}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      isSaved && styles.reactionActive,
-                      pressed && { opacity: 0.85 },
-                    ]}
-                  >
-                    <IconSymbol
-                      name={isSaved ? 'bookmark.fill' : 'bookmark'}
-                      size={20}
-                      color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
-                    />
-                    <Text style={[styles.actionLabel, isSaved && styles.reactionLabelActive]}>
-                      {isSaved ? 'Saved' : 'Save'}
-                    </Text>
-                  </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Deep Dive"
+                  onPress={() => {
+                    // TODO: Implement Deep Dive navigation
+                    console.log('[Deep Dive] Placeholder for event:', displayEventId);
+                  }}
+                  style={({ pressed }) => [styles.engagementButton, pressed && { opacity: 0.85 }]}
+                >
+                  <IconSymbol name="book" size={22} color={theme.colors.textSecondary} />
+                </Pressable>
 
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={handleShare}
-                    style={({ pressed }) => [styles.actionButton, pressed && { opacity: 0.85 }]}
-                  >
-                    <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.textSecondary} />
-                    <Text style={styles.actionLabel}>Share</Text>
-                  </Pressable>
-                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Save"
+                  accessibilityState={{ selected: isSaved }}
+                  onPress={toggleSave}
+                  style={({ pressed }) => [
+                    styles.engagementButton,
+                    isSaved && styles.engagementButtonActive,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                >
+                  <IconSymbol
+                    name={isSaved ? 'bookmark.fill' : 'bookmark'}
+                    size={22}
+                    color={isSaved ? theme.colors.accentPrimary : theme.colors.textSecondary}
+                  />
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Share"
+                  onPress={handleShare}
+                  style={({ pressed }) => [styles.engagementButton, pressed && { opacity: 0.85 }]}
+                >
+                  <IconSymbol name="square.and.arrow.up" size={22} color={theme.colors.textSecondary} />
+                </Pressable>
               </View>
             </View>
           </View>
@@ -524,13 +521,16 @@ const EventDetailScreen = () => {
             <IconSymbol name="chevron.right" size={18} color="#fff" style={{ transform: [{ rotate: '180deg' }] }} />
             <Text style={styles.navLabel}>Back</Text>
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleShare}
-            style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
-          >
-            <IconSymbol name="square.and.arrow.up" size={18} color="#fff" />
-          </Pressable>
+          {hasNext ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Next story"
+              onPress={handleNext}
+              style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.85 }]}
+            >
+              <IconSymbol name="chevron.right" size={18} color="#fff" />
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </SafeAreaView>

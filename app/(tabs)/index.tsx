@@ -306,10 +306,11 @@ type HeroCarouselCta = 'continue' | 'preview';
 type HeroCarouselCardProps = {
   item: HeroCarouselItem;
   index: number;
+  allItemIds: string[];
   styles: ReturnType<typeof buildStyles>;
   theme: ThemeDefinition;
   heroGradient: ImageSource;
-  onOpen: (eventId: string) => void;
+  onOpen: (eventId: string, source?: string, carouselIndex?: number, carouselItemIds?: string[]) => void;
   onCardOpened: (eventId: string, index: number) => void;
   onCtaPress: (eventId: string, index: number, cta: HeroCarouselCta) => void;
   onShare?: (eventId: string, index: number) => void;
@@ -317,13 +318,13 @@ type HeroCarouselCardProps = {
 };
 
 const HeroCarouselCard = React.memo(
-  ({ item, index, styles, theme, heroGradient, onOpen, onCardOpened, onCtaPress, onShare, isSkeleton }: HeroCarouselCardProps) => {
+  ({ item, index, allItemIds, styles, theme, heroGradient, onOpen, onCardOpened, onCtaPress, onShare, isSkeleton }: HeroCarouselCardProps) => {
   const { isSaved, isLiked, toggleSave, toggleLike } = useEventEngagement(item.id);
 
   const handleOpenDetail = useCallback(() => {
     onCardOpened(item.id, index);
-    onOpen(item.id);
-  }, [index, item.id, onCardOpened, onOpen]);
+    onOpen(item.id, 'home-carousel', index, allItemIds);
+  }, [index, item.id, allItemIds, onCardOpened, onOpen]);
 
   const handleDeepDive = useCallback(() => {
     // TODO: Implement Deep Dive navigation after card redesign is complete
@@ -699,8 +700,13 @@ const HomeScreen = () => {
   }, [profile?.savedEventIds]);
 
   const handleOpenEvent = useCallback(
-    (eventId: string) => {
-      router.push({ pathname: '/event/[id]', params: { id: eventId } });
+    (eventId: string, source?: string, carouselIndex?: number, carouselItemIds?: string[]) => {
+      const params: Record<string, string> = { id: eventId };
+      if (source) params.source = source;
+      if (carouselIndex !== undefined) params.carouselIndex = String(carouselIndex);
+      if (carouselItemIds) params.carouselItemIds = carouselItemIds.join(',');
+
+      router.push({ pathname: '/event/[id]', params });
     },
     [router]
   );
@@ -789,6 +795,7 @@ const HomeScreen = () => {
                 <HeroCarouselCard
                   item={item}
                   index={index}
+                  allItemIds={displayHeroItems.map((i) => i.id)}
                   styles={styles}
                   theme={theme}
                   heroGradient={heroGradient}
