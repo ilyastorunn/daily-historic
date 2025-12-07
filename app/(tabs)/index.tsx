@@ -75,16 +75,14 @@ const buildStyles = (theme: ThemeDefinition) => {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.xl,
       paddingBottom: spacing.md, // Reduced to minimize gap above tab bar
-      gap: spacing.lg, // 20pt - NorthStar minimum
+      gap: spacing.xxl, // 40pt - Generous spacing for better breathability
     },
     sectionHeader: {
       gap: spacing.xs,
     },
     heroCarouselContainer: {
       gap: 0,
-    },
-    moduleSpacing: {
-      marginTop: spacing.md,
+      marginTop: -28, // Reduce gap between header and carousel (40pt - 28pt = 12pt)
     },
     bottomSpacer: {
       height: spacing.xxl + spacing.lg,
@@ -810,40 +808,32 @@ const HomeScreen = () => {
             />
           </View>
 
-          <View style={styles.moduleSpacing}>
-            <WeeklyCollectionsGrid
-              items={weeklyCollections}
-              loading={weeklyCollectionsLoading}
-              onOpen={handleOpenCollection}
-              onSeeAll={handleSeeAllCollections}
-              testID="home-weekly-collections"
-            />
-          </View>
+          <WeeklyCollectionsGrid
+            items={weeklyCollections}
+            loading={weeklyCollectionsLoading}
+            onOpen={handleOpenCollection}
+            onSeeAll={handleSeeAllCollections}
+            testID="home-weekly-collections"
+          />
 
-          <View style={styles.moduleSpacing}>
-            <TimeMachineBlock
-              premium={isPremiumUser}
-              imageUrl={timeMachineImage}
-              subtitle="Guided timeline journeys."
-              onPress={handleTimeMachinePress}
-              onTeaser={handleTimeMachineTeaser}
-              loading={timeMachineLoading || timeMachineSeeding}
-              testID="home-time-machine"
-            />
-          </View>
+          <TimeMachineBlock
+            premium={isPremiumUser}
+            imageUrl={timeMachineImage}
+            subtitle="Guided timeline journeys."
+            onPress={handleTimeMachinePress}
+            onTeaser={handleTimeMachineTeaser}
+            loading={timeMachineLoading || timeMachineSeeding}
+            testID="home-time-machine"
+          />
 
-          <View style={styles.moduleSpacing}>
-            <CategoryExploreGrid testID="home-category-explore" />
-          </View>
+          <CategoryExploreGrid testID="home-category-explore" />
 
           {savedEventsData.length > 0 && (
-            <View style={styles.moduleSpacing}>
-              <SavedStories
-                savedEvents={savedEventsData}
-                loading={savedEventsLoading}
-                onEventPress={handleSavedStoryPress}
-              />
-            </View>
+            <SavedStories
+              savedEvents={savedEventsData}
+              loading={savedEventsLoading}
+              onEventPress={handleSavedStoryPress}
+            />
           )}
 
           <View style={styles.bottomSpacer} />
