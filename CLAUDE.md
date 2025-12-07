@@ -52,10 +52,21 @@ npm run test:ingest
 - `app/index.tsx` - Entry point that redirects to onboarding or tabs based on user state
 - `app/(tabs)/` - Main tab navigation with custom bottom dock (Home, Explore, Profile)
 - `app/onboarding/index.tsx` - Multi-step onboarding flow orchestrator
-- `app/event/[id].tsx` - Dynamic event detail pages
+- `app/event/[id].tsx` - Dynamic event detail pages with context-aware navigation
 - `app/collection/[id].tsx` - Dynamic collection detail pages
 
 The custom tab bar in `(tabs)/_layout.tsx` uses `BottomTabBarProps` and includes haptic feedback on iOS.
+
+**Context-Aware Navigation Pattern**:
+Event detail pages support sequential browsing via URL params:
+- `source` - Origin of navigation (e.g., 'home-carousel')
+- `carouselIndex` - Current position in carousel
+- `carouselItemIds` - Comma-separated list of all event IDs in sequence
+
+This enables:
+- Conditional "Next" button in top-right when navigating from carousels
+- Preserving navigation context across page transitions
+- Extensible pattern for other list-based features (Explore, Collections)
 
 ### State Management
 
@@ -110,11 +121,26 @@ components/
 
 Components use `useAppTheme()` hook for consistent styling across light/dark modes.
 
+**Engagement Button Pattern**:
+Event cards and detail pages use a consistent icon-only button design (44×44pt):
+1. **Like** (heart) - Toggles like state in user profile
+2. **Deep Dive** (book) - Premium feature navigation (placeholder)
+3. **Save** (bookmark) - Toggles save state in user profile
+4. **Share** (square.and.arrow.up) - Native share sheet
+
+- Buttons are circular with 1pt border (`borderSubtle`)
+- Active states use `accentPrimary` color with `accentSoft` background
+- 22pt icon size, centered in 44×44pt touch target
+- Consistent spacing with `gap: spacing.md` (12pt) between buttons
+- All interaction logic handled by `useEventEngagement` hook
+
 ### Custom Hooks
 
 **Data Hooks** (`hooks/`):
 - `useDailyDigestEvents` - Load events for a date with cascading fallbacks
-- `useEventEngagement` - Track saves/reactions with optimistic updates and Firestore sync
+- `useEventEngagement` - Track saves/reactions/likes with optimistic updates and Firestore sync
+  - Manages `savedEventIds[]` array and `reactions{}` map in user profile
+  - Methods: `toggleSave()`, `toggleLike()` with immediate UI updates
 - `useWeeklyCollections`, `useTimeMachine`, `useHomeChips`, `useEventContent`, `useCollectionDetail` - Feature-specific data
 - `useStoryOfTheDay` - SOTD hook with loading/error states, optional enabled flag
 - `useYMBI` - You Might Be Interested hook with user context (categories, saved, home exclusions)
@@ -125,12 +151,24 @@ Components use `useAppTheme()` hook for consistent styling across light/dark mod
 
 **Centralized design tokens** in `theme/tokens.ts`:
 - Colors (primary, secondary, accent, text, surface, border, etc.)
-- Spacing (xs, sm, md, lg, xl, xxl)
+- Spacing scale: `xs=4pt, sm=8pt, md=12pt, lg=18pt, xl=28pt, xxl=40pt, card=24pt`
 - Radius (sm, md, lg, pill)
 - Typography (heading, body, label, caption sizes)
 - Shadows (iOS/Android optimized)
 
 Access via `useAppTheme()` hook which returns current theme based on system color scheme.
+
+**Spacing Guidelines**:
+- Use `spacing.xxl` (40pt) for primary module spacing to ensure breathability
+- Apply negative margins sparingly to fine-tune specific gaps (e.g., hero carousel: `-28pt`)
+- Prefer flexbox `gap` property over manual margin wrappers for consistency
+- Add extra `marginVertical` for premium/emphasis modules (e.g., Time Machine: `+12pt`)
+
+**Home Page Layout Pattern** (`app/(tabs)/index.tsx`):
+- ScrollView uses `gap: spacing.xxl` (40pt) between all direct children
+- Section header → Hero carousel reduced to 12pt via `marginTop: -28`
+- Time Machine has extra spacing (52pt total) via `marginVertical: spacing.md`
+- No wrapper Views for spacing - rely on flexbox gap for cleaner code
 
 ### Type System
 
