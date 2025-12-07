@@ -84,6 +84,9 @@ const buildStyles = (theme: ThemeDefinition) => {
       gap: 0,
       marginTop: -28, // Reduce gap between header and carousel (40pt - 28pt = 12pt)
     },
+    timeMachineContainer: {
+      marginVertical: spacing.md, // Add extra 12pt top and bottom (total: 40pt + 12pt = 52pt)
+    },
     bottomSpacer: {
       height: spacing.xxl + spacing.lg,
     },
@@ -816,15 +819,17 @@ const HomeScreen = () => {
             testID="home-weekly-collections"
           />
 
-          <TimeMachineBlock
-            premium={isPremiumUser}
-            imageUrl={timeMachineImage}
-            subtitle="Guided timeline journeys."
-            onPress={handleTimeMachinePress}
-            onTeaser={handleTimeMachineTeaser}
-            loading={timeMachineLoading || timeMachineSeeding}
-            testID="home-time-machine"
-          />
+          <View style={styles.timeMachineContainer}>
+            <TimeMachineBlock
+              premium={isPremiumUser}
+              imageUrl={timeMachineImage}
+              subtitle="Guided timeline journeys."
+              onPress={handleTimeMachinePress}
+              onTeaser={handleTimeMachineTeaser}
+              loading={timeMachineLoading || timeMachineSeeding}
+              testID="home-time-machine"
+            />
+          </View>
 
           <CategoryExploreGrid testID="home-category-explore" />
 
