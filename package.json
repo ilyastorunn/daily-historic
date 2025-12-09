@@ -12,7 +12,9 @@
     "ingest": "tsx scripts/ingest/run.ts",
     "validate:overrides": "tsx scripts/ingest/validate-overrides.ts",
     "test:ingest": "vitest run",
-    "test:covers": "tsx scripts/test-collection-covers.ts"
+    "test:covers": "tsx scripts/test-collection-covers.ts",
+    "analyze:events": "tsx scripts/analyze-events.ts",
+    "enrich:featured": "tsx scripts/enrich-featured-events.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

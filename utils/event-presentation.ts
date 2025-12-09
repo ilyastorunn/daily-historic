@@ -53,7 +53,8 @@ const stripHtmlTags = (value?: string | null) => {
 
 export const selectPrimaryPage = (event: FirestoreEventDocument): FirestoreRelatedPage | undefined => {
   const pages = event.relatedPages ?? [];
-  if (pages.length === 0) {
+  // Ensure pages is actually an array before using array methods
+  if (!Array.isArray(pages) || pages.length === 0) {
     return undefined;
   }
   return pages.find((page) => page.selectedMedia?.sourceUrl) ?? pages[0];
@@ -124,9 +125,13 @@ export const buildEventSearchText = (event: FirestoreEventDocument) => {
   if (primaryPage?.displayTitle) buffer.push(primaryPage.displayTitle);
   if (primaryPage?.description) buffer.push(primaryPage.description);
   if (primaryPage?.extract) buffer.push(primaryPage.extract);
-  for (const page of event.relatedPages ?? []) {
-    if (page.displayTitle) buffer.push(page.displayTitle);
-    if (page.description) buffer.push(page.description);
+  const pages = event.relatedPages ?? [];
+  // Ensure pages is actually an array before iterating
+  if (Array.isArray(pages)) {
+    for (const page of pages) {
+      if (page.displayTitle) buffer.push(page.displayTitle);
+      if (page.description) buffer.push(page.description);
+    }
   }
   return buffer.join(' ').toLowerCase();
 };
@@ -138,6 +143,10 @@ export interface EventSourceLink {
 
 export const buildEventSourceLinks = (event: FirestoreEventDocument): EventSourceLink[] => {
   const pages = event.relatedPages ?? [];
+  // Ensure pages is actually an array before using array methods
+  if (!Array.isArray(pages)) {
+    return [];
+  }
   return pages
     .map((page) => {
       const rawLabel =

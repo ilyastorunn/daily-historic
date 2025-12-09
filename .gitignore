@@ -4,6 +4,8 @@
 .env
 GoogleService-Info.plist
 google-services.json
+firebase-service-account.json
+*service-account*.json
 
 # dependencies
 node_modules/

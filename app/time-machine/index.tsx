@@ -17,12 +17,12 @@ const TimeMachineScreen = () => {
   const styles = useMemo(() => buildStyles(theme), [theme]);
 
   const yearParam = params.year ? Number(params.year) : undefined;
-  const teaserMode = params.mode === 'teaser';
 
+  // Phase 1: No teaser mode, everyone gets full access
   const { timeline, loading, error, loadTimeline } = useTimeMachine({
-    enabled: !teaserMode,
-    seedOnMount: !teaserMode && !yearParam,
-    premium: !teaserMode,
+    enabled: true,
+    seedOnMount: !yearParam,
+    premium: true,
   });
 
   const events = useMemo(() => timeline?.events ?? [], [timeline?.events]);
@@ -31,132 +31,84 @@ const TimeMachineScreen = () => {
   const year = timeline?.year ?? yearParam;
   const [isYearPickerVisible, setYearPickerVisible] = useState(false);
 
-  const teaserEvents = useMemo(
-    () => [
-      {
-        id: heroEvent.id,
-        title: heroEvent.title,
-        summary: heroEvent.summary,
-        imageUrl: getImageUri(heroEvent.image) ?? undefined,
-        dateISO: heroEvent.date,
-        categoryId: heroEvent.categories?.[0],
-      },
-    ],
-    []
-  );
+  const displayEvents = events;
 
-  const displayEvents = teaserMode ? teaserEvents : events;
+  const handleEventPress = (eventId: string) => {
+    trackEvent('time_machine_event_opened', { event_id: eventId, year });
+    router.push({ pathname: '/event/[id]', params: { id: eventId, source: 'time-machine' } });
+  };
+
   const availableYears = useMemo(() => {
-    const defaultYears = [1969, 1986, 1492, 1776];
-    const timelineYears = events
-      .map((event) => (event.dateISO ? Number(event.dateISO.slice(0, 4)) : undefined))
-      .filter((value): value is number => typeof value === 'number' && !Number.isNaN(value));
-    const merged = Array.from(new Set([year ?? defaultYears[0], ...timelineYears, ...defaultYears]));
+    // Featured years for Phase 1
+    const featuredYears = [2013, 1991, 1987, 1943, 1944];
+    const merged = Array.from(new Set([year, ...featuredYears].filter(Boolean) as number[]));
     return merged.sort((a, b) => a - b);
-  }, [events, year]);
+  }, [year]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>Time Machine</Text>
-          {teaserMode ? (
-            <Text style={styles.helper}>Preview unlocked moments before starting your premium journey.</Text>
-          ) : (
-            <Text style={styles.helper}>Exploring the year {year ?? '—'}.</Text>
-          )}
+          <Text style={styles.helper}>Exploring the year {year ?? '—'}.</Text>
 
           {loading ? <Text style={styles.loading}>Loading timeline…</Text> : null}
           {error ? <Text style={styles.error}>Unable to load events right now.</Text> : null}
 
           <View style={styles.timeline}>
             {displayEvents.map((event) => (
-              <TimelineCard key={event.id} {...event} />
+              <TimelineCard key={event.id} {...event} onPress={handleEventPress} />
             ))}
           </View>
 
-          {!teaserMode ? (
-            <View style={styles.contextSection}>
-              <Text style={styles.contextTitle}>What led here</Text>
-              {beforeEvents.length > 0 ? (
-                beforeEvents.map((event) => (
-                  <TimelineCard key={event.id} {...event} footerLabel="Before" />
-                ))
-              ) : (
-                <Text style={styles.helper}>More context coming soon.</Text>
-              )}
-            </View>
-          ) : null}
-
-          {!teaserMode ? (
-            <View style={styles.contextSection}>
-              <Text style={styles.contextTitle}>What followed</Text>
-              {afterEvents.length > 0 ? (
-                afterEvents.map((event) => (
-                  <TimelineCard key={event.id} {...event} footerLabel="After" />
-                ))
-              ) : (
-                <Text style={styles.helper}>Stay tuned for follow-up stories.</Text>
-              )}
-            </View>
-          ) : null}
-
-          {!teaserMode ? (
-            <View style={styles.controls}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setYearPickerVisible(true)}
-                style={styles.yearPickerButton}
-              >
-                <Text style={styles.yearPickerLabel}>Choose another year</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.controls}>
-              <Text style={styles.helper}>Upgrade soon to unlock full journeys.</Text>
-            </View>
-          )}
+          <View style={styles.controls}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setYearPickerVisible(true)}
+              style={styles.yearPickerButton}
+            >
+              <Text style={styles.yearPickerLabel}>Choose another year</Text>
+            </Pressable>
+          </View>
 
           <Text style={styles.note} onPress={() => router.back()}>
             ← Back to Home
           </Text>
         </ScrollView>
       </View>
-      {!teaserMode ? (
-        <Modal
-          transparent
-          visible={isYearPickerVisible}
-          animationType="fade"
-          onRequestClose={() => setYearPickerVisible(false)}
-        >
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Select a year</Text>
-              {availableYears.map((option) => (
-                <Pressable
-                  key={option}
-                  accessibilityRole="button"
-                  onPress={() => {
-                    setYearPickerVisible(false);
-                    trackEvent('time_machine_year_selected', { year: option });
-                    loadTimeline(option);
-                  }}
-                  style={styles.modalOption}
-                >
-                  <Text style={styles.modalOptionLabel}>{option}</Text>
-                </Pressable>
-              ))}
+      <Modal
+        transparent
+        visible={isYearPickerVisible}
+        animationType="fade"
+        onRequestClose={() => setYearPickerVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Select a year</Text>
+            {availableYears.map((option) => (
               <Pressable
+                key={option}
                 accessibilityRole="button"
-                onPress={() => setYearPickerVisible(false)}
-                style={styles.modalCancel}
+                onPress={() => {
+                  setYearPickerVisible(false);
+                  trackEvent('time_machine_year_selected', { year: option });
+                  loadTimeline(option);
+                }}
+                style={styles.modalOption}
               >
-                <Text style={styles.modalCancelLabel}>Close</Text>
+                <Text style={styles.modalOptionLabel}>{option}</Text>
               </Pressable>
-            </View>
+            ))}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setYearPickerVisible(false)}
+              style={styles.modalCancel}
+            >
+              <Text style={styles.modalCancelLabel}>Close</Text>
+            </Pressable>
           </View>
-        </Modal>
-      ) : null}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

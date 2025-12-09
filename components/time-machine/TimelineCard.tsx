@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 
 import { useAppTheme } from '@/theme';
 import { categoryLabelFromId } from '@/utils/categories';

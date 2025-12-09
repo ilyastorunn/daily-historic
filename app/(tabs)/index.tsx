@@ -738,14 +738,12 @@ const HomeScreen = () => {
   const handleTimeMachinePress = useCallback(async () => {
     const userTier = isPremiumUser ? 'premium' : 'free';
     trackEvent('time_machine_open_clicked', { user_tier: userTier });
-    if (!isPremiumUser) {
-      handleTimeMachineTeaser();
-      return;
-    }
+
+    // Phase 1: No paywall, everyone gets access
     await loadTimeMachineTimeline();
     trackEvent('time_machine_started', { year: timeMachineYear ?? undefined, user_tier: userTier });
     router.push({ pathname: '/time-machine', params: { year: timeMachineYear ? String(timeMachineYear) : undefined } });
-  }, [handleTimeMachineTeaser, isPremiumUser, loadTimeMachineTimeline, router, timeMachineYear]);
+  }, [isPremiumUser, loadTimeMachineTimeline, router, timeMachineYear]);
 
   const handleSavedStoryPress = useCallback(
     (eventId: string) => {

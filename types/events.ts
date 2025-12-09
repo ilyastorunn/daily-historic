@@ -42,9 +42,12 @@ export interface FirestoreEventDocument {
   era?: string;
   tags?: string[];
   date?: FirestoreEventDate;
+  dateISO?: string;
   relatedPages?: FirestoreRelatedPage[];
   source?: Record<string, unknown>;
   enrichment?: Record<string, unknown>;
+  beforeContext?: string;
+  afterContext?: string;
   createdAt?: FirestoreTimestamp;
   updatedAt?: FirestoreTimestamp;
 }

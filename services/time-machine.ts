@@ -1,5 +1,8 @@
 import { getImageUri } from '@/utils/image-source';
 import { heroEvent } from '@/constants/events';
+import { firebaseFirestore, query, collection, getDocs } from '@/services/firebase';
+import type { FirestoreEventDocument } from '@/types/events';
+import { getEventImageUri, getEventSummary, getEventTitle } from '@/utils/event-presentation';
 
 export type TimeMachineSeedResponse = {
   year: number;
@@ -12,6 +15,8 @@ export type TimelineEvent = {
   imageUrl?: string;
   dateISO?: string;
   categoryId?: string;
+  beforeContext?: string;
+  afterContext?: string;
 };
 
 export type TimeMachineTimelineResponse = {
@@ -43,13 +48,49 @@ const fetchJson = async <T>(input: RequestInfo | URL, init?: RequestInit): Promi
   return (await response.json()) as T;
 };
 
+// Featured years with enriched content (Phase 1)
+const FEATURED_YEARS = [2013, 1991, 1987, 1943, 1944];
+
 export const fetchTimeMachineSeed = async (): Promise<TimeMachineSeedResponse> => {
+  // Phase 1: Return random featured year directly (no API call)
+  const randomIndex = Math.floor(Math.random() * FEATURED_YEARS.length);
+  return { year: FEATURED_YEARS[randomIndex] };
+};
+
+const mapFirestoreEventToTimelineEvent = (doc: FirestoreEventDocument): TimelineEvent => {
+  let imageUrl: string | undefined;
+
+  // Debug: Check relatedPages structure
+  const relatedPages = doc.relatedPages;
+  console.log('[Time Machine] Event:', doc.eventId?.slice(0, 8), {
+    hasRelatedPages: !!relatedPages,
+    isArray: Array.isArray(relatedPages),
+    length: Array.isArray(relatedPages) ? relatedPages.length : 'N/A',
+    hasSelectedMedia: Array.isArray(relatedPages) && relatedPages.length > 0
+      ? !!relatedPages[0]?.selectedMedia
+      : false,
+  });
+
   try {
-    return await fetchJson<TimeMachineSeedResponse>(buildUrl('/seed'));
+    imageUrl = getEventImageUri(doc);
   } catch (error) {
-    console.warn('Falling back to local time machine seed', error);
-    return { year: 1969 };
+    console.warn('[Time Machine] Failed to get image for event', doc.eventId, error);
+    // Try direct access to relatedPages
+    if (Array.isArray(relatedPages) && relatedPages.length > 0) {
+      imageUrl = relatedPages[0]?.selectedMedia?.sourceUrl;
+    }
   }
+
+  return {
+    id: doc.eventId,
+    title: getEventTitle(doc),
+    summary: getEventSummary(doc),
+    imageUrl,
+    dateISO: doc.dateISO,
+    categoryId: doc.categories?.[0],
+    beforeContext: doc.beforeContext,
+    afterContext: doc.afterContext,
+  };
 };
 
 export const fetchTimeMachineTimeline = async (
@@ -57,11 +98,46 @@ export const fetchTimeMachineTimeline = async (
   options: { categories?: string } = {}
 ): Promise<TimeMachineTimelineResponse> => {
   try {
-    return await fetchJson<TimeMachineTimelineResponse>(
-      buildUrl('/timeline', { year, categories: options.categories })
-    );
+    console.log('[Time Machine] Fetching timeline for year:', year);
+
+    // Fetch events from Firestore for the specified year
+    const eventsCollection = collection(firebaseFirestore, 'contentEvents');
+    const eventsQuery = query(eventsCollection);
+    const eventsSnapshot = await getDocs(eventsQuery);
+
+    const yearEvents: FirestoreEventDocument[] = [];
+    eventsSnapshot.forEach((doc) => {
+      const data = doc.data() as FirestoreEventDocument;
+      if (data.year === year) {
+        yearEvents.push(data);
+      }
+    });
+
+    console.log('[Time Machine] Found events for year:', year, yearEvents.length);
+
+    // Sort by dateISO chronologically
+    yearEvents.sort((a, b) => {
+      const dateA = a.dateISO || '1900-01-01';
+      const dateB = b.dateISO || '1900-01-01';
+      return dateA.localeCompare(dateB);
+    });
+
+    if (yearEvents.length === 0) {
+      throw new Error(`No events found for year ${year}`);
+    }
+
+    // Map to TimelineEvent format
+    const events = yearEvents.map(mapFirestoreEventToTimelineEvent);
+
+    return {
+      year,
+      events,
+      before: [], // Will be implemented in Phase 2
+      after: [], // Will be implemented in Phase 2
+    };
   } catch (error) {
     console.warn('Falling back to local time machine timeline', error);
+    // Fallback to heroEvent (1969 Moon Landing)
     return {
       year,
       events: [
@@ -74,45 +150,8 @@ export const fetchTimeMachineTimeline = async (
           categoryId: heroEvent.categories?.[0],
         },
       ],
-      before: [
-        {
-          id: 'gemini-program',
-          title: 'Project Gemini lifts off',
-          summary: 'NASA perfects rendezvous and EVA techniques in the years leading up to Apollo.',
-          imageUrl:
-            'https://upload.wikimedia.org/wikipedia/commons/5/5c/Gemini_6A_and_Gemini_7_photograph.jpg',
-          dateISO: '1965-12-15',
-          categoryId: 'science',
-        },
-        {
-          id: 'sputnik-launch',
-          title: 'Sputnik starts the space race',
-          summary: 'The Soviet Union launches the first artificial satellite, spurring global competition.',
-          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/9b/Sputnik_1.jpg',
-          dateISO: '1957-10-04',
-          categoryId: 'science',
-        },
-      ],
-      after: [
-        {
-          id: 'viking-on-mars',
-          title: 'Viking 1 touches down on Mars',
-          summary: 'NASA’s robotic lander beams back the first clear images from the Martian surface.',
-          imageUrl:
-            'https://upload.wikimedia.org/wikipedia/commons/1/1a/Viking_Lander_model.png',
-          dateISO: '1976-07-20',
-          categoryId: 'science',
-        },
-        {
-          id: 'iss-assembly',
-          title: 'International Space Station assembly begins',
-          summary: 'Nations collaborate to build a permanent laboratory in orbit.',
-          imageUrl:
-            'https://upload.wikimedia.org/wikipedia/commons/d/d3/ISS_assembly_animation.gif',
-          dateISO: '1998-11-20',
-          categoryId: 'science',
-        },
-      ],
+      before: [],
+      after: [],
     };
   }
 };
