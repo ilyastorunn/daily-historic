@@ -551,6 +551,7 @@ const HomeScreen = () => {
     timelineYear: timeMachineYear,
     heroImageUrl: timeMachineImageUrl,
     loadTimeline: loadTimeMachineTimeline,
+    seed: seedTimeMachine,
   } = useTimeMachine({ enabled: true, seedOnMount: true, premium: isPremiumUser });
 
   const weeklyCollections = useMemo(
@@ -740,10 +741,12 @@ const HomeScreen = () => {
     trackEvent('time_machine_open_clicked', { user_tier: userTier });
 
     // Phase 1: No paywall, everyone gets access
+    // Pick a new random year each time
+    await seedTimeMachine();
     await loadTimeMachineTimeline();
     trackEvent('time_machine_started', { year: timeMachineYear ?? undefined, user_tier: userTier });
     router.push({ pathname: '/time-machine', params: { year: timeMachineYear ? String(timeMachineYear) : undefined } });
-  }, [isPremiumUser, loadTimeMachineTimeline, router, timeMachineYear]);
+  }, [isPremiumUser, loadTimeMachineTimeline, router, seedTimeMachine, timeMachineYear]);
 
   const handleSavedStoryPress = useCallback(
     (eventId: string) => {

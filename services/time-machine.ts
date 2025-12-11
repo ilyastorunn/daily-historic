@@ -1,8 +1,74 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { getImageUri } from '@/utils/image-source';
 import { heroEvent } from '@/constants/events';
-import { firebaseFirestore, query, collection, getDocs } from '@/services/firebase';
+import { firebaseFirestore, query, collection, getDocs, where, limit } from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getEventImageUri, getEventSummary, getEventTitle } from '@/utils/event-presentation';
+
+// Security: Limit max events per year to prevent unbounded queries
+const MAX_EVENTS_PER_YEAR = 100;
+
+// Cache configuration
+const CACHE_KEY_PREFIX = '@daily_historic/time_machine_cache';
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours (same as YMBI)
+
+// Security: Valid year range to prevent abuse
+const MIN_VALID_YEAR = 1800;
+const MAX_VALID_YEAR = new Date().getFullYear();
+
+// Security: Validate year input
+export const isValidYear = (year: unknown): year is number => {
+  return (
+    typeof year === 'number' &&
+    Number.isFinite(year) &&
+    Number.isInteger(year) &&
+    year >= MIN_VALID_YEAR &&
+    year <= MAX_VALID_YEAR
+  );
+};
+
+// Cache helpers
+type CachedTimeline = {
+  data: TimeMachineTimelineResponse;
+  timestamp: number;
+};
+
+const getCacheKey = (year: number) => `${CACHE_KEY_PREFIX}_${year}`;
+
+const getCachedTimeline = async (year: number): Promise<TimeMachineTimelineResponse | null> => {
+  try {
+    const cacheKey = getCacheKey(year);
+    const cached = await AsyncStorage.getItem(cacheKey);
+    if (!cached) return null;
+
+    const parsed: CachedTimeline = JSON.parse(cached);
+    const age = Date.now() - parsed.timestamp;
+
+    if (age > CACHE_TTL_MS) {
+      // Cache expired, remove it
+      await AsyncStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return parsed.data;
+  } catch (error) {
+    return null;
+  }
+};
+
+const setCachedTimeline = async (year: number, data: TimeMachineTimelineResponse): Promise<void> => {
+  try {
+    const cacheKey = getCacheKey(year);
+    const cached: CachedTimeline = {
+      data,
+      timestamp: Date.now(),
+    };
+    await AsyncStorage.setItem(cacheKey, JSON.stringify(cached));
+  } catch (error) {
+    // Silently fail if caching fails
+  }
+};
 
 export type TimeMachineSeedResponse = {
   year: number;
@@ -60,22 +126,11 @@ export const fetchTimeMachineSeed = async (): Promise<TimeMachineSeedResponse> =
 const mapFirestoreEventToTimelineEvent = (doc: FirestoreEventDocument): TimelineEvent => {
   let imageUrl: string | undefined;
 
-  // Debug: Check relatedPages structure
-  const relatedPages = doc.relatedPages;
-  console.log('[Time Machine] Event:', doc.eventId?.slice(0, 8), {
-    hasRelatedPages: !!relatedPages,
-    isArray: Array.isArray(relatedPages),
-    length: Array.isArray(relatedPages) ? relatedPages.length : 'N/A',
-    hasSelectedMedia: Array.isArray(relatedPages) && relatedPages.length > 0
-      ? !!relatedPages[0]?.selectedMedia
-      : false,
-  });
-
   try {
     imageUrl = getEventImageUri(doc);
   } catch (error) {
-    console.warn('[Time Machine] Failed to get image for event', doc.eventId, error);
-    // Try direct access to relatedPages
+    // Try direct access to relatedPages as fallback
+    const relatedPages = doc.relatedPages;
     if (Array.isArray(relatedPages) && relatedPages.length > 0) {
       imageUrl = relatedPages[0]?.selectedMedia?.sourceUrl;
     }
@@ -97,23 +152,31 @@ export const fetchTimeMachineTimeline = async (
   year: number,
   options: { categories?: string } = {}
 ): Promise<TimeMachineTimelineResponse> => {
-  try {
-    console.log('[Time Machine] Fetching timeline for year:', year);
+  // Security: Validate year input to prevent injection/abuse
+  if (!isValidYear(year)) {
+    throw new Error(`Invalid year: ${year}. Must be between ${MIN_VALID_YEAR} and ${MAX_VALID_YEAR}`);
+  }
 
-    // Fetch events from Firestore for the specified year
+  // Check cache first
+  const cached = await getCachedTimeline(year);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    // Fetch events from Firestore for the specified year (optimized with where clause + limit)
     const eventsCollection = collection(firebaseFirestore, 'contentEvents');
-    const eventsQuery = query(eventsCollection);
+    const eventsQuery = query(
+      eventsCollection,
+      where('year', '==', year),
+      limit(MAX_EVENTS_PER_YEAR)
+    );
     const eventsSnapshot = await getDocs(eventsQuery);
 
     const yearEvents: FirestoreEventDocument[] = [];
     eventsSnapshot.forEach((doc) => {
-      const data = doc.data() as FirestoreEventDocument;
-      if (data.year === year) {
-        yearEvents.push(data);
-      }
+      yearEvents.push(doc.data() as FirestoreEventDocument);
     });
-
-    console.log('[Time Machine] Found events for year:', year, yearEvents.length);
 
     // Sort by dateISO chronologically
     yearEvents.sort((a, b) => {
@@ -129,14 +192,18 @@ export const fetchTimeMachineTimeline = async (
     // Map to TimelineEvent format
     const events = yearEvents.map(mapFirestoreEventToTimelineEvent);
 
-    return {
+    const result: TimeMachineTimelineResponse = {
       year,
       events,
       before: [], // Will be implemented in Phase 2
       after: [], // Will be implemented in Phase 2
     };
+
+    // Cache the result
+    await setCachedTimeline(year, result);
+
+    return result;
   } catch (error) {
-    console.warn('Falling back to local time machine timeline', error);
     // Fallback to heroEvent (1969 Moon Landing)
     return {
       year,

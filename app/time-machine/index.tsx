@@ -1,24 +1,39 @@
-import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme';
 import { useTimeMachine } from '@/hooks/use-time-machine';
-import { TimelineCard } from '@/components/time-machine/TimelineCard';
+import { TimeMachineCard } from '@/components/time-machine/TimeMachineCard';
+import { MonthTimeline } from '@/components/time-machine/MonthTimeline';
 import { trackEvent } from '@/services/analytics';
-import { heroEvent } from '@/constants/events';
-import { getImageUri } from '@/utils/image-source';
+import type { TimelineEvent } from '@/services/time-machine';
+import { isValidYear } from '@/services/time-machine';
 
 const TimeMachineScreen = () => {
-  const params = useLocalSearchParams<{ year?: string; mode?: string }>();
+  const params = useLocalSearchParams<{ year?: string }>();
   const router = useRouter();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
 
-  const yearParam = params.year ? Number(params.year) : undefined;
+  // Security: Validate year parameter from URL
+  const yearParam = useMemo(() => {
+    if (!params.year) return undefined;
+    const parsed = Number(params.year);
+    return isValidYear(parsed) ? parsed : undefined;
+  }, [params.year]);
 
-  // Phase 1: No teaser mode, everyone gets full access
   const { timeline, loading, error, loadTimeline } = useTimeMachine({
     enabled: true,
     seedOnMount: !yearParam,
@@ -26,56 +41,183 @@ const TimeMachineScreen = () => {
   });
 
   const events = useMemo(() => timeline?.events ?? [], [timeline?.events]);
-  const beforeEvents = timeline?.before ?? [];
-  const afterEvents = timeline?.after ?? [];
   const year = timeline?.year ?? yearParam;
   const [isYearPickerVisible, setYearPickerVisible] = useState(false);
 
-  const displayEvents = events;
+  // Scroll tracking state
+  const [activeMonth, setActiveMonth] = useState<number>(1);
+  const cardPositions = useRef<Map<number, number>>(new Map());
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const handleEventPress = (eventId: string) => {
-    trackEvent('time_machine_event_opened', { event_id: eventId, year });
-    router.push({ pathname: '/event/[id]', params: { id: eventId, source: 'time-machine' } });
-  };
+  // Security: Prevent rapid year selection (debouncing)
+  const lastYearLoadTime = useRef<number>(0);
+  const YEAR_LOAD_DEBOUNCE_MS = 500;
 
+  // Group events by month
+  const eventsByMonth = useMemo(() => {
+    const grouped = new Map<number, TimelineEvent[]>();
+    events.forEach((event) => {
+      if (event.dateISO) {
+        const month = parseInt(event.dateISO.split('-')[1], 10);
+        if (month > 0 && month <= 12) {
+          if (!grouped.has(month)) {
+            grouped.set(month, []);
+          }
+          grouped.get(month)!.push(event);
+        }
+      }
+    });
+    return grouped;
+  }, [events]);
+
+  // Get available months (only those with events)
+  const availableMonths = useMemo(
+    () => Array.from(eventsByMonth.keys()).sort((a, b) => a - b),
+    [eventsByMonth]
+  );
+
+  // Available years for picker
   const availableYears = useMemo(() => {
-    // Featured years for Phase 1
     const featuredYears = [2013, 1991, 1987, 1943, 1944];
     const merged = Array.from(new Set([year, ...featuredYears].filter(Boolean) as number[]));
     return merged.sort((a, b) => a - b);
   }, [year]);
 
+  // Handle card layout to track positions
+  const handleCardLayout = useCallback((month: number, yPosition: number) => {
+    cardPositions.current.set(month, yPosition);
+  }, []);
+
+  // Track scroll position and update active month
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+
+      if (availableMonths.length === 0) return;
+
+      // Find which month is currently most visible
+      let currentMonth = availableMonths[0];
+      for (const [month, yPos] of cardPositions.current) {
+        if (yPos <= offsetY + 100) {
+          currentMonth = month;
+        }
+      }
+
+      if (currentMonth !== activeMonth) {
+        setActiveMonth(currentMonth);
+      }
+    },
+    [availableMonths, activeMonth]
+  );
+
+  // Scroll to specific month
+  const scrollToMonth = useCallback((month: number) => {
+    const yPosition = cardPositions.current.get(month);
+    if (yPosition !== undefined && scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        y: yPosition,
+        animated: true,
+      });
+    }
+    setActiveMonth(month);
+  }, []);
+
+  // Handle event press
+  const handleEventPress = useCallback(
+    (eventId: string) => {
+      trackEvent('time_machine_event_opened', { event_id: eventId, year });
+      router.push({ pathname: '/event/[id]', params: { id: eventId, source: 'time-machine' } });
+    },
+    [router, year]
+  );
+
+  // Initialize active month when events load
+  React.useEffect(() => {
+    if (availableMonths.length > 0 && activeMonth === 1 && !availableMonths.includes(1)) {
+      setActiveMonth(availableMonths[0]);
+    }
+  }, [availableMonths, activeMonth]);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.content}>
+        {/* Header */}
+        <View style={styles.header}>
           <Text style={styles.title}>Time Machine</Text>
-          <Text style={styles.helper}>Exploring the year {year ?? '—'}.</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setYearPickerVisible(true)}
+            style={styles.yearButton}
+          >
+            <Text style={styles.yearButtonText}>{year ?? '—'}</Text>
+          </Pressable>
+        </View>
 
-          {loading ? <Text style={styles.loading}>Loading timeline…</Text> : null}
-          {error ? <Text style={styles.error}>Unable to load events right now.</Text> : null}
+        {/* Month Timeline */}
+        {availableMonths.length > 0 && year && (
+          <MonthTimeline
+            availableMonths={availableMonths}
+            activeMonth={activeMonth}
+            year={year}
+            onMonthPress={scrollToMonth}
+          />
+        )}
 
-          <View style={styles.timeline}>
-            {displayEvents.map((event) => (
-              <TimelineCard key={event.id} {...event} onPress={handleEventPress} />
+        {/* Loading/Error States */}
+        {loading ? (
+          <View style={styles.centerContent}>
+            <Text style={styles.loading}>Loading timeline…</Text>
+          </View>
+        ) : null}
+
+        {error ? (
+          <View style={styles.centerContent}>
+            <Text style={styles.error}>Unable to load events right now.</Text>
+          </View>
+        ) : null}
+
+        {/* Cards ScrollView */}
+        {!loading && !error && (
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+              useNativeDriver: false,
+              listener: handleScroll,
+            })}
+            scrollEventThrottle={16}
+          >
+            {/* Render events */}
+            {events.map((event, index) => (
+              <View
+                key={event.id}
+                onLayout={(e) => {
+                  if (event.dateISO) {
+                    const month = parseInt(event.dateISO.split('-')[1], 10);
+                    if (index === 0 || !cardPositions.current.has(month)) {
+                      handleCardLayout(month, e.nativeEvent.layout.y);
+                    }
+                  }
+                }}
+              >
+                <TimeMachineCard {...event} onPress={handleEventPress} />
+              </View>
             ))}
-          </View>
 
-          <View style={styles.controls}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setYearPickerVisible(true)}
-              style={styles.yearPickerButton}
-            >
-              <Text style={styles.yearPickerLabel}>Choose another year</Text>
+            {/* Bottom spacing */}
+            <View style={styles.bottomSpacer} />
+
+            {/* Back button */}
+            <Pressable onPress={() => router.back()} style={styles.backButton}>
+              <Text style={styles.backText}>← Back to Home</Text>
             </Pressable>
-          </View>
-
-          <Text style={styles.note} onPress={() => router.back()}>
-            ← Back to Home
-          </Text>
-        </ScrollView>
+          </ScrollView>
+        )}
       </View>
+
+      {/* Year Picker Modal */}
       <Modal
         transparent
         visible={isYearPickerVisible}
@@ -90,6 +232,13 @@ const TimeMachineScreen = () => {
                 key={option}
                 accessibilityRole="button"
                 onPress={() => {
+                  // Security: Debounce year selection to prevent rapid tapping abuse
+                  const now = Date.now();
+                  if (now - lastYearLoadTime.current < YEAR_LOAD_DEBOUNCE_MS) {
+                    return; // Ignore rapid taps
+                  }
+                  lastYearLoadTime.current = now;
+
                   setYearPickerVisible(false);
                   trackEvent('time_machine_year_selected', { year: option });
                   loadTimeline(option);
@@ -123,19 +272,40 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
       flex: 1,
       backgroundColor: theme.colors.screen,
     },
-    content: {
-      padding: theme.spacing.xl,
-      gap: theme.spacing.lg,
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.lg,
     },
     title: {
-      fontFamily: 'Times New Roman',
+      fontFamily: 'serif',
       fontSize: 32,
+      fontWeight: '600',
       color: theme.colors.textPrimary,
     },
-    helper: {
+    yearButton: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.radius.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.borderSubtle,
+      backgroundColor: theme.colors.surface,
+      minHeight: 44,
+      justifyContent: 'center',
+    },
+    yearButtonText: {
       fontFamily: 'System',
       fontSize: 16,
-      color: theme.colors.textSecondary,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+    },
+    centerContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
     },
     loading: {
       fontFamily: 'System',
@@ -146,37 +316,20 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
       fontFamily: 'System',
       fontSize: 14,
       color: theme.colors.borderStrong,
+      textAlign: 'center',
     },
-    timeline: {
-      gap: theme.spacing.md,
+    scrollContent: {
+      paddingTop: theme.spacing.xl,
+      gap: theme.spacing.xl,
     },
-    contextSection: {
-      marginTop: theme.spacing.lg,
-      gap: theme.spacing.sm,
+    bottomSpacer: {
+      height: theme.spacing.xxl,
     },
-    contextTitle: {
-      fontFamily: 'Times New Roman',
-      fontSize: 22,
-      color: theme.colors.textPrimary,
+    backButton: {
+      alignSelf: 'center',
+      paddingVertical: theme.spacing.lg,
     },
-    controls: {
-      paddingVertical: theme.spacing.md,
-    },
-    yearPickerButton: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm,
-      borderRadius: theme.radius.pill,
-      borderWidth: 1,
-      borderColor: theme.colors.borderSubtle,
-      backgroundColor: theme.colors.surface,
-    },
-    yearPickerLabel: {
-      fontFamily: 'System',
-      fontSize: 14,
-      color: theme.colors.textPrimary,
-    },
-    note: {
+    backText: {
       fontFamily: 'System',
       fontSize: 14,
       color: theme.colors.textSecondary,
@@ -196,9 +349,11 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
       gap: theme.spacing.sm,
     },
     modalTitle: {
-      fontFamily: 'Times New Roman',
+      fontFamily: 'serif',
       fontSize: 22,
+      fontWeight: '600',
       color: theme.colors.textPrimary,
+      marginBottom: theme.spacing.sm,
     },
     modalOption: {
       paddingVertical: theme.spacing.sm,
