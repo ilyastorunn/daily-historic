@@ -3,9 +3,10 @@ import { firebaseFirestore } from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import type { CategoryOption } from '@/contexts/onboarding-context';
 import { getYMBISeedEvents } from '@/constants/explore-seed';
+import { fetchWithCache, CachePresets } from '@/services/api-helpers';
+import { CacheKeys } from '@/utils/cache-keys';
+import { cacheService } from '@/services/cache-service';
 
-const YMBI_CACHE_KEY_PREFIX = '@daily_historic/ymbi_cache';
-const YMBI_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 const YMBI_NOT_INTERESTED_KEY = '@daily_historic/ymbi_not_interested';
 const NOT_INTERESTED_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
@@ -14,106 +15,10 @@ export type YMBIResponse = {
   rationale?: string;
 };
 
-type YMBICache = {
-  timestamp: number;
-  dateKey: string; // Format: "MM-DD" to invalidate cache when day changes
-  data: YMBIResponse;
-};
-
 type NotInterestedEntry = {
   eventId: string;
   categoryId: string;
   timestamp: number;
-};
-
-/**
- * Get today's date key in MM-DD format for the given timezone
- */
-const getDateKey = (timezone?: string): string => {
-  try {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone || undefined,
-      month: '2-digit',
-      day: '2-digit',
-    });
-
-    const parts = formatter.formatToParts(now);
-    const month = parts.find((p) => p.type === 'month')?.value || '01';
-    const day = parts.find((p) => p.type === 'day')?.value || '01';
-
-    return `${month}-${day}`;
-  } catch (error) {
-    // Fallback to system timezone if invalid timezone
-    const now = new Date();
-    return `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  }
-};
-
-/**
- * Get cached YMBI from AsyncStorage
- */
-const getCachedYMBI = async (userId: string, timezone?: string): Promise<YMBIResponse | null> => {
-  try {
-    const cacheKey = `${YMBI_CACHE_KEY_PREFIX}:${userId}`;
-    const cached = await AsyncStorage.getItem(cacheKey);
-    if (!cached) {
-      return null;
-    }
-
-    const parsedCache: YMBICache = JSON.parse(cached);
-    const now = Date.now();
-    const age = now - parsedCache.timestamp;
-
-    // Get today's date key in user's timezone
-    const todayKey = getDateKey(timezone);
-
-    // Check if cached data is from today
-    if (parsedCache.dateKey !== todayKey) {
-      console.log('[YMBI] Cache from different day', {
-        cached: parsedCache.dateKey,
-        today: todayKey,
-      });
-      return null;
-    }
-
-    // Check if cache is still valid (within TTL)
-    if (age < YMBI_CACHE_TTL) {
-      console.log('[YMBI] Using cached recommendations', {
-        userId,
-        age: `${Math.round(age / 1000 / 60)}min`,
-        date: parsedCache.dateKey,
-      });
-      return parsedCache.data;
-    }
-
-    // Cache expired
-    console.log('[YMBI] Cache expired', { userId, age: `${Math.round(age / 1000 / 60 / 60)}hrs` });
-    return null;
-  } catch (error) {
-    console.warn('[YMBI] Failed to read cache', error);
-    return null;
-  }
-};
-
-/**
- * Set cached YMBI in AsyncStorage
- */
-const setCachedYMBI = async (userId: string, data: YMBIResponse, timezone?: string): Promise<void> => {
-  try {
-    const dateKey = getDateKey(timezone);
-
-    const cacheKey = `${YMBI_CACHE_KEY_PREFIX}:${userId}`;
-    const cache: YMBICache = {
-      timestamp: Date.now(),
-      dateKey,
-      data,
-    };
-    await AsyncStorage.setItem(cacheKey, JSON.stringify(cache));
-    console.log('[YMBI] Cached recommendations', { userId, count: data.items.length, date: dateKey });
-  } catch (error) {
-    console.warn('[YMBI] Failed to write cache', error);
-  }
 };
 
 /**
@@ -345,12 +250,13 @@ const getYMBIFromSeed = (limit: number): YMBIResponse => {
 
 /**
  * Fetch You Might Be Interested recommendations
+ * Now uses unified cache system
  * @param userId - User ID for caching
  * @param userCategories - Categories user selected during onboarding
  * @param savedEventIds - Events user has saved
  * @param homeEventIds - Events currently shown on Home (to avoid duplicates)
  * @param limit - Number of recommendations (default 8)
- * @param timezone - User's timezone (for date-based cache invalidation)
+ * @param forceRefresh - Force bypass cache (default false)
  */
 export const fetchYMBI = async (
   userId: string,
@@ -358,49 +264,54 @@ export const fetchYMBI = async (
   savedEventIds: string[] = [],
   homeEventIds: string[] = [],
   limit: number = 8,
-  timezone?: string
+  forceRefresh = false
 ): Promise<YMBIResponse> => {
-  try {
-    // Check cache first
-    const cached = await getCachedYMBI(userId, timezone);
-    if (cached) {
-      return cached;
+  const cacheKey = CacheKeys.explore.ymbi(userId, userCategories, limit, homeEventIds);
+
+  return fetchWithCache(
+    cacheKey,
+    async () => {
+      try {
+        // Try Firestore
+        const firestoreResult = await fetchYMBIFromFirestore(
+          userId,
+          userCategories,
+          savedEventIds,
+          homeEventIds,
+          limit
+        );
+
+        if (firestoreResult) {
+          return firestoreResult;
+        }
+
+        // Final fallback: seed data
+        console.log('[YMBI] Using seed fallback');
+        return getYMBIFromSeed(limit);
+      } catch (error) {
+        console.error('[YMBI] Unexpected error in fetch chain', error);
+        return getYMBIFromSeed(limit);
+      }
+    },
+    {
+      ...CachePresets.shortLived('explore'), // 6 hours TTL
+      version: 1,
+      forceRefresh,
     }
-
-    // Try Firestore
-    const firestoreResult = await fetchYMBIFromFirestore(
-      userId,
-      userCategories,
-      savedEventIds,
-      homeEventIds,
-      limit
-    );
-
-    if (firestoreResult) {
-      await setCachedYMBI(userId, firestoreResult, timezone);
-      return firestoreResult;
-    }
-
-    // Final fallback: seed data
-    console.log('[YMBI] Using seed fallback');
-    const seedResult = getYMBIFromSeed(limit);
-    await setCachedYMBI(userId, seedResult, timezone);
-    return seedResult;
-  } catch (error) {
-    console.error('[YMBI] Unexpected error in fetch chain', error);
-    return getYMBIFromSeed(limit);
-  }
+  );
 };
 
 /**
  * Clear YMBI cache (useful for testing or manual refresh)
+ * Now uses unified cache service
  */
-export const clearYMBICache = async (userId: string): Promise<void> => {
-  try {
-    const cacheKey = `${YMBI_CACHE_KEY_PREFIX}:${userId}`;
-    await AsyncStorage.removeItem(cacheKey);
-    console.log('[YMBI] Cache cleared', { userId });
-  } catch (error) {
-    console.warn('[YMBI] Failed to clear cache', error);
-  }
+export const clearYMBICache = async (
+  userId: string,
+  userCategories: CategoryOption[] = [],
+  limit: number = 8,
+  homeEventIds: string[] = []
+): Promise<void> => {
+  const cacheKey = CacheKeys.explore.ymbi(userId, userCategories, limit, homeEventIds);
+  await cacheService.invalidate('explore', cacheKey);
+  console.log('[YMBI] Cache cleared via unified cache service', { userId });
 };

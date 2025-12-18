@@ -1,17 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { getImageUri } from '@/utils/image-source';
 import { heroEvent } from '@/constants/events';
 import { firebaseFirestore, query, collection, getDocs, where, limit } from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getEventImageUri, getEventSummary, getEventTitle } from '@/utils/event-presentation';
+import { fetchWithCache, CachePresets } from '@/services/api-helpers';
+import { CacheKeys } from '@/utils/cache-keys';
 
 // Security: Limit max events per year to prevent unbounded queries
 const MAX_EVENTS_PER_YEAR = 100;
-
-// Cache configuration
-const CACHE_KEY_PREFIX = '@daily_historic/time_machine_cache';
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours (same as YMBI)
 
 // Security: Valid year range to prevent abuse
 const MIN_VALID_YEAR = 1800;
@@ -26,48 +22,6 @@ export const isValidYear = (year: unknown): year is number => {
     year >= MIN_VALID_YEAR &&
     year <= MAX_VALID_YEAR
   );
-};
-
-// Cache helpers
-type CachedTimeline = {
-  data: TimeMachineTimelineResponse;
-  timestamp: number;
-};
-
-const getCacheKey = (year: number) => `${CACHE_KEY_PREFIX}_${year}`;
-
-const getCachedTimeline = async (year: number): Promise<TimeMachineTimelineResponse | null> => {
-  try {
-    const cacheKey = getCacheKey(year);
-    const cached = await AsyncStorage.getItem(cacheKey);
-    if (!cached) return null;
-
-    const parsed: CachedTimeline = JSON.parse(cached);
-    const age = Date.now() - parsed.timestamp;
-
-    if (age > CACHE_TTL_MS) {
-      // Cache expired, remove it
-      await AsyncStorage.removeItem(cacheKey);
-      return null;
-    }
-
-    return parsed.data;
-  } catch (error) {
-    return null;
-  }
-};
-
-const setCachedTimeline = async (year: number, data: TimeMachineTimelineResponse): Promise<void> => {
-  try {
-    const cacheKey = getCacheKey(year);
-    const cached: CachedTimeline = {
-      data,
-      timestamp: Date.now(),
-    };
-    await AsyncStorage.setItem(cacheKey, JSON.stringify(cached));
-  } catch (error) {
-    // Silently fail if caching fails
-  }
 };
 
 export type TimeMachineSeedResponse = {
@@ -150,75 +104,76 @@ const mapFirestoreEventToTimelineEvent = (doc: FirestoreEventDocument): Timeline
 
 export const fetchTimeMachineTimeline = async (
   year: number,
-  options: { categories?: string } = {}
+  options: { categories?: string; forceRefresh?: boolean } = {}
 ): Promise<TimeMachineTimelineResponse> => {
   // Security: Validate year input to prevent injection/abuse
   if (!isValidYear(year)) {
     throw new Error(`Invalid year: ${year}. Must be between ${MIN_VALID_YEAR} and ${MAX_VALID_YEAR}`);
   }
 
-  // Check cache first
-  const cached = await getCachedTimeline(year);
-  if (cached) {
-    return cached;
-  }
+  const cacheKey = CacheKeys.timeMachine.timeline(year, options.categories);
 
-  try {
-    // Fetch events from Firestore for the specified year (optimized with where clause + limit)
-    const eventsCollection = collection(firebaseFirestore, 'contentEvents');
-    const eventsQuery = query(
-      eventsCollection,
-      where('year', '==', year),
-      limit(MAX_EVENTS_PER_YEAR)
-    );
-    const eventsSnapshot = await getDocs(eventsQuery);
+  return fetchWithCache(
+    cacheKey,
+    async () => {
+      try {
+        // Fetch events from Firestore for the specified year (optimized with where clause + limit)
+        const eventsCollection = collection(firebaseFirestore, 'contentEvents');
+        const eventsQuery = query(
+          eventsCollection,
+          where('year', '==', year),
+          limit(MAX_EVENTS_PER_YEAR)
+        );
+        const eventsSnapshot = await getDocs(eventsQuery);
 
-    const yearEvents: FirestoreEventDocument[] = [];
-    eventsSnapshot.forEach((doc) => {
-      yearEvents.push(doc.data() as FirestoreEventDocument);
-    });
+        const yearEvents: FirestoreEventDocument[] = [];
+        eventsSnapshot.forEach((doc: any) => {
+          yearEvents.push(doc.data() as FirestoreEventDocument);
+        });
 
-    // Sort by dateISO chronologically
-    yearEvents.sort((a, b) => {
-      const dateA = a.dateISO || '1900-01-01';
-      const dateB = b.dateISO || '1900-01-01';
-      return dateA.localeCompare(dateB);
-    });
+        // Sort by dateISO chronologically
+        yearEvents.sort((a, b) => {
+          const dateA = a.dateISO || '1900-01-01';
+          const dateB = b.dateISO || '1900-01-01';
+          return dateA.localeCompare(dateB);
+        });
 
-    if (yearEvents.length === 0) {
-      throw new Error(`No events found for year ${year}`);
+        if (yearEvents.length === 0) {
+          throw new Error(`No events found for year ${year}`);
+        }
+
+        // Map to TimelineEvent format
+        const events = yearEvents.map(mapFirestoreEventToTimelineEvent);
+
+        return {
+          year,
+          events,
+          before: [], // Will be implemented in Phase 2
+          after: [], // Will be implemented in Phase 2
+        };
+      } catch (error) {
+        // Fallback to heroEvent (1969 Moon Landing)
+        return {
+          year,
+          events: [
+            {
+              id: heroEvent.id,
+              title: heroEvent.title,
+              summary: heroEvent.summary,
+              imageUrl: getImageUri(heroEvent.image) ?? undefined,
+              dateISO: heroEvent.date,
+              categoryId: heroEvent.categories?.[0],
+            },
+          ],
+          before: [],
+          after: [],
+        };
+      }
+    },
+    {
+      ...CachePresets.shortLived('time-machine'), // 6 hours TTL
+      version: 1,
+      forceRefresh: options.forceRefresh || false,
     }
-
-    // Map to TimelineEvent format
-    const events = yearEvents.map(mapFirestoreEventToTimelineEvent);
-
-    const result: TimeMachineTimelineResponse = {
-      year,
-      events,
-      before: [], // Will be implemented in Phase 2
-      after: [], // Will be implemented in Phase 2
-    };
-
-    // Cache the result
-    await setCachedTimeline(year, result);
-
-    return result;
-  } catch (error) {
-    // Fallback to heroEvent (1969 Moon Landing)
-    return {
-      year,
-      events: [
-        {
-          id: heroEvent.id,
-          title: heroEvent.title,
-          summary: heroEvent.summary,
-          imageUrl: getImageUri(heroEvent.image) ?? undefined,
-          dateISO: heroEvent.date,
-          categoryId: heroEvent.categories?.[0],
-        },
-      ],
-      before: [],
-      after: [],
-    };
-  }
+  );
 };

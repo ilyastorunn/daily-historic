@@ -6,6 +6,8 @@ import {
   firebaseFirestore,
 } from '@/services/firebase';
 import type { DailyDigestDocument, FirestoreEventDocument } from '@/types/events';
+import { fetchWithCache, CachePresets } from '@/services/api-helpers';
+import { CacheKeys } from '@/utils/cache-keys';
 
 const toTwoDigits = (value: number) => value.toString().padStart(2, '0');
 const toFourDigits = (value: number) => value.toString().padStart(4, '0');
@@ -95,63 +97,76 @@ export const fetchEventsByIds = async (ids: string[]): Promise<FirestoreEventDoc
 export const fetchDailyDigest = async (
   month: number,
   day: number,
-  year?: number
+  year?: number,
+  forceRefresh = false
 ): Promise<{ digest: DailyDigestDocument | null; events: FirestoreEventDocument[] }> => {
-  const digestCollection = firebaseFirestore.collection<DailyDigestDocument>(DAILY_DIGESTS_COLLECTION);
-  const numericYear = typeof year === 'number' && Number.isFinite(year) ? year : undefined;
-  const candidateIds: string[] = [];
+  const cacheKey = CacheKeys.home.dailyDigest(month, day, year);
 
-  if (numericYear !== undefined) {
-    candidateIds.push(buildYearAwareDigestDocumentId(numericYear, month, day));
-  }
-  candidateIds.push(buildLegacyDigestDocumentId(month, day));
+  return fetchWithCache(
+    cacheKey,
+    async () => {
+      // Original fetch logic (unchanged)
+      const digestCollection = firebaseFirestore.collection<DailyDigestDocument>(DAILY_DIGESTS_COLLECTION);
+      const numericYear = typeof year === 'number' && Number.isFinite(year) ? year : undefined;
+      const candidateIds: string[] = [];
 
-  let resolvedSnapshot: FirebaseFirestoreTypes.DocumentSnapshot<DailyDigestDocument> | null = null;
+      if (numericYear !== undefined) {
+        candidateIds.push(buildYearAwareDigestDocumentId(numericYear, month, day));
+      }
+      candidateIds.push(buildLegacyDigestDocumentId(month, day));
 
-  for (const candidateId of candidateIds) {
-    const snapshot = await digestCollection.doc(candidateId).get();
-    if (snapshot.exists) {
-      resolvedSnapshot = snapshot;
-      break;
+      let resolvedSnapshot: FirebaseFirestoreTypes.DocumentSnapshot<DailyDigestDocument> | null = null;
+
+      for (const candidateId of candidateIds) {
+        const snapshot = await digestCollection.doc(candidateId).get();
+        if (snapshot.exists) {
+          resolvedSnapshot = snapshot;
+          break;
+        }
+      }
+
+      if (!resolvedSnapshot && numericYear !== undefined) {
+        const isoDate = buildIsoDate(numericYear, month, day);
+        const querySnapshot = await digestCollection.where('date', '==', isoDate).limit(1).get();
+        if (!querySnapshot.empty) {
+          resolvedSnapshot =
+            (querySnapshot.docs[0] as FirebaseFirestoreTypes.DocumentSnapshot<DailyDigestDocument>) ?? null;
+        }
+      }
+
+      if (!resolvedSnapshot) {
+        return { digest: null, events: [] };
+      }
+
+      const digestData = resolvedSnapshot.data() ?? null;
+
+      if (!digestData) {
+        return { digest: null, events: [] };
+      }
+
+      const eventIds = extractEventIds(digestData);
+
+      if (eventIds.length === 0) {
+        const normalizedDigest: DailyDigestDocument = {
+          ...digestData,
+          digestId: digestData.digestId ?? resolvedSnapshot.id,
+          eventIds,
+        };
+        return { digest: normalizedDigest, events: [] };
+      }
+
+      const events = await fetchEventsByIds(eventIds);
+      const normalizedDigest: DailyDigestDocument = {
+        ...digestData,
+        digestId: digestData.digestId ?? resolvedSnapshot.id,
+        eventIds,
+      };
+
+      return { digest: normalizedDigest, events };
+    },
+    {
+      ...CachePresets.daily('home'),
+      forceRefresh,
     }
-  }
-
-  if (!resolvedSnapshot && numericYear !== undefined) {
-    const isoDate = buildIsoDate(numericYear, month, day);
-    const querySnapshot = await digestCollection.where('date', '==', isoDate).limit(1).get();
-    if (!querySnapshot.empty) {
-      resolvedSnapshot =
-        (querySnapshot.docs[0] as FirebaseFirestoreTypes.DocumentSnapshot<DailyDigestDocument>) ?? null;
-    }
-  }
-
-  if (!resolvedSnapshot) {
-    return { digest: null, events: [] };
-  }
-
-  const digestData = resolvedSnapshot.data() ?? null;
-
-  if (!digestData) {
-    return { digest: null, events: [] };
-  }
-
-  const eventIds = extractEventIds(digestData);
-
-  if (eventIds.length === 0) {
-    const normalizedDigest: DailyDigestDocument = {
-      ...digestData,
-      digestId: digestData.digestId ?? resolvedSnapshot.id,
-      eventIds,
-    };
-    return { digest: normalizedDigest, events: [] };
-  }
-
-  const events = await fetchEventsByIds(eventIds);
-  const normalizedDigest: DailyDigestDocument = {
-    ...digestData,
-    digestId: digestData.digestId ?? resolvedSnapshot.id,
-    eventIds,
-  };
-
-  return { digest: normalizedDigest, events };
+  );
 };

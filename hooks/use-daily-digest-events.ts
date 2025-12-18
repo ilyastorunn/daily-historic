@@ -56,7 +56,9 @@ export const useDailyDigestEvents = ({ month, day, year, enabled = true }: UseDa
 
     const load = async () => {
       try {
-        const result = await fetchDailyDigest(month, day, normalizedYear);
+        // Force refresh on manual reload (pull-to-refresh)
+        const forceRefresh = reloadKey > 0;
+        const result = await fetchDailyDigest(month, day, normalizedYear, forceRefresh);
         if (cancelled) {
           return;
         }
