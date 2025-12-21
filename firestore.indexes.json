@@ -27,6 +27,80 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "contentEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date.month",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date.day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "year",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "contentEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date.month",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date.day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "categories",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "year",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "contentEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date.month",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date.day",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "era",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "year",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

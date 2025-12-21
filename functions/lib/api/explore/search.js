@@ -50,6 +50,8 @@ async function exploreSearch(request, response) {
             q: request.query.q || "",
             categories: request.query.categories || "",
             era: request.query.era || undefined,
+            month: request.query.month ? parseInt(request.query.month, 10) : undefined,
+            day: request.query.day ? parseInt(request.query.day, 10) : undefined,
             sort: request.query.sort || "relevance",
             cursor: request.query.cursor || undefined,
             limit: parseInt(request.query.limit || "20", 10),
@@ -59,28 +61,59 @@ async function exploreSearch(request, response) {
             response.status(400).json({ error: "Limit must be between 1 and 50" });
             return;
         }
-        console.log("[Search API] Request params:", params);
+        // Validate month and day
+        if (params.month !== undefined && (params.month < 1 || params.month > 12)) {
+            response.status(400).json({ error: "Month must be between 1 and 12" });
+            return;
+        }
+        if (params.day !== undefined && (params.day < 1 || params.day > 31)) {
+            response.status(400).json({ error: "Day must be between 1 and 31" });
+            return;
+        }
+        console.log("[Search API] Request params:", Object.assign(Object.assign({}, params), { hasMonth: params.month !== undefined, hasDay: params.day !== undefined, hasEra: !!params.era, hasCategories: !!params.categories }));
         // Get Firestore instance
         const db = (0, index_1.getDb)();
-        // Build Firestore query
-        let firestoreQuery = db
-            .collection("contentEvents")
-            .orderBy("year", "desc");
-        // Apply era filter
-        if (params.era) {
-            firestoreQuery = firestoreQuery.where("era", "==", params.era);
-        }
-        // Apply category filter (if single category)
-        // Note: Firestore doesn't support 'array-contains-any' with other filters
-        // For multiple categories, we'll filter client-side after fetching
+        // Parse category array early for query building
         const categoryArray = params.categories
             ? params.categories.split(",").filter(Boolean)
             : [];
-        if (categoryArray.length === 1) {
+        // Build Firestore query - CRITICAL ORDER: where() filters BEFORE orderBy()
+        let firestoreQuery = db.collection("contentEvents");
+        // STEP 1: Apply month/day filters FIRST (if provided)
+        if (params.month !== undefined && params.day !== undefined) {
+            console.log("[Search API] Applying month/day filters:", {
+                month: params.month,
+                day: params.day,
+            });
             firestoreQuery = firestoreQuery
-                .where("categories", "array-contains", categoryArray[0]);
+                .where("date.month", "==", params.month)
+                .where("date.day", "==", params.day);
         }
-        // Apply cursor pagination
+        else if (params.month !== undefined) {
+            // Month only (unlikely, but handle it)
+            firestoreQuery = firestoreQuery.where("date.month", "==", params.month);
+        }
+        else if (params.day !== undefined) {
+            // Day only (unlikely, but handle it)
+            firestoreQuery = firestoreQuery.where("date.day", "==", params.day);
+        }
+        // STEP 2: Apply era filter (if provided)
+        if (params.era) {
+            console.log("[Search API] Applying era filter:", params.era);
+            firestoreQuery = firestoreQuery.where("era", "==", params.era);
+        }
+        // STEP 3: Apply category filter (single category only - multi handled client-side)
+        // Note: Firestore doesn't support 'array-contains-any' with other filters
+        if (categoryArray.length === 1) {
+            console.log("[Search API] Applying single category filter:", categoryArray[0]);
+            firestoreQuery = firestoreQuery.where("categories", "array-contains", categoryArray[0]);
+        }
+        // STEP 4: Apply orderBy (MUST come after all where() clauses)
+        firestoreQuery = firestoreQuery
+            .orderBy("year", "desc")
+            .orderBy("__name__", "desc"); // Required for cursor pagination
+        console.log("[Search API] Query structure built, applying cursor and limit");
+        // STEP 5: Apply cursor pagination (if provided)
         if (params.cursor) {
             const cursorDoc = await db
                 .collection("contentEvents")
@@ -89,14 +122,32 @@ async function exploreSearch(request, response) {
             if (cursorDoc.exists) {
                 firestoreQuery = firestoreQuery.startAfter(cursorDoc);
             }
+            else {
+                console.warn("[Search API] Cursor document not found:", params.cursor);
+            }
         }
-        // Fetch with +1 to determine if there are more results
-        // For multi-category, fetch more to account for client-side filtering
+        // STEP 6: Apply limit
         const requestedLimit = params.limit || 20;
-        const fetchMultiplier = categoryArray.length > 1 ? 10 : 1;
-        const fetchLimit = (requestedLimit * fetchMultiplier) + 1;
-        firestoreQuery = firestoreQuery.limit(fetchLimit);
-        const snapshot = await firestoreQuery.get();
+        const fetchLimit = Math.min(requestedLimit + 1, 51); // Max 50 results + 1 for hasMore
+        if (categoryArray.length > 1) {
+            // Multi-category: fetch limited set and filter client-side
+            // Limit to 50 to prevent timeout
+            console.log("[Search API] Multi-category mode, fetching up to 50 for client-side filtering");
+            firestoreQuery = firestoreQuery.limit(50);
+        }
+        else {
+            firestoreQuery = firestoreQuery.limit(fetchLimit);
+        }
+        // Timeout protection: max 8 seconds
+        const QUERY_TIMEOUT_MS = 8000;
+        const fetchWithTimeout = async () => {
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("Query timeout after 8s")), QUERY_TIMEOUT_MS);
+            });
+            const queryPromise = firestoreQuery.get();
+            return Promise.race([queryPromise, timeoutPromise]);
+        };
+        const snapshot = await fetchWithTimeout();
         console.log("[Search API] Fetched documents:", snapshot.size);
         // Map documents to events
         let events = snapshot.docs.map((doc) => {
@@ -152,9 +203,27 @@ async function exploreSearch(request, response) {
     }
     catch (error) {
         console.error("[Search API] Error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const isIndexError = errorMessage.includes("FAILED_PRECONDITION") ||
+            errorMessage.includes("requires an index") ||
+            errorMessage.includes("index");
+        if (isIndexError) {
+            console.error("[Search API] INDEX REQUIRED - Query params:", {
+                month: request.query.month,
+                day: request.query.day,
+                era: request.query.era,
+                categories: request.query.categories,
+            });
+            response.status(503).json({
+                error: "Index building",
+                message: "Database indexes are being prepared. Please try again in a few minutes.",
+                retryAfter: 60,
+            });
+            return;
+        }
         response.status(500).json({
             error: "Internal server error",
-            message: error instanceof Error ? error.message : "Unknown error",
+            message: errorMessage,
         });
     }
 }
