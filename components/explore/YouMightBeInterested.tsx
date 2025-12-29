@@ -6,7 +6,8 @@ import type { FirestoreEventDocument } from '@/types/events';
 import { heroEvent } from '@/constants/events';
 import { formatCategoryLabel } from '@/constants/personalization';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
-import { getEventImageUri, getEventSummary, getEventTitle, getEventYearLabel } from '@/utils/event-presentation';
+import { getEventImageSource, getEventSummary, getEventTitle, getEventYearLabel } from '@/utils/event-presentation';
+import { toImageSource } from '@/utils/wikimedia-image-source';
 import { createLinearGradientSource } from '@/utils/gradient';
 import { markNotInterested } from '@/services/you-might-be-interested';
 import { trackEvent } from '@/services/analytics';
@@ -189,8 +190,7 @@ const YMBICard = ({
     []
   );
 
-  const imageUri = getEventImageUri(event);
-  const imageSource = imageUri ? { uri: imageUri } : heroEvent.image;
+  const imageSource = getEventImageSource(event) ?? toImageSource(heroEvent.image);
   const yearLabel = getEventYearLabel(event);
   const title = getEventTitle(event);
   const summary = getEventSummary(event);

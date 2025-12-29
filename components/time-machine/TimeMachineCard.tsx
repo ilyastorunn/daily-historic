@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
+import { createImageSource } from '@/utils/wikimedia-image-source';
 import { useAppTheme } from '@/theme';
 import { categoryLabelFromId } from '@/utils/categories';
 
@@ -15,6 +16,7 @@ export type TimeMachineCardProps = {
   dateISO?: string;
   categoryId?: string;
   onPress?: (id: string) => void;
+  fullScreen?: boolean; // Tinder-style full-screen mode
 };
 
 const formatDate = (dateISO: string): string => {
@@ -27,9 +29,9 @@ const formatDate = (dateISO: string): string => {
 };
 
 export const TimeMachineCard = memo<TimeMachineCardProps>(
-  ({ id, title, summary, imageUrl, dateISO, categoryId, onPress }) => {
+  ({ id, title, summary, imageUrl, dateISO, categoryId, onPress, fullScreen = false }) => {
     const theme = useAppTheme();
-    const styles = buildStyles(theme);
+    const styles = buildStyles(theme, fullScreen);
 
     const handlePress = () => {
       onPress?.(id);
@@ -45,7 +47,7 @@ export const TimeMachineCard = memo<TimeMachineCardProps>(
         {imageUrl ? (
           <View style={styles.imageContainer}>
             <Image
-              source={{ uri: imageUrl }}
+              source={createImageSource(imageUrl)}
               style={styles.image}
               contentFit="cover"
               transition={150}
@@ -76,8 +78,10 @@ export const TimeMachineCard = memo<TimeMachineCardProps>(
 
 TimeMachineCard.displayName = 'TimeMachineCard';
 
-const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
-  StyleSheet.create({
+const buildStyles = (theme: ReturnType<typeof useAppTheme>, fullScreen: boolean) => {
+  const imageHeight = fullScreen ? 420 : 300; // Larger for full-screen mode
+
+  return StyleSheet.create({
     card: {
       width: SCREEN_WIDTH - theme.spacing.xl * 2,
       alignSelf: 'center',
@@ -97,11 +101,11 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
     imageContainer: {
       position: 'relative',
       width: '100%',
-      height: 300,
+      height: imageHeight,
     },
     image: {
       width: '100%',
-      height: 300,
+      height: imageHeight,
       backgroundColor: theme.colors.surfaceSubtle,
     },
     imagePlaceholder: {
@@ -151,3 +155,4 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
       marginTop: theme.spacing.xs,
     },
   });
+};

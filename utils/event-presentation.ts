@@ -1,5 +1,8 @@
+import type { ImageSource } from 'expo-image';
+
 import { formatCategoryLabel, formatEraLabel } from '@/constants/personalization';
 import type { FirestoreEventDocument, FirestoreRelatedPage } from '@/types/events';
+import { createImageSource } from '@/utils/wikimedia-image-source';
 
 const decodeHtmlEntities = (text: string): string => {
   // Common HTML entities map
@@ -70,6 +73,18 @@ export const getEventImageUri = (event: FirestoreEventDocument) => {
   }
   const thumbnail = primaryPage.thumbnails?.find((asset) => asset.sourceUrl);
   return thumbnail?.sourceUrl;
+};
+
+/**
+ * Returns an ImageSource with proper Wikimedia headers for the event's primary image.
+ * Use this when passing image sources to expo-image components.
+ *
+ * @param event - Firestore event document
+ * @returns ImageSource with headers for Wikimedia URLs, or undefined if no image
+ */
+export const getEventImageSource = (event: FirestoreEventDocument): ImageSource | undefined => {
+  const uri = getEventImageUri(event);
+  return createImageSource(uri);
 };
 
 export const getEventTitle = (event: FirestoreEventDocument) => {

@@ -30,6 +30,7 @@ import {
   getEventYearLabel,
   selectPrimaryPage,
 } from '@/utils/event-presentation';
+import { createImageSource, toImageSource } from '@/utils/wikimedia-image-source';
 
 // Reactions removed - using Like + Deep Dive + Save + Share instead
 
@@ -236,9 +237,9 @@ const EventDetailScreen = () => {
   const staticEvent = useMemo(() => (eventIdParam ? getEventById(eventIdParam) : null), [eventIdParam]);
   const { event: fetchedEvent, loading: remoteLoading, error: remoteError } = useEventContent(eventIdParam);
   const [imageLoadError, setImageLoadError] = React.useState(false);
-  const fallbackImageSource = staticEvent?.image ?? heroEvent.image;
+  const fallbackImageSource = toImageSource(staticEvent?.image) ?? toImageSource(heroEvent.image);
   const dynamicImageUri = fetchedEvent ? getEventImageUri(fetchedEvent) : undefined;
-  const heroImageSource = imageLoadError || !dynamicImageUri ? fallbackImageSource : { uri: dynamicImageUri };
+  const heroImageSource = imageLoadError || !dynamicImageUri ? fallbackImageSource : createImageSource(dynamicImageUri);
   const heroImageUri = useMemo(
     () => (dynamicImageUri && !imageLoadError ? dynamicImageUri : getImageUri(fallbackImageSource)),
     [dynamicImageUri, fallbackImageSource, imageLoadError]

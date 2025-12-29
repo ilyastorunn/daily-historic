@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
 import { Image } from 'expo-image';
 
+import { createImageSource } from '@/utils/wikimedia-image-source';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 export type WeeklyCollectionTile = {
@@ -213,7 +214,7 @@ export const WeeklyCollectionsGrid: React.FC<WeeklyCollectionsGridProps> = ({
                           </View>
                         ) : (
                           <Image
-                            source={{ uri: item.coverUrl }}
+                            source={createImageSource(item.coverUrl)}
                             style={styles.tileImage}
                             contentFit="cover"
                             onError={() => handleImageError(item.id, item.coverUrl)}

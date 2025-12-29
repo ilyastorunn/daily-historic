@@ -18,6 +18,7 @@ import {
 
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import { getImageUri } from '@/utils/image-source';
+import { toImageSource } from '@/utils/wikimedia-image-source';
 
 export type EditorialCardAction = {
   label: string;
@@ -256,7 +257,7 @@ export const EditorialCard: React.FC<EditorialCardProps> = ({
       {imageSource ? (
         <View style={themedStyles.mediaShell}>
           <Image
-            source={imageSource}
+            source={toImageSource(imageSource)}
             style={themedStyles.media}
             contentFit="cover"
             transition={150}

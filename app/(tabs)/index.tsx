@@ -39,6 +39,7 @@ import {
   getEventTitle,
   getEventYearLabel,
 } from '@/utils/event-presentation';
+import { createImageSource, toImageSource } from '@/utils/wikimedia-image-source';
 import { createLinearGradientSource } from '@/utils/gradient';
 import { getImageUri } from '@/utils/image-source';
 
@@ -495,7 +496,7 @@ const HomeScreen = () => {
       summary: heroEvent.summary,
       meta: heroEvent.location,
       yearLabel: heroEvent.year,
-      imageSource: heroEvent.image,
+      imageSource: toImageSource(heroEvent.image)!,
       imageUri: getImageUri(heroEvent.image),
       isFallback: true,
       categories: heroEvent.categories ?? [],
@@ -588,7 +589,9 @@ const HomeScreen = () => {
         summary,
         meta,
         yearLabel,
-        imageSource: imageUri ? { uri: imageUri } : defaultHeroItem.imageSource,
+        imageSource: imageUri
+          ? (createImageSource(imageUri) ?? defaultHeroItem.imageSource)
+          : defaultHeroItem.imageSource,
         imageUri: imageUri ?? defaultHeroItem.imageUri,
         event,
         categories,
@@ -742,11 +745,13 @@ const HomeScreen = () => {
 
     // Phase 1: No paywall, everyone gets access
     // Pick a new random year each time
-    await seedTimeMachine();
-    await loadTimeMachineTimeline();
-    trackEvent('time_machine_started', { year: timeMachineYear ?? undefined, user_tier: userTier });
-    router.push({ pathname: '/time-machine', params: { year: timeMachineYear ? String(timeMachineYear) : undefined } });
-  }, [isPremiumUser, loadTimeMachineTimeline, router, seedTimeMachine, timeMachineYear]);
+    const randomYear = await seedTimeMachine();
+    if (randomYear) {
+      await loadTimeMachineTimeline(randomYear);
+      trackEvent('time_machine_started', { year: randomYear, user_tier: userTier });
+      router.push({ pathname: '/time-machine', params: { year: String(randomYear) } });
+    }
+  }, [isPremiumUser, loadTimeMachineTimeline, router, seedTimeMachine]);
 
   const handleSavedStoryPress = useCallback(
     (eventId: string) => {
@@ -822,11 +827,10 @@ const HomeScreen = () => {
 
           <View style={styles.timeMachineContainer}>
             <TimeMachineBlock
-              premium={isPremiumUser}
+              premium={true}
               imageUrl={timeMachineImage}
               subtitle="Guided timeline journeys."
               onPress={handleTimeMachinePress}
-              onTeaser={handleTimeMachineTeaser}
               loading={timeMachineLoading || timeMachineSeeding}
               testID="home-time-machine"
             />

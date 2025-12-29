@@ -15,10 +15,11 @@ import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
 import { heroEvent } from '@/constants/events';
 import {
-  getEventImageUri,
+  getEventImageSource,
   getEventTitle,
   getEventYearLabel,
 } from '@/utils/event-presentation';
+import { toImageSource } from '@/utils/wikimedia-image-source';
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography } = theme;
@@ -133,8 +134,7 @@ const SavedEventCard: React.FC<SavedEventCardProps> = ({ event, styles, onOpen }
   const theme = useAppTheme();
   const { toggleSave } = useEventEngagement(event.eventId);
 
-  const imageUri = getEventImageUri(event);
-  const imageSource = imageUri ? { uri: imageUri } : heroEvent.image;
+  const imageSource = getEventImageSource(event) ?? toImageSource(heroEvent.image);
   const yearLabel = getEventYearLabel(event);
   const title = getEventTitle(event);
 

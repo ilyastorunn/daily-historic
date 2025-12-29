@@ -3,17 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { colors, radiusScale, spacingScale } from './styles';
-import { buildWikimediaFileUrl } from '@/utils/wikimedia';
+import { buildWikimediaImageSource } from '@/utils/wikimedia';
 
 const sources = {
-  armstrong: { uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg') },
-  edison: { uri: buildWikimediaFileUrl('File:Thomas_Edison2.jpg') },
-  cesar: {
-    uri: buildWikimediaFileUrl('File:Vincenzo_Camuccini_-_Morte_di_Cesare.jpg'),
-  },
-  empire: {
-    uri: buildWikimediaFileUrl('File:Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg'),
-  },
+  armstrong: buildWikimediaImageSource('File:Neil_Armstrong_pose.jpg'),
+  edison: buildWikimediaImageSource('File:Thomas_Edison2.jpg'),
+  cesar: buildWikimediaImageSource('File:Vincenzo_Camuccini_-_Morte_di_Cesare.jpg'),
+  empire: buildWikimediaImageSource('File:Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg'),
 };
 
 const HeroCollage = () => (

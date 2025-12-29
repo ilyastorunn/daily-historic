@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+
+import { createImageSource } from '@/utils/wikimedia-image-source';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -155,7 +157,7 @@ export const TimeMachineBlock: React.FC<TimeMachineBlockProps> = ({
         </View>
       ) : (
         <Pressable style={styles.pressable} accessibilityRole="button" onPress={handlePress}>
-          <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+          <Image source={createImageSource(imageUrl)} style={styles.image} contentFit="cover" />
           <View style={styles.overlay}>
             {!premium ? <Text style={styles.badge}>Premium</Text> : null}
             <Text style={styles.title}>{title}</Text>

@@ -1,6 +1,6 @@
 import type { ImageSource } from 'expo-image';
 
-import { buildWikimediaFileUrl } from '@/utils/wikimedia';
+import { buildWikimediaImageSource } from '@/utils/wikimedia';
 
 export type EventCategory =
   | 'science'
@@ -58,9 +58,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       "Neil Armstrong descends from Apollo 11's Eagle module and becomes the first human to touch the lunar surface, broadcasting the moment to over 600 million viewers at home.",
     location: 'Sea of Tranquility, Moon',
-    image: {
-      uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Neil_Armstrong_pose.jpg'),
     categories: ['science', 'innovation'],
     eras: ['modern'],
     whyItMatters:
@@ -82,9 +80,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'U.S. Secretary of State Bainbridge Colby certifies the 19th Amendment, granting women the right to vote nationwide after decades of activism.',
     location: 'Washington, D.C., USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Suffragists_Parade_Down_Fifth_Avenue,_1917.JPG'),
-    },
+    image: buildWikimediaImageSource('File:Suffragists_Parade_Down_Fifth_Avenue,_1917.JPG'),
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
     whyItMatters: 'A milestone that underpins today’s conversations around civic equity.',
@@ -104,9 +100,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Ada Lovelace publishes her notes on Charles Babbage’s Analytical Engine, describing algorithmic steps and envisioning creative uses beyond calculation.',
     location: 'London, United Kingdom',
-    image: {
-      uri: buildWikimediaFileUrl('File:Ada_Lovelace_portrait.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Ada_Lovelace_portrait.jpg'),
     categories: ['innovation', 'science'],
     eras: ['industrial'],
     sources: [
@@ -129,9 +123,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Speakeasies and theaters across Harlem popularize jazz legends like Duke Ellington, broadcasting a transformative sound to the entire country.',
     location: 'Harlem, New York City, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_publicity.JPG'),
-    },
+    image: buildWikimediaImageSource('File:Duke_Ellington_-_publicity.JPG'),
     categories: ['culture', 'art'],
     eras: ['modern'],
     sources: [
@@ -151,9 +143,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Jean-François Champollion announces that he has decoded Egyptian hieroglyphs by comparing Greek and Demotic scripts, giving voice to millennia of inscriptions.',
     location: 'Paris, France',
-    image: {
-      uri: buildWikimediaFileUrl('File:Rosetta_Stone.JPG'),
-    },
+    image: buildWikimediaImageSource('File:Rosetta_Stone.JPG'),
     categories: ['culture', 'science'],
     eras: ['modern'],
     sources: [
@@ -172,9 +162,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Sally Ride Science starts camps to sustain girls\' curiosity in STEM, extending the impact of Ride\'s 1983 mission to a new generation.',
     location: 'San Diego, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Sally_Ride_in_1984.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Sally_Ride_in_1984.jpg'),
     categories: ['science', 'human-rights'],
     eras: ['contemporary'],
     sources: [
@@ -190,9 +178,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Over 150,000 Allied troops land on five beaches in Normandy, France, launching the largest amphibious invasion in history and opening a critical Western Front against Nazi occupation.',
     location: 'Normandy, France',
-    image: {
-      uri: buildWikimediaFileUrl('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
     categories: ['politics'],
     eras: ['modern'],
     sources: [
@@ -209,9 +195,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Japanese aircraft attack the US Pacific Fleet at Pearl Harbor, Hawaii, killing over 2,400 Americans and sinking battleships. The next day, President Roosevelt declares war.',
     location: 'Pearl Harbor, Hawaii, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:The_USS_Arizona_(BB-39)_burning_after_the_Japanese_attack_on_Pearl_Harbor_-_NARA_195617_-_Edit.jpg'),
-    },
+    image: buildWikimediaImageSource('File:The_USS_Arizona_(BB-39)_burning_after_the_Japanese_attack_on_Pearl_Harbor_-_NARA_195617_-_Edit.jpg'),
     categories: ['politics'],
     eras: ['modern'],
     sources: [
@@ -228,9 +212,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Germany signs an armistice agreement with the Allies, ending four years of unprecedented carnage that claimed over 17 million lives and reshaped the modern world.',
     location: 'Compiègne, France',
-    image: {
-      uri: buildWikimediaFileUrl('File:American_soldiers_rejoice_at_the_Armistice,_11th_November_1918._(45780427912).jpg'),
-    },
+    image: buildWikimediaImageSource('File:American_soldiers_rejoice_at_the_Armistice,_11th_November_1918._(45780427912).jpg'),
     categories: ['politics'],
     eras: ['modern'],
     sources: [
@@ -247,9 +229,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'The B-29 bomber Enola Gay drops "Little Boy" on Hiroshima, instantly killing 70,000 and ushering in the atomic age. Japan surrenders nine days later, ending WWII.',
     location: 'Hiroshima, Japan',
-    image: {
-      uri: buildWikimediaFileUrl('File:Atomic_bombing_of_Japan.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Atomic_bombing_of_Japan.jpg'),
     categories: ['politics', 'science'],
     eras: ['modern'],
     sources: [
@@ -266,9 +246,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'After months of brutal urban combat, the German Sixth Army surrenders at Stalingrad. The decisive Soviet victory shifts momentum on the Eastern Front and dooms the Nazi invasion.',
     location: 'Stalingrad (Volgograd), Soviet Union',
-    image: {
-      uri: buildWikimediaFileUrl('File:RIAN_archive_602161_Center_of_Stalingrad_after_liberation.jpg'),
-    },
+    image: buildWikimediaImageSource('File:RIAN_archive_602161_Center_of_Stalingrad_after_liberation.jpg'),
     categories: ['politics'],
     eras: ['modern'],
     sources: [
@@ -285,9 +263,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'The Treaty of Versailles officially ends WWI, imposing harsh reparations on Germany and redrawing European borders. Its punitive terms contribute to economic collapse and the rise of extremism.',
     location: 'Versailles, France',
-    image: {
-      uri: buildWikimediaFileUrl('File:William_Orpen_-_The_Signing_of_Peace_in_the_Hall_of_Mirrors.jpg'),
-    },
+    image: buildWikimediaImageSource('File:William_Orpen_-_The_Signing_of_Peace_in_the_Hall_of_Mirrors.jpg'),
     categories: ['politics'],
     eras: ['modern'],
     sources: [
@@ -304,9 +280,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'The standoff over Soviet missiles in Cuba brings the US and USSR closest to nuclear war. President Kennedy\'s naval blockade and Khrushchev\'s decision to withdraw avert catastrophe.',
     location: 'Cuba and Washington, D.C.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Cuban_crisis_map_missile_range.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Cuban_crisis_map_missile_range.jpg'),
     categories: ['politics'],
     eras: ['modern'],
     sources: [
@@ -323,9 +297,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Marie Curie shares the Nobel Prize in Physics with Pierre Curie and Henri Becquerel for their work on radioactivity, becoming the first woman to receive a Nobel Prize.',
     location: 'Stockholm, Sweden',
-    image: {
-      uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Marie_Curie_c1920.jpg'),
     categories: ['science', 'human-rights'],
     eras: ['modern'],
     sources: [
@@ -342,9 +314,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Rosa Parks refuses to surrender her bus seat to a white passenger in Montgomery, Alabama. Her arrest sparks a 381-day boycott that catapults Martin Luther King Jr. to prominence and desegregates public transit.',
     location: 'Montgomery, Alabama, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Rosa_Parks_in_Color.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Rosa_Parks_in_Color.jpg'),
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
     sources: [
@@ -361,9 +331,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Amelia Earhart lands in Northern Ireland after flying solo from Newfoundland, becoming the first woman to fly solo across the Atlantic Ocean and cementing her place as an aviation pioneer.',
     location: 'Culmore, Northern Ireland',
-    image: {
-      uri: buildWikimediaFileUrl('File:Amelia_Earhart_standing_under_nose_of_her_Lockheed_Model_10-E_Electra.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Amelia_Earhart_standing_under_nose_of_her_Lockheed_Model_10-E_Electra.jpg'),
     categories: ['innovation', 'human-rights'],
     eras: ['modern'],
     sources: [
@@ -380,9 +348,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Florence Nightingale arrives in Crimea with 38 nurses, introducing sanitary reforms that dramatically reduce death rates. Her work establishes nursing as a respected profession.',
     location: 'Scutari (Üsküdar), Ottoman Empire',
-    image: {
-      uri: buildWikimediaFileUrl('File:Florence_Nightingale_(H_Hering_NPG_x82368).jpg'),
-    },
+    image: buildWikimediaImageSource('File:Florence_Nightingale_(H_Hering_NPG_x82368).jpg'),
     categories: ['science', 'human-rights'],
     eras: ['industrial'],
     sources: [
@@ -399,9 +365,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Harriet Tubman makes over a dozen dangerous trips into slave states via the Underground Railroad, personally leading approximately 70 enslaved people to freedom and never losing a passenger.',
     location: 'Eastern Shore, Maryland to Northern States',
-    image: {
-      uri: buildWikimediaFileUrl('File:Harriet_Tubman.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Harriet_Tubman.jpg'),
     categories: ['human-rights'],
     eras: ['industrial'],
     sources: [
@@ -418,9 +382,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'At 17, Malala becomes the youngest Nobel Prize winner, recognized for her courageous advocacy for girls\' education after surviving a Taliban assassination attempt in Pakistan.',
     location: 'Oslo, Norway',
-    image: {
-      uri: buildWikimediaFileUrl('File:Malala_Yousafzai.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Malala_Yousafzai.jpg'),
     categories: ['human-rights'],
     eras: ['contemporary'],
     sources: [
@@ -437,9 +399,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Emmeline Pankhurst founds the Women\'s Social and Political Union in Manchester, adopting the motto "Deeds not Words" and launching militant tactics that accelerate the suffrage movement.',
     location: 'Manchester, United Kingdom',
-    image: {
-      uri: buildWikimediaFileUrl('File:Emmeline_Pankhurst_Arrested_1914.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Emmeline_Pankhurst_Arrested_1914.jpg'),
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
     sources: [
@@ -456,9 +416,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'The Victoria returns to Spain, completing the first circumnavigation of Earth. Though Magellan died in the Philippines, his expedition proves the world is round and opens new trade routes.',
     location: 'Seville, Spain',
-    image: {
-      uri: buildWikimediaFileUrl('File:Magellan_Elcano_Circumnavigation-en.svg'),
-    },
+    image: buildWikimediaImageSource('File:Magellan_Elcano_Circumnavigation-en.svg'),
     categories: ['innovation'],
     eras: ['renaissance'],
     sources: [
@@ -475,9 +433,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'After 18 months of arduous travel, the Lewis and Clark Expedition reaches the Pacific coast, mapping unknown territory and establishing American claims to the western frontier.',
     location: 'Pacific Coast, Oregon',
-    image: {
-      uri: buildWikimediaFileUrl('File:Lewis_and_clark-expedition.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Lewis_and_clark-expedition.jpg'),
     categories: ['innovation', 'politics'],
     eras: ['industrial'],
     sources: [
@@ -494,9 +450,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Roald Amundsen and his team become the first humans to reach the geographic South Pole, beating Robert Scott\'s British expedition by 34 days in the heroic age of Antarctic exploration.',
     location: 'South Pole, Antarctica',
-    image: {
-      uri: buildWikimediaFileUrl('File:Amundsen_Expedition_at_South_Pole.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Amundsen_Expedition_at_South_Pole.jpg'),
     categories: ['innovation'],
     eras: ['modern'],
     sources: [
@@ -513,9 +467,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Edmund Hillary and Tenzing Norgay reach the 29,029-foot summit of Mount Everest, conquering the world\'s highest mountain after decades of failed attempts.',
     location: 'Mount Everest, Nepal-Tibet border',
-    image: {
-      uri: buildWikimediaFileUrl('File:Tenzing_Norgay.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Tenzing_Norgay.jpg'),
     categories: ['innovation'],
     eras: ['modern'],
     sources: [
@@ -532,9 +484,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Captain James Cook lands at Botany Bay, Australia, during his first Pacific voyage. His meticulous charts and observations transform European knowledge of the Southern Hemisphere.',
     location: 'Botany Bay, Australia',
-    image: {
-      uri: buildWikimediaFileUrl('File:Captainjamescookportrait.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Captainjamescookportrait.jpg'),
     categories: ['innovation'],
     eras: ['industrial'],
     sources: [
@@ -551,9 +501,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Ernest Shackleton completes one of history\'s greatest survival stories, rescuing his entire crew after the Endurance was crushed by Antarctic ice, enduring 22 months of extreme conditions.',
     location: 'Elephant Island, Antarctica',
-    image: {
-      uri: buildWikimediaFileUrl('File:Endurance_trapped_in_pack_ice.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Endurance_trapped_in_pack_ice.jpg'),
     categories: ['innovation'],
     eras: ['modern'],
     sources: [
@@ -570,9 +518,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Jonas Salk announces the successful trial of his polio vaccine, protecting millions of children from paralysis and death. He refuses to patent it, saying "Could you patent the sun?"',
     location: 'Pittsburgh, Pennsylvania, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Jonas_Salk_candid.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Jonas_Salk_candid.jpg'),
     categories: ['science'],
     eras: ['modern'],
     sources: [
@@ -589,9 +535,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'James Watson and Francis Crick publish their model of DNA\'s double helix structure in Nature, revolutionizing biology and launching the era of molecular genetics.',
     location: 'Cambridge, United Kingdom',
-    image: {
-      uri: buildWikimediaFileUrl('File:DNA_Model_Crick-Watson.jpg'),
-    },
+    image: buildWikimediaImageSource('File:DNA_Model_Crick-Watson.jpg'),
     categories: ['science'],
     eras: ['modern'],
     sources: [
@@ -608,9 +552,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'South African surgeon Christiaan Barnard performs the first successful human-to-human heart transplant, opening a new frontier in organ transplantation and extending countless lives.',
     location: 'Cape Town, South Africa',
-    image: {
-      uri: buildWikimediaFileUrl('File:Christiaan_Barnard_(1968).jpg'),
-    },
+    image: buildWikimediaImageSource('File:Christiaan_Barnard_(1968).jpg'),
     categories: ['science'],
     eras: ['modern'],
     sources: [
@@ -627,9 +569,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'German physicist Wilhelm Röntgen accidentally discovers X-rays while experimenting with cathode rays, creating the first X-ray image of his wife\'s hand and founding medical imaging.',
     location: 'Würzburg, Germany',
-    image: {
-      uri: buildWikimediaFileUrl('File:WilhelmRöntgen.JPG'),
-    },
+    image: buildWikimediaImageSource('File:WilhelmRöntgen.JPG'),
     categories: ['science'],
     eras: ['industrial'],
     sources: [
@@ -646,9 +586,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Louis Pasteur\'s experiments definitively prove that microorganisms cause fermentation and disease, revolutionizing medicine and leading to antiseptic practices that save millions.',
     location: 'Paris, France',
-    image: {
-      uri: buildWikimediaFileUrl('File:Louis_Pasteur.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Louis_Pasteur.jpg'),
     categories: ['science'],
     eras: ['industrial'],
     sources: [
@@ -665,9 +603,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'William T.G. Morton publicly demonstrates ether anesthesia during surgery at Massachusetts General Hospital, transforming medicine by eliminating the horrific pain of operations.',
     location: 'Boston, Massachusetts, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:The_first_use_of_ether_in_dental_surgery,_1846._Ernest_Board._Wellcome_V0018140.jpg'),
-    },
+    image: buildWikimediaImageSource('File:The_first_use_of_ether_in_dental_surgery,_1846._Ernest_Board._Wellcome_V0018140.jpg'),
     categories: ['science'],
     eras: ['industrial'],
     sources: [
@@ -684,9 +620,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'The ENIAC (Electronic Numerical Integrator and Computer) is unveiled at the University of Pennsylvania, weighing 30 tons and performing calculations 1,000 times faster than previous machines.',
     location: 'Philadelphia, Pennsylvania, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Eniac.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Eniac.jpg'),
     categories: ['innovation', 'science'],
     eras: ['modern'],
     sources: [
@@ -703,9 +637,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'UCLA sends the first message over ARPANET to Stanford Research Institute, transmitting "LO" before the system crashes. This moment marks the birth of the internet.',
     location: 'Los Angeles, California, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Arpanet_logical_map,_march_1977.png'),
-    },
+    image: buildWikimediaImageSource('File:Arpanet_logical_map,_march_1977.png'),
     categories: ['innovation'],
     eras: ['modern'],
     sources: [
@@ -722,9 +654,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Tim Berners-Lee submits his proposal for a "World Wide Web" at CERN, envisioning a system of linked documents accessible via the internet that would revolutionize information sharing.',
     location: 'Geneva, Switzerland',
-    image: {
-      uri: buildWikimediaFileUrl('File:Tim_Berners-Lee_CP_2_head_crop.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Tim_Berners-Lee_CP_2_head_crop.jpg'),
     categories: ['innovation'],
     eras: ['contemporary'],
     sources: [
@@ -741,9 +671,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Steve Jobs introduces the iPhone at Macworld, combining a phone, iPod, and internet communicator. The touchscreen device transforms mobile computing and launches the smartphone era.',
     location: 'San Francisco, California, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Steve_Jobs_Headshot_2010-CROP_(cropped_2).jpg'),
-    },
+    image: buildWikimediaImageSource('File:Steve_Jobs_Headshot_2010-CROP_(cropped_2).jpg'),
     categories: ['innovation'],
     eras: ['contemporary'],
     sources: [
@@ -760,9 +688,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Larry Page and Sergey Brin incorporate Google Inc. in a Menlo Park garage. Their PageRank algorithm revolutionizes web search and builds one of the world\'s most valuable companies.',
     location: 'Menlo Park, California, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Googleplex-Patio-Aug-2014.JPG'),
-    },
+    image: buildWikimediaImageSource('File:Googleplex-Patio-Aug-2014.JPG'),
     categories: ['innovation'],
     eras: ['contemporary'],
     sources: [
@@ -779,9 +705,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'James Watt patents his improved steam engine with separate condenser, dramatically increasing efficiency. His innovations power factories, trains, and ships, driving industrialization.',
     location: 'Birmingham, United Kingdom',
-    image: {
-      uri: buildWikimediaFileUrl('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
-    },
+    image: buildWikimediaImageSource('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
     categories: ['innovation'],
     eras: ['industrial'],
     sources: [
@@ -798,9 +722,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'The Central Pacific and Union Pacific railroads meet at Promontory Summit, Utah, completing the first transcontinental railroad and revolutionizing American commerce and westward expansion.',
     location: 'Promontory Summit, Utah, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:East_and_West_Shaking_hands_at_the_laying_of_last_rail_Union_Pacific_Railroad_-_Restoration.jpg'),
-    },
+    image: buildWikimediaImageSource('File:East_and_West_Shaking_hands_at_the_laying_of_last_rail_Union_Pacific_Railroad_-_Restoration.jpg'),
     categories: ['innovation', 'politics'],
     eras: ['industrial'],
     sources: [
@@ -817,9 +739,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'President Abraham Lincoln issues the Emancipation Proclamation, declaring all enslaved people in Confederate states free. The order transforms the Civil War into a fight for human freedom.',
     location: 'Washington, D.C., USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Emancipation_proclamation.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Emancipation_proclamation.jpg'),
     categories: ['human-rights', 'politics'],
     eras: ['industrial'],
     sources: [
@@ -836,9 +756,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Confederate artillery opens fire on Fort Sumter in Charleston Harbor, marking the start of the American Civil War. The four-year conflict will claim 600,000 lives and end slavery.',
     location: 'Charleston, South Carolina, USA',
-    image: {
-      uri: buildWikimediaFileUrl('File:Bombardment_of_Fort_Sumter_Charleston_Harbor_1863.jpeg'),
-    },
+    image: buildWikimediaImageSource('File:Bombardment_of_Fort_Sumter_Charleston_Harbor_1863.jpeg'),
     categories: ['politics'],
     eras: ['industrial'],
     sources: [
@@ -855,9 +773,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'After four years of grueling work, Michelangelo unveils his frescoes on the Sistine Chapel ceiling, including the iconic "Creation of Adam." The work defines High Renaissance art.',
     location: 'Vatican City',
-    image: {
-      uri: buildWikimediaFileUrl('File:Creación_de_Adán.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Creación_de_Adán.jpg'),
     categories: ['art', 'culture'],
     eras: ['renaissance'],
     sources: [
@@ -874,9 +790,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Claude Monet paints "Impression, Sunrise" in Le Havre. When exhibited in 1874, critics mock its loose brushwork, inadvertently naming Impressionism—one of history\'s most influential art movements.',
     location: 'Le Havre, France',
-    image: {
-      uri: buildWikimediaFileUrl('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
     categories: ['art', 'culture'],
     eras: ['industrial'],
     sources: [
@@ -893,9 +807,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     detail:
       'Ludwig van Beethoven, now completely deaf, conducts the premiere of his Ninth Symphony in Vienna. The revolutionary work features a choral finale that becomes an anthem of human unity.',
     location: 'Vienna, Austria',
-    image: {
-      uri: buildWikimediaFileUrl('File:Beethoven.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Beethoven.jpg'),
     categories: ['art', 'culture'],
     eras: ['industrial'],
     sources: [
@@ -910,12 +822,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'women-in-stem-week',
     title: 'Women Who Changed the World',
     summary: 'Pioneers who shattered glass ceilings across science, politics, and human rights.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Marie_Curie_c1920.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Sally_Ride_in_1984.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Marie_Curie_c1920.jpg'),
+    coverImage: buildWikimediaImageSource('File:Sally_Ride_in_1984.jpg'),
     eventIds: [
       'marie-curie-nobel',
       'ada-lovelace-analytical',
@@ -929,12 +837,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'voices-of-change',
     title: 'Voices of Change',
     summary: 'Courageous acts that redefined freedom, equality, and justice.',
-    image: {
-      uri: buildWikimediaFileUrl('File:March_on_Washington_for_Jobs_and_Freedom,_Martin_Luther_King,_Jr._and_Joachim_Prinz_1963.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Selma_to_Montgomery_Marches.jpg'),
-    },
+    image: buildWikimediaImageSource('File:March_on_Washington_for_Jobs_and_Freedom,_Martin_Luther_King,_Jr._and_Joachim_Prinz_1963.jpg'),
+    coverImage: buildWikimediaImageSource('File:Selma_to_Montgomery_Marches.jpg'),
     eventIds: [
       'rosa-parks-bus-boycott',
       'women-suffrage-usa',
@@ -947,12 +851,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'world-wars-defining-moments',
     title: 'World Wars: Defining Moments',
     summary: 'Turning points that shaped the 20th century through conflict and resolution.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Raising_the_Flag_on_Iwo_Jima,_larger_-_edit1.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
+    coverImage: buildWikimediaImageSource('File:Raising_the_Flag_on_Iwo_Jima,_larger_-_edit1.jpg'),
     eventIds: [
       'd-day-normandy-landing',
       'pearl-harbor-attack',
@@ -967,24 +867,16 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'space-race',
     title: 'Sprint to the Stars',
     summary: 'Cold War rivalries that pushed human ingenuity beyond Earth.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Buzz_salutes_the_U.S._Flag.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
+    coverImage: buildWikimediaImageSource('File:Buzz_salutes_the_U.S._Flag.jpg'),
     eventIds: ['apollo-11-first-footsteps', 'women-in-stem-week', 'amelia-earhart-atlantic'],
   },
   {
     id: 'ancient-innovations',
     title: 'Ancient Inventions',
     summary: 'Engineering leaps that shaped early civilizations.',
-    image: {
-      uri: buildWikimediaFileUrl('File:NAMA_Machine_d\'Anticythère_1.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Kheops-Pyramid.jpg'),
-    },
+    image: buildWikimediaImageSource('File:NAMA_Machine_d\'Anticythère_1.jpg'),
+    coverImage: buildWikimediaImageSource('File:Kheops-Pyramid.jpg'),
     eventIds: [
       'rosetta-stone-decode',
       'ada-lovelace-analytical',
@@ -995,12 +887,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'age-of-exploration',
     title: 'Age of Exploration',
     summary: 'Intrepid voyages that mapped the unknown and conquered new frontiers.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Magellan_Elcano_Circumnavigation-en.svg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:The_Fighting_Temeraire,_JMW_Turner,_National_Gallery.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Magellan_Elcano_Circumnavigation-en.svg'),
+    coverImage: buildWikimediaImageSource('File:The_Fighting_Temeraire,_JMW_Turner,_National_Gallery.jpg'),
     eventIds: [
       'magellan-circumnavigation',
       'lewis-clark-expedition',
@@ -1014,12 +902,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'medical-miracles',
     title: 'Medical Miracles',
     summary: 'Breakthroughs that conquered disease and transformed human health.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Jonas_Salk_candid.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Penicillin_core.svg'),
-    },
+    image: buildWikimediaImageSource('File:Jonas_Salk_candid.jpg'),
+    coverImage: buildWikimediaImageSource('File:Penicillin_core.svg'),
     eventIds: [
       'salk-polio-vaccine',
       'dna-structure-discovery',
@@ -1034,12 +918,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'scientific-breakthroughs',
     title: 'Scientific Breakthroughs',
     summary: 'Discoveries that redefined our understanding of the universe.',
-    image: {
-      uri: buildWikimediaFileUrl('File:DNA_Model_Crick-Watson.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Hubble_ultra_deep_field.jpg'),
-    },
+    image: buildWikimediaImageSource('File:DNA_Model_Crick-Watson.jpg'),
+    coverImage: buildWikimediaImageSource('File:Hubble_ultra_deep_field.jpg'),
     eventIds: [
       'dna-structure-discovery',
       'marie-curie-nobel',
@@ -1052,12 +932,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'inventors-visionaries',
     title: 'Inventors & Visionaries',
     summary: 'Bold minds who imagined the impossible and made it real.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Ada_Lovelace_portrait.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Lightbulb.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Ada_Lovelace_portrait.jpg'),
+    coverImage: buildWikimediaImageSource('File:Lightbulb.jpg'),
     eventIds: [
       'ada-lovelace-analytical',
       'marie-curie-nobel',
@@ -1070,12 +946,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'digital-age',
     title: 'Digital Age',
     summary: 'Technology revolutions that connected the world and transformed daily life.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Eniac.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Internet_map_1024.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Eniac.jpg'),
+    coverImage: buildWikimediaImageSource('File:Internet_map_1024.jpg'),
     eventIds: [
       'first-computer-eniac',
       'internet-arpanet',
@@ -1089,12 +961,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'industrial-revolution',
     title: 'Industrial Revolution',
     summary: 'Steam, steel, and ingenuity forge the modern world.',
-    image: {
-      uri: buildWikimediaFileUrl('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Spinning_jenny.jpg'),
-    },
+    image: buildWikimediaImageSource('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
+    coverImage: buildWikimediaImageSource('File:Spinning_jenny.jpg'),
     eventIds: [
       'steam-engine-watt',
       'transcontinental-railroad',
@@ -1107,12 +975,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'american-founding',
     title: 'American Founding & Reform',
     summary: 'Nation-building moments that defined freedom and equality.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Emancipation_proclamation.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Declaration_independence.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Emancipation_proclamation.jpg'),
+    coverImage: buildWikimediaImageSource('File:Declaration_independence.jpg'),
     eventIds: [
       'emancipation-proclamation',
       'civil-war-begins',
@@ -1125,12 +989,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'art-through-ages',
     title: 'Art Through the Ages',
     summary: 'Masterpieces that captured the human spirit across centuries.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Michelangelo_-_Creation_of_Adam_(cropped).jpg'),
-    },
+    image: buildWikimediaImageSource('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
+    coverImage: buildWikimediaImageSource('File:Michelangelo_-_Creation_of_Adam_(cropped).jpg'),
     eventIds: [
       'sistine-chapel-ceiling',
       'impressionism-monet',
@@ -1143,12 +1003,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'jazz-age-culture',
     title: 'Jazz Age & Cultural Revolution',
     summary: 'The Roaring Twenties transform music, art, and society.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Duke_Ellington_-_publicity.JPG'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Louis_Armstrong_restored.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Duke_Ellington_-_publicity.JPG'),
+    coverImage: buildWikimediaImageSource('File:Louis_Armstrong_restored.jpg'),
     eventIds: [
       'harlem-renaissance-jazz',
       'women-suffrage-usa',
@@ -1161,12 +1017,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'lost-civilizations',
     title: 'Lost Civilizations',
     summary: 'Ancient mysteries preserved in stone, ash, and memory.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Rosetta_Stone.JPG'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Machu_Picchu,_Peru.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Rosetta_Stone.JPG'),
+    coverImage: buildWikimediaImageSource('File:Machu_Picchu,_Peru.jpg'),
     eventIds: [
       'rosetta-stone-decode',
       'magellan-circumnavigation',
@@ -1177,12 +1029,8 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     id: 'renaissance-enlightenment',
     title: 'Renaissance & Enlightenment',
     summary: 'Revival of learning, art, and humanist ideals.',
-    image: {
-      uri: buildWikimediaFileUrl('File:Creación_de_Adán.jpg'),
-    },
-    coverImage: {
-      uri: buildWikimediaFileUrl('File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Creación_de_Adán.jpg'),
+    coverImage: buildWikimediaImageSource('File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'),
     eventIds: [
       'sistine-chapel-ceiling',
       'magellan-circumnavigation',
