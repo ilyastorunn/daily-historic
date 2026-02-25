@@ -33,17 +33,19 @@ export const useTimeMachine = ({ enabled = true, seedOnMount = true, premium = f
   const [state, setState] = useState<TimeMachineState>(() => createInitialState());
   const [seedKey, setSeedKey] = useState(0);
 
-  const seed = useCallback(async () => {
+  const seed = useCallback(async (): Promise<number | undefined> => {
     if (!enabled) {
-      return;
+      return undefined;
     }
     setState((previous) => ({ ...previous, seedLoading: true, error: null }));
     try {
       const result = await fetchTimeMachineSeed();
       setState((previous) => ({ ...previous, seedLoading: false, lastSeed: result }));
+      return result.year;
     } catch (error) {
       const resolvedError = error instanceof Error ? error : new Error('Failed to seed Time Machine');
       setState((previous) => ({ ...previous, seedLoading: false, error: resolvedError }));
+      return undefined;
     }
   }, [enabled]);
 

@@ -128,18 +128,24 @@ export const CacheKeys = {
      * Search results
      * @param query Search query text
      * @param filters Applied filters (categories, era)
-     * @param dateKey Date context (MM-DD format)
+     * @param month Month (1-12)
+     * @param day Day of month (1-31)
+     * @param sort Sort mode ('relevance' or 'recent')
      */
     search: (
       query: string,
       filters: { categories?: string[]; era?: string },
-      dateKey: string
+      month: number,
+      day: number,
+      sort: string
     ): string => {
       const paramsHash = hashParams({
         q: query.toLowerCase().trim(),
         categories: filters.categories?.sort() || [],
         era: filters.era || '',
-        date: dateKey,
+        month,
+        day,
+        sort,
       });
 
       return `search:${paramsHash}`;

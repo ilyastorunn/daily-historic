@@ -28,6 +28,7 @@ type CategoryOption =
 
 type OnboardingState = {
   stepIndex: number;
+  displayName: string;
   accountSelection: AccountSelection;
   emailAddress: string;
   accountPassword: string;
@@ -63,6 +64,7 @@ const INITIAL_NOTIFICATION_TIME = '09:00';
 
 const initialState: OnboardingState = {
   stepIndex: 0,
+  displayName: '',
   accountSelection: null,
   emailAddress: '',
   accountPassword: '',

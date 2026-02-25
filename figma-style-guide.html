@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Historic Onboarding - Figma Style Guide</title>
+    <style>
+        @page {
+            margin: 1.5cm;
+            size: A4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: #1c1a16;
+            background: #ffffff;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .cover {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #F7F4EE 0%, #EDE7DE 100%);
+            border-radius: 24px;
+            margin-bottom: 40px;
+            page-break-after: always;
+        }
+
+        .cover h1 {
+            font-size: 48px;
+            font-weight: 600;
+            color: #1c1a16;
+            margin-bottom: 16px;
+            font-family: Georgia, serif;
+        }
+
+        .cover .subtitle {
+            font-size: 24px;
+            color: #6d675c;
+            margin-bottom: 32px;
+        }
+
+        .cover .device-frame {
+            display: inline-block;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(23, 18, 12, 0.15);
+            margin: 20px 0;
+        }
+
+        .cover .device-screen {
+            width: 215px;
+            height: 466px;
+            background: linear-gradient(180deg, #708C77 0%, #9bbb92 100%);
+            border-radius: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .cover .meta {
+            margin-top: 32px;
+            font-size: 14px;
+            color: #8d867a;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: 600;
+            margin: 40px 0 20px;
+            color: #1c1a16;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #708C77;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 32px 0 16px;
+            color: #353128;
+            page-break-after: avoid;
+        }
+
+        h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 12px;
+            color: #524d43;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: #6d675c;
+        }
+
+        .section {
+            margin-bottom: 48px;
+            page-break-inside: avoid;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .color-card {
+            border: 1px solid #e5d9c8;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(23, 18, 12, 0.08);
+        }
+
+        .color-swatch {
+            height: 80px;
+            position: relative;
+        }
+
+        .color-info {
+            padding: 12px;
+            background: white;
+        }
+
+        .color-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1c1a16;
+            margin-bottom: 4px;
+        }
+
+        .color-value {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #708C77;
+            background: #f7f4ee;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .spacing-visual {
+            background: #f7f4ee;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .spacing-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 16px;
+        }
+
+        .spacing-box {
+            background: #708C77;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .spacing-label {
+            font-size: 14px;
+            color: #6d675c;
+            font-family: monospace;
+        }
+
+        .component-demo {
+            background: #ffffff;
+            border: 1px solid #e5d9c8;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 4px 16px rgba(23, 18, 12, 0.06);
+        }
+
+        .button-primary {
+            background: #708C77;
+            color: white;
+            border: none;
+            border-radius: 999px;
+            padding: 18px 32px;
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            box-shadow: 0 10px 18px rgba(23, 18, 12, 0.15);
+            display: inline-block;
+            margin: 8px;
+        }
+
+        .button-secondary {
+            background: white;
+            color: #708C77;
+            border: 1px solid #e5d9c8;
+            border-radius: 999px;
+            padding: 18px 32px;
+            font-size: 17px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 8px;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 999px;
+            border: 1px solid #e5d9c8;
+            background: white;
+            font-size: 15px;
+            font-weight: 500;
+            color: #6d675c;
+            margin: 4px;
+        }
+
+        .chip.active {
+            background: rgba(112, 140, 119, 0.12);
+            border-color: #708C77;
+            color: #708C77;
+        }
+
+        .typography-example {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f7f4ee;
+            border-radius: 12px;
+        }
+
+        .type-heading-lg {
+            font-family: Georgia, serif;
+            font-size: 30px;
+            line-height: 36px;
+            letter-spacing: -0.6px;
+            color: #1c1a16;
+            margin-bottom: 12px;
+        }
+
+        .type-body {
+            font-size: 16px;
+            line-height: 24px;
+            color: #6d675c;
+            margin-bottom: 12px;
+        }
+
+        .type-helper {
+            font-size: 13px;
+            line-height: 18px;
+            color: #8d867a;
+        }
+
+        .grid-visual {
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 7px,
+                #e5d9c8 7px,
+                #e5d9c8 8px
+            ),
+            repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 7px,
+                #e5d9c8 7px,
+                #e5d9c8 8px
+            );
+            padding: 40px;
+            border-radius: 12px;
+            margin: 20px 0;
+            min-height: 200px;
+            position: relative;
+        }
+
+        .grid-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #708C77;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .canvas-frame {
+            border: 2px solid #708C77;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 20px 0;
+            background: white;
+        }
+
+        .canvas-inner {
+            background: #f7f4ee;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            color: #6d675c;
+            font-size: 14px;
+        }
+
+        .safe-area-visual {
+            position: relative;
+            background: #f7f4ee;
+            border-radius: 40px;
+            padding: 59px 20px 34px;
+            margin: 20px auto;
+            max-width: 430px;
+            aspect-ratio: 430/932;
+        }
+
+        .safe-area-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 59px;
+            background: rgba(112, 140, 119, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #524d43;
+            border-radius: 40px 40px 0 0;
+        }
+
+        .safe-area-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 34px;
+            background: rgba(112, 140, 119, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #524d43;
+            border-radius: 0 0 40px 40px;
+        }
+
+        .safe-area-content {
+            background: white;
+            border-radius: 28px;
+            padding: 28px;
+            height: 100%;
+            box-shadow: inset 0 0 0 1px #e5d9c8;
+        }
+
+        code {
+            background: #f7f4ee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #708C77;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .spec-table th {
+            background: #708C77;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .spec-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5d9c8;
+        }
+
+        .spec-table tr:nth-child(even) {
+            background: #f7f4ee;
+        }
+
+        .highlight-box {
+            background: #fff8e1;
+            border-left: 4px solid #708C77;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .highlight-box strong {
+            color: #708C77;
+        }
+
+        .dark-mode-demo {
+            background: #1f1c17;
+            padding: 24px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+
+        .dark-mode-demo .button-primary {
+            background: #9bbb92;
+        }
+
+        .dark-mode-demo .type-heading-lg {
+            color: #ede7de;
+        }
+
+        .dark-mode-demo .type-body {
+            color: #c8c0b3;
+        }
+
+        .checklist {
+            background: #f7f4ee;
+            padding: 24px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #524d43;
+        }
+
+        .checklist-item::before {
+            content: '□';
+            font-size: 20px;
+            color: #708C77;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+            h2 {
+                page-break-before: always;
+            }
+            h2:first-of-type {
+                page-break-before: avoid;
+            }
+        }
+
+        .radius-demo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .radius-item {
+            text-align: center;
+        }
+
+        .radius-box {
+            width: 80px;
+            height: 80px;
+            background: #708C77;
+            margin-bottom: 8px;
+        }
+
+        .radius-label {
+            font-size: 12px;
+            color: #6d675c;
+            font-weight: 600;
+        }
+
+        .shadow-demo {
+            display: flex;
+            gap: 24px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .shadow-box {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6d675c;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="cover">
+        <h1>Daily Historic</h1>
+        <div class="subtitle">Onboarding Design System</div>
+        <div class="device-frame">
+            <div class="device-screen">
+                iPhone 16 Plus<br>430×932px
+            </div>
+        </div>
+        <div class="meta">
+            Figma Style Guide · v1.0<br>
+            Design Tokens & Component Specifications
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📐 Canvas & Layout</h2>
+
+        <h3>Ekran Boyutları</h3>
+        <div class="canvas-frame">
+            <div class="canvas-inner">
+                <strong>Canvas:</strong> 430 × 932 px (iPhone 16 Plus)<br>
+                <strong>Safe Area Top:</strong> ~59px (status bar + padding)<br>
+                <strong>Safe Area Bottom:</strong> ~34px (home indicator)<br>
+                <strong>Çalışma Alanı:</strong> 430 × 839 px
+            </div>
+        </div>
+
+        <h3>Safe Area Görselleştirme</h3>
+        <div class="safe-area-visual">
+            <div class="safe-area-top">Safe Area Top: 59px</div>
+            <div class="safe-area-content">
+                İçerik Alanı<br>
+                430 × 839 px
+            </div>
+            <div class="safe-area-bottom">Safe Area Bottom: 34px</div>
+        </div>
+
+        <h3>8pt Grid Sistemi</h3>
+        <div class="grid-visual">
+            <div class="grid-label">8pt × 8pt Grid</div>
+        </div>
+        <div class="highlight-box">
+            <strong>Kural:</strong> Tüm boyutlar ve boşluklar 8pt'nin katları olmalıdır. Elemanlar kenarlara yapışmaz, minimum 20pt margin kullanılır.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🎨 Color Palette</h2>
+
+        <h3>Light Mode - Zemin & Yüzeyler</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #F7F4EE;"></div>
+                <div class="color-info">
+                    <div class="color-name">App Background</div>
+                    <div class="color-value">#F7F4EE</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #EDE7DE;"></div>
+                <div class="color-info">
+                    <div class="color-name">Hero Background</div>
+                    <div class="color-value">#EDE7DE</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #FFFFFF; border: 1px solid #e5d9c8;"></div>
+                <div class="color-info">
+                    <div class="color-name">Surface (Kartlar)</div>
+                    <div class="color-value">#FFFFFF</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #F1EBDF;"></div>
+                <div class="color-info">
+                    <div class="color-name">Surface Subtle</div>
+                    <div class="color-value">#F1EBDF</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Light Mode - Metinler</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #1C1A16;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Primary</div>
+                    <div class="color-value">#1C1A16</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #6D675C;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Secondary</div>
+                    <div class="color-value">#6D675C</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #8D867A;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Tertiary</div>
+                    <div class="color-value">#8D867A</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Light Mode - Accent & Borders</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #708C77;"></div>
+                <div class="color-info">
+                    <div class="color-name">Accent Primary ⭐</div>
+                    <div class="color-value">#708C77</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: rgba(112, 140, 119, 0.12);"></div>
+                <div class="color-info">
+                    <div class="color-name">Accent Soft</div>
+                    <div class="color-value">rgba(112,140,119,0.12)</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #CAD6CE;"></div>
+                <div class="color-info">
+                    <div class="color-name">Accent Muted</div>
+                    <div class="color-value">#CAD6CE</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #E5D9C8;"></div>
+                <div class="color-info">
+                    <div class="color-name">Border Subtle</div>
+                    <div class="color-value">#E5D9C8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <strong>⚠️ Accent Kuralı:</strong> Ekran başına TEK accent kullanımı! Sadece primary CTA veya aktif state için.
+        </div>
+
+        <h3>Dark Mode - Zemin & Yüzeyler</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #1F1C17;"></div>
+                <div class="color-info">
+                    <div class="color-name">App Background</div>
+                    <div class="color-value">#1F1C17</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #353128;"></div>
+                <div class="color-info">
+                    <div class="color-name">Hero Background</div>
+                    <div class="color-value">#353128</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #24201A;"></div>
+                <div class="color-info">
+                    <div class="color-name">Surface (Kartlar)</div>
+                    <div class="color-value">#24201A</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #2F2A24;"></div>
+                <div class="color-info">
+                    <div class="color-name">Surface Subtle</div>
+                    <div class="color-value">#2F2A24</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Dark Mode - Metinler</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #EDE7DE;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Primary</div>
+                    <div class="color-value">#EDE7DE</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #C8C0B3;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Secondary</div>
+                    <div class="color-value">#C8C0B3</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #9F978A;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Tertiary</div>
+                    <div class="color-value">#9F978A</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Dark Mode - Accent & Borders</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #9BBB92;"></div>
+                <div class="color-info">
+                    <div class="color-name">Accent Primary ⭐</div>
+                    <div class="color-value">#9BBB92</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: rgba(155, 187, 146, 0.2);"></div>
+                <div class="color-info">
+                    <div class="color-name">Accent Soft</div>
+                    <div class="color-value">rgba(155,187,146,0.2)</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: rgba(155, 187, 146, 0.45);"></div>
+                <div class="color-info">
+                    <div class="color-name">Accent Muted</div>
+                    <div class="color-value">rgba(155,187,146,0.45)</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: rgba(214, 206, 192, 0.35);"></div>
+                <div class="color-info">
+                    <div class="color-name">Border Subtle</div>
+                    <div class="color-value">rgba(214,206,192,0.35)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🔤 Typography</h2>
+
+        <h3>Font Families</h3>
+        <div class="component-demo">
+            <p><strong>Serif:</strong> Times New Roman (iOS), serif (Android) → Başlıklar için</p>
+            <p><strong>Sans-serif:</strong> System (iOS), sans-serif (Android) → Gövde metinler için</p>
+        </div>
+
+        <h3>Başlıklar (Serif)</h3>
+        <div class="typography-example">
+            <div class="type-heading-lg">Welcome, Time Voyager!</div>
+            <code>30px / 36px line-height / -0.6 letter-spacing / Regular</code>
+        </div>
+
+        <h3>Gövde Metinler (Sans-serif)</h3>
+        <div class="typography-example">
+            <div class="type-body">Chrono curates one luminous moment from history every day. Let's tune the timeline so it fits your curiosity.</div>
+            <code>16px / 24px / Regular (400)</code>
+        </div>
+
+        <div class="typography-example">
+            <div class="type-helper">Curated stories, gentle reminders, nothing spammy.</div>
+            <code>13px / 18px / Regular (400) / Tertiary Color</code>
+        </div>
+
+        <h3>Typography Scale</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Style</th>
+                    <th>Size / Line Height</th>
+                    <th>Weight</th>
+                    <th>Letter Spacing</th>
+                    <th>Kullanım</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Account Hero</td>
+                    <td>34px / 38px</td>
+                    <td>Regular</td>
+                    <td>-0.6px</td>
+                    <td>Account ekranı hero başlık</td>
+                </tr>
+                <tr>
+                    <td>Hero Greeting</td>
+                    <td>30px / 36px</td>
+                    <td>Regular</td>
+                    <td>-0.6px</td>
+                    <td>Welcome ekranı başlık</td>
+                </tr>
+                <tr>
+                    <td>Step Title</td>
+                    <td>26px / 32px</td>
+                    <td>Regular</td>
+                    <td>-0.4px</td>
+                    <td>Adım başlıkları</td>
+                </tr>
+                <tr>
+                    <td>Section Title</td>
+                    <td>18px / auto</td>
+                    <td>Semibold (600)</td>
+                    <td>0</td>
+                    <td>Bölüm başlıkları</td>
+                </tr>
+                <tr>
+                    <td>Hero Body</td>
+                    <td>16px / 24px</td>
+                    <td>Regular (400)</td>
+                    <td>0</td>
+                    <td>Ana açıklama metinleri</td>
+                </tr>
+                <tr>
+                    <td>Body</td>
+                    <td>16px / 22px</td>
+                    <td>Regular (400)</td>
+                    <td>0</td>
+                    <td>Genel gövde metinleri</td>
+                </tr>
+                <tr>
+                    <td>Label</td>
+                    <td>15px / 20px</td>
+                    <td>Medium (500)</td>
+                    <td>0</td>
+                    <td>Form etiketleri</td>
+                </tr>
+                <tr>
+                    <td>Helper Text</td>
+                    <td>13px / 18px</td>
+                    <td>Regular (400)</td>
+                    <td>0</td>
+                    <td>Yardımcı metinler</td>
+                </tr>
+                <tr>
+                    <td>Primary Button</td>
+                    <td>17px / auto</td>
+                    <td>Semibold (600)</td>
+                    <td>0.2px</td>
+                    <td>Ana butonlar</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Metin Kuralları:</strong><br>
+            • Başlık: Maksimum 60 karakter<br>
+            • Gövde: Maksimum 120 karakter<br>
+            • Satır başına: 45-60 karakter hedef<br>
+            • CTA: Tek fiil + hedef (örn: "Continue", "Save Time")
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📏 Spacing System</h2>
+
+        <div class="spacing-visual">
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 4px;">xs</div>
+                <div class="spacing-label">4pt - Micro adjustments</div>
+            </div>
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 8px;">sm</div>
+                <div class="spacing-label">8pt - Tight gaps</div>
+            </div>
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 12px;">md</div>
+                <div class="spacing-label">12pt - Default gaps, buton padding</div>
+            </div>
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 18px;">lg</div>
+                <div class="spacing-label">18pt - Section gaps, buton padding</div>
+            </div>
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 28px;">xl</div>
+                <div class="spacing-label">28pt - Page margins, büyük gaps</div>
+            </div>
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 40px;">xxl</div>
+                <div class="spacing-label">40pt - Modül arası boşluk (PRIMARY)</div>
+            </div>
+            <div class="spacing-row">
+                <div class="spacing-box" style="width: 24px;">card</div>
+                <div class="spacing-label">24pt - Kart padding, footer padding</div>
+            </div>
+        </div>
+
+        <h3>Kullanım Örnekleri</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Element</th>
+                    <th>Spacing</th>
+                    <th>Değer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Header Padding</td>
+                    <td>Horizontal lg, Top sm, Bottom md</td>
+                    <td>18pt, 8pt, 12pt</td>
+                </tr>
+                <tr>
+                    <td>Content Wrapper Padding</td>
+                    <td>Horizontal xl, Top lg, Bottom xxl</td>
+                    <td>28pt, 18pt, 40pt</td>
+                </tr>
+                <tr>
+                    <td>Footer Padding</td>
+                    <td>Horizontal xl, Vertical card</td>
+                    <td>28pt, 24pt</td>
+                </tr>
+                <tr>
+                    <td>Kartlar Arası</td>
+                    <td>Minimum</td>
+                    <td>16pt</td>
+                </tr>
+                <tr>
+                    <td>Modüller Arası</td>
+                    <td>xxl (PRIMARY)</td>
+                    <td>40pt</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>⭕ Border Radius</h2>
+
+        <div class="radius-demo">
+            <div class="radius-item">
+                <div class="radius-box" style="border-radius: 10px;"></div>
+                <div class="radius-label">sm: 10pt</div>
+            </div>
+            <div class="radius-item">
+                <div class="radius-box" style="border-radius: 14px;"></div>
+                <div class="radius-label">md: 14pt</div>
+            </div>
+            <div class="radius-item">
+                <div class="radius-box" style="border-radius: 18px;"></div>
+                <div class="radius-label">lg: 18pt</div>
+            </div>
+            <div class="radius-item">
+                <div class="radius-box" style="border-radius: 28px;"></div>
+                <div class="radius-label">xl: 28pt</div>
+            </div>
+            <div class="radius-item">
+                <div class="radius-box" style="border-radius: 22px;"></div>
+                <div class="radius-label">card: 22pt</div>
+            </div>
+            <div class="radius-item">
+                <div class="radius-box" style="border-radius: 999px;"></div>
+                <div class="radius-label">pill: 999pt</div>
+            </div>
+        </div>
+
+        <h3>Kullanım Kılavuzu</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Element</th>
+                    <th>Radius</th>
+                    <th>Değer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Primary/Secondary Butonlar</td>
+                    <td>pill</td>
+                    <td>999pt</td>
+                </tr>
+                <tr>
+                    <td>Chip'ler (Kategori, Option)</td>
+                    <td>pill</td>
+                    <td>999pt</td>
+                </tr>
+                <tr>
+                    <td>Kartlar (Standard, Form)</td>
+                    <td>lg</td>
+                    <td>18pt</td>
+                </tr>
+                <tr>
+                    <td>Content Wrapper Üst Köşeler</td>
+                    <td>xl</td>
+                    <td>28pt</td>
+                </tr>
+                <tr>
+                    <td>Input Fields</td>
+                    <td>md</td>
+                    <td>14pt</td>
+                </tr>
+                <tr>
+                    <td>Checkbox</td>
+                    <td>sm</td>
+                    <td>10pt</td>
+                </tr>
+                <tr>
+                    <td>Progress Bar</td>
+                    <td>pill</td>
+                    <td>999pt</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Button Components</h2>
+
+        <h3>Primary Button (Filled)</h3>
+        <div class="component-demo">
+            <button class="button-primary">Continue</button>
+            <button class="button-primary">Start Your Journey</button>
+            <button class="button-primary">Save Time</button>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Background</strong></td>
+                    <td>Accent Primary (#708C77 light / #9BBB92 dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Color</strong></td>
+                    <td>Surface (#FFFFFF light / #24201A dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>pill (999pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Vertical 18pt, Horizontal otomatik (flex)</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Style</strong></td>
+                    <td>17px / Semibold (600) / 0.2 letter-spacing</td>
+                </tr>
+                <tr>
+                    <td><strong>Shadow</strong></td>
+                    <td>Y=10, Blur 18, Opacity 0.15</td>
+                </tr>
+                <tr>
+                    <td><strong>Min Height</strong></td>
+                    <td>~54pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Pressed State</strong></td>
+                    <td>Transform: scale(0.98)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Secondary Button (Outlined)</h3>
+        <div class="component-demo">
+            <button class="button-secondary">Preview Today's Highlight</button>
+            <button class="button-secondary">Go Back</button>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Background</strong></td>
+                    <td>Surface (#FFFFFF light / #24201A dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Color</strong></td>
+                    <td>Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Border</strong></td>
+                    <td>1pt solid Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>pill (999pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Vertical 18pt, Horizontal otomatik</td>
+                </tr>
+                <tr>
+                    <td><strong>Pressed State</strong></td>
+                    <td>Opacity: 0.9</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Auth Button (Circle Icon)</h3>
+        <div class="component-demo">
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <div style="width: 72px; height: 72px; border-radius: 36px; border: 1px solid #e5d9c8; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(23,18,12,0.08);">
+                    <span style="font-size: 28px;">🍎</span>
+                </div>
+                <div style="width: 72px; height: 72px; border-radius: 36px; border: 1px solid #e5d9c8; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(23,18,12,0.08);">
+                    <span style="font-size: 28px;">G</span>
+                </div>
+                <div style="width: 72px; height: 72px; border-radius: 36px; border: 1px solid #e5d9c8; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(23,18,12,0.08);">
+                    <span style="font-size: 28px;">✉️</span>
+                </div>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Size</strong></td>
+                    <td>72 × 72pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>36pt (tam daire)</td>
+                </tr>
+                <tr>
+                    <td><strong>Border</strong></td>
+                    <td>1pt solid Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Icon Size</strong></td>
+                    <td>28pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Shadow</strong></td>
+                    <td>Y=6, Blur 12, Opacity 0.08</td>
+                </tr>
+                <tr>
+                    <td><strong>Pressed State</strong></td>
+                    <td>Transform: scale(0.98)</td>
+                </tr>
+                <tr>
+                    <td><strong>Focused State</strong></td>
+                    <td>Border: Accent Primary, Shadow opacity 0.15</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🏷️ Chip Components</h2>
+
+        <h3>Option Chip (Outlined)</h3>
+        <div class="component-demo">
+            <span class="chip">09:00 AM</span>
+            <span class="chip active">12:00 PM</span>
+            <span class="chip">05:00 PM</span>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Default Background</strong></td>
+                    <td>Surface (#FFFFFF light / Surface Elevated dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Default Border</strong></td>
+                    <td>1pt solid Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Active Background</strong></td>
+                    <td>Accent Soft (rgba accent 12%/20%)</td>
+                </tr>
+                <tr>
+                    <td><strong>Active Border</strong></td>
+                    <td>1pt solid Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>pill (999pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Horizontal 24pt, Vertical 8pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Style</strong></td>
+                    <td>15px / Medium (500)</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Color</strong></td>
+                    <td>Text Secondary (default) / Accent Primary (active)</td>
+                </tr>
+                <tr>
+                    <td><strong>Pressed State</strong></td>
+                    <td>Opacity: 0.85</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Category Chip (Icon + Label)</h3>
+        <div class="component-demo">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span class="chip">🌍 World Wars</span>
+                <span class="chip active">🏛️ Ancient Civilizations</span>
+                <span class="chip">🔬 Science & Discovery</span>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Border Width</strong></td>
+                    <td>2pt (animasyonlu)</td>
+                </tr>
+                <tr>
+                    <td><strong>Default Border</strong></td>
+                    <td>Border Subtle (light) / rgba(255,255,255,0.1) (dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Selected Border</strong></td>
+                    <td>Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Horizontal 14pt, Vertical 10pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Gap (Icon↔Label)</strong></td>
+                    <td>9pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Icon Size</strong></td>
+                    <td>25 × 25pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Style</strong></td>
+                    <td>14px / 19px line-height / Medium (500)</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Animation</strong></td>
+                    <td>250ms ease (color transition)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🎴 Card Components</h2>
+
+        <h3>Standard Card</h3>
+        <div class="component-demo">
+            <div style="background: white; border-radius: 18px; padding: 28px; box-shadow: 0 10px 20px rgba(23,18,12,0.08); max-width: 300px;">
+                <div style="font-size: 16px; font-weight: 600; color: #1c1a16; margin-bottom: 8px;">Card Title</div>
+                <div style="font-size: 14px; color: #6d675c; line-height: 1.5;">This is a standard card with proper padding, radius, and shadow elevation.</div>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Background</strong></td>
+                    <td>Surface (#FFFFFF light / #24201A dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>lg (18pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>xl (28pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Gap (inner content)</strong></td>
+                    <td>sm (8pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Shadow</strong></td>
+                    <td>Y=10, Blur 20, Opacity 0.08, Elevation 2</td>
+                </tr>
+                <tr>
+                    <td><strong>Selected Border</strong></td>
+                    <td>1pt solid Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Pressed State</strong></td>
+                    <td>Transform: scale(0.99)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Shadow Variations</h3>
+        <div class="shadow-demo">
+            <div class="shadow-box" style="box-shadow: 0 4px 12px rgba(23,18,12,0.08);">
+                Form Card<br>
+                Y=8, Blur 18<br>
+                Opacity 0.08
+            </div>
+            <div class="shadow-box" style="box-shadow: 0 10px 20px rgba(23,18,12,0.08);">
+                Standard Card<br>
+                Y=10, Blur 20<br>
+                Opacity 0.08
+            </div>
+            <div class="shadow-box" style="box-shadow: 0 12px 24px rgba(23,18,12,0.12);">
+                Permission Card<br>
+                Y=12, Blur 24<br>
+                Opacity 0.12
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📝 Input Components</h2>
+
+        <h3>Text Input</h3>
+        <div class="component-demo">
+            <input type="text" placeholder="you@example.com" style="width: 100%; max-width: 300px; border: 1px solid #e5d9c8; border-radius: 14px; padding: 8px 18px; font-size: 16px; font-family: system-ui;">
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Background</strong></td>
+                    <td>Surface (#FFFFFF light / #24201A dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Border</strong></td>
+                    <td>1pt solid Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>md (14pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Horizontal 18pt (lg), Vertical 8pt (sm)</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Style</strong></td>
+                    <td>16px / Regular (400) / Sans-serif</td>
+                </tr>
+                <tr>
+                    <td><strong>Text Color</strong></td>
+                    <td>Text Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Placeholder Color</strong></td>
+                    <td>Text Tertiary</td>
+                </tr>
+                <tr>
+                    <td><strong>Min Height</strong></td>
+                    <td>~48pt (touch target)</td>
+                </tr>
+                <tr>
+                    <td><strong>Focus State (optional)</strong></td>
+                    <td>Border: Accent Primary</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Checkbox</h3>
+        <div class="component-demo">
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div style="width: 20px; height: 20px; border: 1px solid #e5d9c8; border-radius: 10px; background: white;"></div>
+                <div style="width: 20px; height: 20px; border: 1px solid #708C77; border-radius: 10px; background: rgba(112,140,119,0.12); display: flex; align-items: center; justify-content: center; font-size: 14px;">✓</div>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Size</strong></td>
+                    <td>20 × 20pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Radius</strong></td>
+                    <td>sm (10pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Default Border</strong></td>
+                    <td>1pt solid Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Default Background</strong></td>
+                    <td>Surface</td>
+                </tr>
+                <tr>
+                    <td><strong>Checked Border</strong></td>
+                    <td>1pt solid Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Checked Background</strong></td>
+                    <td>Accent Soft</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📊 Progress Bar</h2>
+
+        <div class="component-demo">
+            <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden; margin: 20px 0;">
+                <div style="width: 60%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+            </div>
+        </div>
+
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Element</th>
+                    <th>Spec</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Track Width</strong></td>
+                    <td>100% (container genişliği)</td>
+                </tr>
+                <tr>
+                    <td><strong>Track Height</strong></td>
+                    <td>6pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Track Background</strong></td>
+                    <td>Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Track Border Radius</strong></td>
+                    <td>pill (999pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Fill Height</strong></td>
+                    <td>6pt (track ile aynı)</td>
+                </tr>
+                <tr>
+                    <td><strong>Fill Background</strong></td>
+                    <td>Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Fill Border Radius</strong></td>
+                    <td>pill (999pt)</td>
+                </tr>
+                <tr>
+                    <td><strong>Fill Width</strong></td>
+                    <td>Dinamik (progress × 100%)</td>
+                </tr>
+                <tr>
+                    <td><strong>Margin Top</strong></td>
+                    <td>xs (4pt) - header'dan boşluk</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🎬 Motion & Animation</h2>
+
+        <h3>Timing Values</h3>
+        <div class="component-demo">
+            <table class="spec-table">
+                <tbody>
+                    <tr>
+                        <td><strong>Micro (fast)</strong></td>
+                        <td>120ms</td>
+                        <td>Buton press, chip selection</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Base</strong></td>
+                        <td>220ms</td>
+                        <td>Standart geçişler</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard</strong></td>
+                        <td>250ms</td>
+                        <td>Border color transitions</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Easing</strong></td>
+                        <td>ease-out</td>
+                        <td>Tüm animasyonlar için</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Kullanım Örnekleri</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Interaction</th>
+                    <th>Duration</th>
+                    <th>Effect</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Buton Press (Primary/Secondary)</td>
+                    <td>&lt;250ms</td>
+                    <td>Transform: scale(0.98)</td>
+                </tr>
+                <tr>
+                    <td>Buton Press (Card)</td>
+                    <td>&lt;250ms</td>
+                    <td>Transform: scale(0.99)</td>
+                </tr>
+                <tr>
+                    <td>Chip Selection</td>
+                    <td>120ms</td>
+                    <td>Transform: scale(1.05), ease-out</td>
+                </tr>
+                <tr>
+                    <td>Chip Press</td>
+                    <td>Instant</td>
+                    <td>Opacity: 0.85</td>
+                </tr>
+                <tr>
+                    <td>Category Chip Border</td>
+                    <td>250ms</td>
+                    <td>Border color transition</td>
+                </tr>
+                <tr>
+                    <td>Opacity Changes</td>
+                    <td>150ms</td>
+                    <td>Fade in/out</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Motion Prensipleri:</strong><br>
+            • Mikro etkileşimler <250ms sınırı içinde kalmalı<br>
+            • Animasyonlar hiyerarşiyi pekiştirir, dekoratif değil<br>
+            • Abartısız ve fonksiyonel olmalı<br>
+            • Ease-out easing kullan (hızlı başla, yavaş bitir)
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>♿ Accessibility</h2>
+
+        <h3>Kontrast Oranları (AA Standard)</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Metin Tipi</th>
+                    <th>Minimum Kontrast</th>
+                    <th>Örnek</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Gövde Metin (Normal)</td>
+                    <td>≥4.5:1</td>
+                    <td>Text Primary / App Background</td>
+                </tr>
+                <tr>
+                    <td>Büyük Başlık (18pt+)</td>
+                    <td>≥3:1</td>
+                    <td>Hero Greeting / Hero Background</td>
+                </tr>
+                <tr>
+                    <td>UI Kontrolleri</td>
+                    <td>≥3:1</td>
+                    <td>Border / Background</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Touch Targets</h3>
+        <div class="component-demo">
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div style="width: 44px; height: 44px; background: rgba(112,140,119,0.2); border: 2px dashed #708C77; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #524d43;">
+                    44×44pt<br>iOS Min
+                </div>
+                <div style="width: 48px; height: 48px; background: rgba(112,140,119,0.2); border: 2px dashed #708C77; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #524d43;">
+                    48×48pt<br>Recommended
+                </div>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Minimum (iOS HIG)</strong></td>
+                    <td>44 × 44pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Recommended</strong></td>
+                    <td>48 × 48pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Hit Slop</strong></td>
+                    <td>Küçük elementlere (örn: back button 36pt) hit slop padding ekle</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Focus States</h3>
+        <div class="component-demo">
+            <div style="width: 120px; height: 48px; background: white; border: 1px solid #e5d9c8; border-radius: 999px; position: relative; display: flex; align-items: center; justify-content: center;">
+                Button
+                <div style="position: absolute; inset: -6px; border: 2px solid #708C77; border-radius: 999px;"></div>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Outline Width</strong></td>
+                    <td>2pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Outline Color</strong></td>
+                    <td>Accent Primary</td>
+                </tr>
+                <tr>
+                    <td><strong>Offset</strong></td>
+                    <td>4pt (outline ile element arası)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📱 Layout Patterns</h2>
+
+        <h3>Header Component</h3>
+        <div class="component-demo">
+            <div style="background: #f7f4ee; padding: 18px 18px 12px; display: flex; flex-direction: column; gap: 4px; border-radius: 12px;">
+                <div style="display: flex; align-items: center; min-height: 36px;">
+                    <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 16px;">←</div>
+                </div>
+                <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                    <div style="width: 40%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                </div>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Horizontal 18pt (lg), Top 8pt (sm), Bottom 12pt (md)</td>
+                </tr>
+                <tr>
+                    <td><strong>Background</strong></td>
+                    <td>Header Background (#F7F4EE light / #1F1C17 dark)</td>
+                </tr>
+                <tr>
+                    <td><strong>Gap</strong></td>
+                    <td>xs (4pt) - back button ve progress arası</td>
+                </tr>
+                <tr>
+                    <td><strong>Min Height</strong></td>
+                    <td>~58pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Back Button Size</strong></td>
+                    <td>36 × 36pt</td>
+                </tr>
+                <tr>
+                    <td><strong>Back Icon Size</strong></td>
+                    <td>20pt</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Content Wrapper</h3>
+        <div class="component-demo">
+            <div style="background: #1b1813; border-radius: 28px 28px 0 0; padding: 18px 28px 40px; color: white; min-height: 200px;">
+                <p style="color: #c8c0b3; margin: 0;">Content goes here...</p>
+                <p style="color: #9f978a; font-size: 13px; margin-top: 12px;">Rounded top corners (xl: 28pt)<br>Horizontal padding: xl (28pt)<br>Top padding: lg (18pt)<br>Bottom padding: xxl (40pt)</p>
+            </div>
+        </div>
+
+        <h3>Footer</h3>
+        <div class="component-demo">
+            <div style="border-top: 1px solid #e5d9c8; padding: 24px 28px; background: #f7f4ee; display: flex; gap: 18px;">
+                <button class="button-primary" style="flex: 1; margin: 0;">Continue</button>
+            </div>
+        </div>
+        <table class="spec-table">
+            <tbody>
+                <tr>
+                    <td><strong>Padding</strong></td>
+                    <td>Horizontal 28pt (xl), Vertical 24pt (card)</td>
+                </tr>
+                <tr>
+                    <td><strong>Border Top</strong></td>
+                    <td>Hairline (0.5-1pt) solid Border Subtle</td>
+                </tr>
+                <tr>
+                    <td><strong>Background</strong></td>
+                    <td>Screen</td>
+                </tr>
+                <tr>
+                    <td><strong>Gap (2 buton yan yana)</strong></td>
+                    <td>lg (18pt)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🌓 Dark Mode Demo</h2>
+
+        <div class="dark-mode-demo">
+            <div class="type-heading-lg">Welcome, Time Voyager!</div>
+            <div class="type-body" style="margin-top: 12px;">
+                Chrono curates one luminous moment from history every day.
+            </div>
+            <div style="margin-top: 24px;">
+                <button class="button-primary">Start Your Journey</button>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <strong>Dark Mode Strateji:</strong><br>
+            • Accent renkleri daha açık ve soft yapılır (#708C77 → #9bbb92)<br>
+            • Aynı hue korunur, sadece lightness/saturation ayarlanır<br>
+            • Kontrast oranı AA standardını korur (≥4.5:1 for text)<br>
+            • Kullanıcı light ↔ dark geçişinde markayı tanır
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📋 Onboarding Flow</h2>
+
+        <h3>Adım Sırası</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Step</th>
+                    <th>Açıklama</th>
+                    <th>Footer Butonu</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>StepName</td>
+                    <td>İsim giriş (text input)</td>
+                    <td>"Continue"</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>StepWelcome</td>
+                    <td>Hero collage + greeting + actions</td>
+                    <td>"Get Started"</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>StepPreview</td>
+                    <td>Carousel preview (3 kart)</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>StepCategories</td>
+                    <td>Multi-select chip grid</td>
+                    <td>"Continue"</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>StepEras</td>
+                    <td>Multi-select chip grid</td>
+                    <td>"Continue"</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>StepNotificationPermission</td>
+                    <td>Permission card</td>
+                    <td>Custom (in-card)</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>StepNotificationTime</td>
+                    <td>Time selection cards (conditional)</td>
+                    <td>"Save Time"</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>StepAccount</td>
+                    <td>Auth butonlar + email sheet</td>
+                    <td>Custom (in-content)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Her Adım İçin:</strong><br>
+            • Progress bar üstte (header içinde)<br>
+            • Back button (ilk adım hariç)<br>
+            • Content area ortada (scroll yapılabilir)<br>
+            • Primary buton footer'da (bazı adımlar hariç)
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>✅ Design Checklist</h2>
+
+        <div class="checklist">
+            <div class="checklist-item">Canvas 430×932px</div>
+            <div class="checklist-item">Safe area marjları korunuyor (top ~59px, bottom ~34px)</div>
+            <div class="checklist-item">Tek accent kullanımı (primary CTA veya aktif state)</div>
+            <div class="checklist-item">Minimum 20pt dış margin (tercih edilen 28pt)</div>
+            <div class="checklist-item">Touch target'lar ≥44×44pt</div>
+            <div class="checklist-item">Metin kontrast AA standardında (≥4.5:1)</div>
+            <div class="checklist-item">Border radius değerleri tutarlı</div>
+            <div class="checklist-item">Shadow değerleri doğru (light/dark mode farklı)</div>
+            <div class="checklist-item">Typography scale'e uygun</div>
+            <div class="checklist-item">Spacing sistemi kullanılıyor (8pt grid)</div>
+            <div class="checklist-item">Component state'leri tasarlandı (default, pressed, disabled, focused)</div>
+            <div class="checklist-item">Light + Dark mode varyantları</div>
+            <div class="checklist-item">Elemanlar kenarlara yapışmıyor</div>
+            <div class="checklist-item">Modüller arası minimum 40pt boşluk (xxl)</div>
+            <div class="checklist-item">Metin kurallarına uyuluyor (başlık ≤60 char, gövde ≤120 char)</div>
+        </div>
+    </div>
+
+    <div class="section" style="page-break-before: always;">
+        <h2>🎨 Figma Organization</h2>
+
+        <h3>Önerilen Dosya Yapısı</h3>
+        <div class="component-demo">
+            <pre style="font-family: monospace; font-size: 13px; line-height: 1.8; color: #524d43; margin: 0; white-space: pre-wrap;">
+📁 <strong>Pages</strong>
+  📄 Design System (colors, typography, components)
+  📄 Onboarding Screens
+  📄 Light Mode Variants
+  📄 Dark Mode Variants
+
+📦 <strong>Components</strong>
+  🔹 Buttons
+     ├─ Primary Button
+     ├─ Secondary Button
+     ├─ Auth Button (Circle)
+     └─ Ghost Link
+  🔹 Chips
+     ├─ Option Chip
+     └─ Category Chip
+  🔹 Cards
+     ├─ Standard Card
+     ├─ Form Card
+     └─ Permission Card
+  🔹 Inputs
+     ├─ Text Input
+     └─ Checkbox
+  🔹 Layout
+     ├─ Header
+     ├─ Footer
+     ├─ Content Wrapper
+     └─ Progress Bar
+
+🎨 <strong>Styles</strong>
+  🎨 Colors
+     ├─ Light Mode Set
+     └─ Dark Mode Set
+  🎨 Text Styles
+     ├─ Headings (Serif)
+     ├─ Body (Sans-serif)
+     └─ Labels & Helpers
+  🎨 Effect Styles
+     ├─ Shadow / Light
+     └─ Shadow / Dark
+            </pre>
+        </div>
+
+        <h3>Auto Layout Kullanımı</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Direction</th>
+                    <th>Gap</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Header</td>
+                    <td>Vertical</td>
+                    <td>xs (4pt)</td>
+                </tr>
+                <tr>
+                    <td>Content Wrapper</td>
+                    <td>Vertical</td>
+                    <td>xl/xxl (28pt/40pt)</td>
+                </tr>
+                <tr>
+                    <td>Footer</td>
+                    <td>Horizontal</td>
+                    <td>lg (18pt)</td>
+                </tr>
+                <tr>
+                    <td>Chip Grid</td>
+                    <td>Horizontal wrap</td>
+                    <td>sm-md (8pt-12pt)</td>
+                </tr>
+                <tr>
+                    <td>Card Interior</td>
+                    <td>Vertical</td>
+                    <td>sm/md/lg (8pt/12pt/18pt)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section" style="page-break-before: always;">
+        <h2>📱 Onboarding Screens Annotated</h2>
+
+        <div class="highlight-box">
+            <strong>8 Onboarding Sayfası Detaylı Görselleştirme</strong><br>
+            Her sayfa için tüm elementlerin boyutları, renkleri, spacing değerleri ve önemli notlar aşağıda detaylı olarak gösterilmiştir.
+        </div>
+
+        <!-- Step 1: StepName -->
+        <h3>1️⃣ StepName - İsim Giriş Ekranı</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0; position: relative;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #6d675c;">←</div>
+                        <div style="position: absolute; right: 30px; top: 30px; font-size: 11px; color: #708C77; background: white; padding: 2px 8px; border-radius: 4px; border: 1px dashed #708C77;">36×36pt<br>pill radius</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden; position: relative;">
+                        <div style="width: 12.5%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                        <div style="position: absolute; right: -60px; top: -8px; font-size: 11px; color: #708C77; background: white; padding: 2px 8px; border-radius: 4px; border: 1px dashed #708C77;">6pt height<br>Accent fill</div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; position: relative;">
+                    <div style="position: absolute; left: -80px; top: 20px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Padding:<br>28pt (xl)</div>
+
+                    <h2 style="font-family: Georgia, serif; font-size: 26px; line-height: 32px; letter-spacing: -0.4px; color: #1c1a16; margin-bottom: 8px;">Your Name</h2>
+                    <div style="position: absolute; right: -100px; top: 60px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">26px / 32px<br>-0.4 spacing<br>Serif</div>
+
+                    <p style="font-size: 15px; line-height: 22px; color: #6d675c; margin-bottom: 28px;">We'd love to know what to call you.</p>
+
+                    <input type="text" placeholder="Enter your name" style="width: 100%; border: 1px solid #e5d9c8; border-radius: 14px; padding: 8px 18px; font-size: 16px; font-family: system-ui; background: white; color: #1c1a16; margin-bottom: 12px;">
+                    <div style="position: absolute; right: -90px; top: 180px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">md radius (14pt)<br>Border Subtle<br>lg padding H</div>
+                </div>
+
+                <!-- Footer -->
+                <div style="border-top: 1px solid #e5d9c8; padding: 24px 28px; position: relative;">
+                    <div style="position: absolute; left: -80px; top: 30px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Padding:<br>24pt (card)</div>
+
+                    <button style="width: 100%; background: #708C77; color: white; border: none; border-radius: 999px; padding: 18px; font-size: 17px; font-weight: 600; letter-spacing: 0.2px; box-shadow: 0 10px 18px rgba(23,18,12,0.15);">Continue</button>
+                    <div style="position: absolute; right: -90px; top: 40px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">18pt V padding<br>17px / 600<br>Accent BG</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: StepWelcome -->
+        <h3>2️⃣ StepWelcome - Karşılama Ekranı</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header with progress -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px;"></div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 25%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; text-align: center; position: relative;">
+                    <!-- Hero Collage Placeholder -->
+                    <div style="width: 200px; height: 200px; background: linear-gradient(135deg, #EDE7DE 0%, #CAD6CE 100%); border-radius: 20px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; color: #6d675c; font-size: 13px; position: relative;">
+                        Hero Collage<br>200×200pt
+                        <div style="position: absolute; right: -110px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Editorial<br>görsel<br>lg radius</div>
+                    </div>
+
+                    <h1 style="font-family: Georgia, serif; font-size: 30px; line-height: 36px; letter-spacing: -0.6px; color: #1c1a16; margin-bottom: 12px; position: relative;">Welcome, Time Voyager!
+                        <div style="position: absolute; right: -100px; top: 0; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">30px / 36px<br>-0.6 spacing<br>Serif</div>
+                    </h1>
+
+                    <p style="font-size: 16px; line-height: 24px; color: #6d675c; margin-bottom: 24px; max-width: 320px; margin-left: auto; margin-right: auto;">Chrono curates one luminous moment from history every day. Let's tune the timeline so it fits your curiosity.</p>
+                    <div style="position: absolute; left: -90px; bottom: 280px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">16px / 24px<br>Text Secondary<br>Max 320pt</div>
+
+                    <!-- Buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px; position: relative;">
+                        <button style="background: #708C77; color: white; border: none; border-radius: 999px; padding: 18px; font-size: 17px; font-weight: 600; letter-spacing: 0.2px; box-shadow: 0 10px 18px rgba(23,18,12,0.15);">Start Your Journey</button>
+                        <button style="background: white; color: #708C77; border: 1px solid #e5d9c8; border-radius: 999px; padding: 18px; font-size: 17px; font-weight: 600;">Preview Today's Highlight</button>
+                        <div style="position: absolute; right: -80px; top: 20px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Gap: 12pt<br>(md)</div>
+                    </div>
+
+                    <a href="#" style="color: #708C77; font-weight: 600; text-decoration: none; font-size: 15px; margin-top: 20px; display: inline-block;">Already have a pass? Sign in</a>
+
+                    <p style="font-size: 13px; line-height: 18px; color: #8d867a; margin-top: 16px;">Curated stories, gentle reminders, nothing spammy.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: StepPreview -->
+        <h3>3️⃣ StepPreview - Carousel Önizleme</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px;">←</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 37.5%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; position: relative;">
+                    <h2 style="font-family: Georgia, serif; font-size: 26px; line-height: 32px; letter-spacing: -0.4px; color: #1c1a16; margin-bottom: 24px;">See what awaits</h2>
+
+                    <!-- Carousel Card -->
+                    <div style="background: #F1EBDF; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 22px rgba(23,18,12,0.12); position: relative; height: 400px;">
+                        <div style="position: absolute; top: -30px; right: -100px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">xl radius (28pt)<br>Surface Subtle BG<br>Shadow Y=10</div>
+
+                        <!-- Image area -->
+                        <div style="height: 240px; background: linear-gradient(135deg, #CAD6CE 0%, #708C77 100%); position: relative;">
+                            <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Event Image<br>240pt height</div>
+                        </div>
+
+                        <!-- Text overlay -->
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 28px; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%); min-height: 160px; display: flex; flex-direction: column; justify-content: flex-end;">
+                            <div style="font-size: 14px; color: white; font-weight: 500; margin-bottom: 4px; letter-spacing: 0.2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">JUNE 6, 1944</div>
+                            <div style="font-family: Georgia, serif; font-size: 20px; line-height: 26px; letter-spacing: -0.2px; color: white; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">D-Day: Allied Forces Land in Normandy</div>
+                            <div style="position: absolute; right: -90px; bottom: 60px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">20px / 26px<br>Serif / 600<br>Text shadow</div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination dots -->
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 18px; position: relative;">
+                        <div style="width: 8px; height: 8px; border-radius: 4px; background: #708C77;"></div>
+                        <div style="width: 8px; height: 8px; border-radius: 4px; background: #e5d9c8;"></div>
+                        <div style="width: 8px; height: 8px; border-radius: 4px; background: #e5d9c8;"></div>
+                        <div style="position: absolute; right: -80px; top: -5px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">8×8pt<br>Gap: 8pt</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: StepCategories -->
+        <h3>4️⃣ StepCategories - Kategori Seçimi</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px;">←</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 50%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; position: relative;">
+                    <h2 style="font-family: Georgia, serif; font-size: 32px; line-height: 38px; letter-spacing: -0.6px; color: #1c1a16; margin-bottom: 24px; position: relative;">What are your<br>interests?
+                        <div style="position: absolute; right: -110px; top: 10px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">32px / 38px<br>-0.6 spacing<br>Serif</div>
+                    </h2>
+
+                    <!-- Category chips -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; position: relative;">
+                        <!-- Selected chip -->
+                        <div style="border: 2px solid #708C77; border-radius: 999px; padding: 10px 14px; background: white; display: inline-flex; align-items: center; gap: 9px;">
+                            <div style="width: 25px; height: 25px; background: #EDE7DE; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🌍</div>
+                            <span style="font-size: 14px; font-weight: 500; color: #1c1a16;">World Wars</span>
+                        </div>
+                        <div style="position: absolute; right: -100px; top: 5px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Border: 2pt<br>Accent color<br>Icon: 25×25pt</div>
+
+                        <!-- Default chips -->
+                        <div style="border: 2px solid #e5d9c8; border-radius: 999px; padding: 10px 14px; background: white; display: inline-flex; align-items: center; gap: 9px;">
+                            <div style="width: 25px; height: 25px; background: #EDE7DE; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🏛️</div>
+                            <span style="font-size: 14px; font-weight: 500; color: #1c1a16;">Ancient Civilizations</span>
+                        </div>
+
+                        <div style="border: 2px solid #e5d9c8; border-radius: 999px; padding: 10px 14px; background: white; display: inline-flex; align-items: center; gap: 9px;">
+                            <div style="width: 25px; height: 25px; background: #EDE7DE; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🔬</div>
+                            <span style="font-size: 14px; font-weight: 500; color: #1c1a16;">Science & Discovery</span>
+                        </div>
+
+                        <div style="position: absolute; left: -90px; top: 80px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Gap: 8pt<br>Wrap: on<br>Padding: 14pt H</div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="border-top: 1px solid #e5d9c8; padding: 24px 28px;">
+                    <button style="width: 100%; background: #708C77; color: white; border: none; border-radius: 999px; padding: 18px; font-size: 17px; font-weight: 600;">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: StepEras -->
+        <h3>5️⃣ StepEras - Dönem Seçimi</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px;">←</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 62.5%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; position: relative;">
+                    <h2 style="font-family: Georgia, serif; font-size: 26px; line-height: 32px; letter-spacing: -0.4px; color: #1c1a16; margin-bottom: 8px;">Favorite Eras</h2>
+                    <p style="font-size: 15px; line-height: 22px; color: #6d675c; margin-bottom: 24px;">Select time periods you're most interested in.</p>
+
+                    <!-- Option chips (outline style) -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; position: relative;">
+                        <!-- Active chip -->
+                        <div style="border: 1px solid #708C77; border-radius: 999px; padding: 8px 24px; background: rgba(112,140,119,0.12); position: relative;">
+                            <span style="font-size: 15px; font-weight: 500; color: #708C77;">Ancient (3000 BCE - 500 CE)</span>
+                            <div style="position: absolute; right: -100px; top: -5px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Active state<br>Accent Soft BG<br>Padding: 24pt H</div>
+                        </div>
+
+                        <!-- Default chips -->
+                        <div style="border: 1px solid #e5d9c8; border-radius: 999px; padding: 8px 24px; background: white;">
+                            <span style="font-size: 15px; font-weight: 500; color: #6d675c;">Medieval (500 - 1500)</span>
+                        </div>
+
+                        <div style="border: 1px solid #e5d9c8; border-radius: 999px; padding: 8px 24px; background: white;">
+                            <span style="font-size: 15px; font-weight: 500; color: #6d675c;">Renaissance (1300 - 1600)</span>
+                        </div>
+
+                        <div style="border: 1px solid #e5d9c8; border-radius: 999px; padding: 8px 24px; background: white;">
+                            <span style="font-size: 15px; font-weight: 500; color: #6d675c;">Modern (1800 - Present)</span>
+                        </div>
+
+                        <div style="position: absolute; left: -90px; top: 60px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">15px / 500<br>Gap: 12pt<br>Vertical: 8pt</div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="border-top: 1px solid #e5d9c8; padding: 24px 28px;">
+                    <button style="width: 100%; background: #708C77; color: white; border: none; border-radius: 999px; padding: 18px; font-size: 17px; font-weight: 600;">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: StepNotificationPermission -->
+        <h3>6️⃣ StepNotificationPermission - Bildirim İzni</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px;">←</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 75%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; position: relative;">
+                    <!-- Permission Card -->
+                    <div style="background: white; border-radius: 18px; padding: 28px; box-shadow: 0 12px 24px rgba(23,18,12,0.12); position: relative;">
+                        <div style="position: absolute; right: -90px; top: 10px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">lg radius (18pt)<br>Padding: 28pt<br>Shadow Y=12</div>
+
+                        <!-- Header with icon -->
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px; position: relative;">
+                            <div style="width: 44px; height: 44px; border-radius: 14px; background: rgba(112,140,119,0.12); display: flex; align-items: center; justify-content: center; font-size: 22px;">🔔</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 16px; font-weight: 600; color: #1c1a16;">Daily Historic</div>
+                                <div style="font-size: 13px; color: #6d675c;">Would Like to Send You Notifications</div>
+                            </div>
+                            <div style="position: absolute; left: -90px; top: 5px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Badge: 44×44<br>md radius<br>Accent Soft</div>
+                        </div>
+
+                        <!-- Content -->
+                        <div style="margin-bottom: 18px;">
+                            <p style="font-size: 18px; line-height: 24px; color: #1c1a16; margin-bottom: 8px;">Stay connected to history</p>
+                            <p style="font-size: 13px; color: #6d675c;">We'll send you a gentle daily reminder with your personalized historical moment.</p>
+                        </div>
+
+                        <!-- Benefits list -->
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; position: relative;">
+                            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                <div style="width: 8px; height: 8px; border-radius: 999px; background: #708C77; margin-top: 6px;"></div>
+                                <span style="flex: 1; font-size: 14px; line-height: 20px; color: #6d675c;">Daily curated historical moments</span>
+                            </div>
+                            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                <div style="width: 8px; height: 8px; border-radius: 999px; background: #708C77; margin-top: 6px;"></div>
+                                <span style="flex: 1; font-size: 14px; line-height: 20px; color: #6d675c;">Personalized to your interests</span>
+                            </div>
+                            <div style="position: absolute; right: -90px; top: 10px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Bullet: 8×8pt<br>Gap: 12pt<br>14px / 20px</div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div style="display: flex; gap: 12px; position: relative;">
+                            <button style="flex: 1; border: 1px solid #708C77; background: rgba(112,140,119,0.12); border-radius: 14px; padding: 12px; font-weight: 600; color: #1c1a16;">Allow</button>
+                            <button style="flex: 1; border: 1px solid #e5d9c8; background: white; border-radius: 14px; padding: 12px; font-weight: 600; color: #1c1a16;">Don't Allow</button>
+                            <div style="position: absolute; right: -90px; top: 5px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">md radius<br>Gap: 12pt<br>Padding: 12pt</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: StepNotificationTime -->
+        <h3>7️⃣ StepNotificationTime - Bildirim Zamanı</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12);">
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px;">←</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 87.5%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 18px 28px 40px; position: relative;">
+                    <h2 style="font-family: Georgia, serif; font-size: 26px; line-height: 32px; letter-spacing: -0.4px; color: #1c1a16; margin-bottom: 8px;">When should we notify you?</h2>
+                    <p style="font-size: 15px; line-height: 22px; color: #6d675c; margin-bottom: 24px;">Choose your preferred time for daily reminders.</p>
+
+                    <!-- Time options -->
+                    <div style="display: flex; flex-direction: column; gap: 12px; position: relative;">
+                        <!-- Active option -->
+                        <div style="border: 1px solid #708C77; background: rgba(112,140,119,0.12); border-radius: 22px; padding: 18px 28px; text-align: center; box-shadow: 0 10px 18px rgba(23,18,12,0.12); position: relative;">
+                            <div style="font-size: 18px; font-weight: 600; color: #1c1a16; margin-bottom: 4px;">12:00 PM</div>
+                            <div style="font-size: 14px; color: #6d675c;">Lunchtime reading</div>
+                            <div style="position: absolute; right: -100px; top: 15px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">card radius (22pt)<br>Accent border<br>Shadow Y=10</div>
+                        </div>
+
+                        <!-- Default options -->
+                        <div style="border: 1px solid transparent; background: #F1EBDF; border-radius: 22px; padding: 18px 28px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: 600; color: #1c1a16; margin-bottom: 4px;">09:00 AM</div>
+                            <div style="font-size: 14px; color: #6d675c;">Morning inspiration</div>
+                        </div>
+
+                        <div style="border: 1px solid transparent; background: #F1EBDF; border-radius: 22px; padding: 18px 28px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: 600; color: #1c1a16; margin-bottom: 4px;">05:00 PM</div>
+                            <div style="font-size: 14px; color: #6d675c;">Evening wind-down</div>
+                        </div>
+
+                        <div style="position: absolute; left: -90px; top: 120px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">18px / 600<br>Padding: 18pt V<br>Gap: 12pt</div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="border-top: 1px solid #e5d9c8; padding: 24px 28px;">
+                    <button style="width: 100%; background: #708C77; color: white; border: none; border-radius: 999px; padding: 18px; font-size: 17px; font-weight: 600;">Save Time</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 8: StepAccount -->
+        <h3>8️⃣ StepAccount - Hesap Oluşturma</h3>
+        <div style="background: #f7f4ee; border-radius: 16px; padding: 24px; margin: 20px 0;">
+            <div style="background: white; border-radius: 28px; padding: 20px; max-width: 430px; margin: 0 auto; box-shadow: 0 10px 30px rgba(23,18,12,0.12); position: relative;">
+                <!-- Gradient background (simulated) -->
+                <div style="position: absolute; inset: 0; background: radial-gradient(circle at 55% 45%, rgba(112,140,119,0.08) 0%, rgba(247,244,238,0.2) 60%, rgba(112,140,119,0.04) 100%); border-radius: 28px; pointer-events: none;"></div>
+
+                <!-- Header -->
+                <div style="background: #F7F4EE; padding: 18px 18px 12px; border-radius: 12px 12px 0 0; margin: -20px -20px 20px; position: relative; z-index: 1;">
+                    <div style="display: flex; align-items: center; min-height: 36px; margin-bottom: 4px;">
+                        <div style="width: 36px; height: 36px; border-radius: 999px; background: rgba(112,140,119,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px;">←</div>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: #e5d9c8; border-radius: 999px; overflow: hidden;">
+                        <div style="width: 100%; height: 100%; background: #708C77; border-radius: 999px;"></div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="padding: 60px 28px 40px; text-align: center; position: relative; z-index: 1;">
+                    <h1 style="font-family: Georgia, serif; font-size: 34px; line-height: 38px; letter-spacing: -0.6px; color: #1c1a16; margin-bottom: 60px; position: relative;">Your moment in history awaits.
+                        <div style="position: absolute; right: -110px; top: 10px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">34px / 38px<br>-0.6 spacing<br>Serif</div>
+                    </h1>
+
+                    <!-- Auth buttons -->
+                    <div style="display: flex; justify-content: center; gap: 18px; margin-bottom: 24px; position: relative;">
+                        <!-- Apple button -->
+                        <div style="width: 72px; height: 72px; border-radius: 36px; border: 1px solid #e5d9c8; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(23,18,12,0.08); font-size: 28px; position: relative;">
+                            🍎
+                            <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77; white-space: nowrap;">72×72pt<br>36pt radius</div>
+                        </div>
+
+                        <!-- Google button -->
+                        <div style="width: 72px; height: 72px; border-radius: 36px; border: 1px solid #e5d9c8; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(23,18,12,0.08); font-size: 28px;">
+                            G
+                        </div>
+
+                        <!-- Email button -->
+                        <div style="width: 72px; height: 72px; border-radius: 36px; border: 1px solid #e5d9c8; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(23,18,12,0.08); font-size: 28px;">
+                            ✉️
+                        </div>
+
+                        <div style="position: absolute; right: -90px; top: 25px; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">Gap: 18pt<br>Shadow Y=6<br>Icon: 28pt</div>
+                    </div>
+
+                    <!-- Continue without signup link -->
+                    <a href="#" style="display: inline-block; color: #6d675c; font-size: 14px; text-decoration: underline; margin-bottom: 24px; padding: 8px;">Continue without sign up</a>
+
+                    <!-- Legal text -->
+                    <p style="font-size: 13px; line-height: 18px; color: #6d675c; max-width: 260px; margin: 0 auto; position: relative;">
+                        By continuing, you agree to Chrono's <span style="color: #708C77; font-weight: 600;">Terms</span> and <span style="color: #708C77; font-weight: 600;">Privacy</span>.
+                        <div style="position: absolute; left: -90px; top: 0; font-size: 11px; color: #708C77; background: white; padding: 4px 8px; border-radius: 4px; border: 1px dashed #708C77;">13px / 18px<br>Max: 260pt<br>Accent links</div>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight-box" style="margin-top: 40px;">
+            <strong>🎨 Tüm Ekranlar İçin Ortak Kurallar:</strong><br>
+            • Header padding: 18pt H, 8pt T, 12pt B<br>
+            • Content padding: 28pt H, 18pt T, 40pt B<br>
+            • Footer padding: 28pt H, 24pt V<br>
+            • Progress bar: 6pt height, pill radius<br>
+            • Back button: 36×36pt, pill radius<br>
+            • Primary button: 18pt V padding, 17px / 600<br>
+            • Content wrapper top radius: xl (28pt)<br>
+            • Canvas: 430×932px (iPhone 16 Plus)
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🚀 Quick Reference</h2>
+
+        <h3>En Sık Kullanılan Değerler</h3>
+        <table class="spec-table">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Accent Color (Light)</strong></td>
+                    <td><code>#708C77</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Accent Color (Dark)</strong></td>
+                    <td><code>#9BBB92</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Primary Spacing (Modüller arası)</strong></td>
+                    <td><code>40pt (xxl)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Page Horizontal Margin</strong></td>
+                    <td><code>28pt (xl)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Card Padding</strong></td>
+                    <td><code>28pt (xl)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Button Padding Vertical</strong></td>
+                    <td><code>18pt (lg)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Button Border Radius</strong></td>
+                    <td><code>999pt (pill)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Card Border Radius</strong></td>
+                    <td><code>18pt (lg)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Content Wrapper Top Radius</strong></td>
+                    <td><code>28pt (xl)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Primary Button Text</strong></td>
+                    <td><code>17px / Semibold (600) / 0.2 spacing</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Body Text</strong></td>
+                    <td><code>16px / 24px / Regular (400)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Helper Text</strong></td>
+                    <td><code>13px / 18px / Regular (400)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Touch Target Minimum</strong></td>
+                    <td><code>44×44pt (iOS) / 48×48pt (Recommended)</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Animation Duration (Micro)</strong></td>
+                    <td><code>120ms (ease-out)</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer style="text-align: center; padding: 40px 20px; color: #8d867a; font-size: 14px; border-top: 1px solid #e5d9c8; margin-top: 60px;">
+        <p style="margin-bottom: 8px;"><strong>Daily Historic Onboarding Design System v1.0</strong></p>
+        <p style="margin: 0;">Projenizde başarılar! ✨</p>
+    </footer>
+</body>
+</html>

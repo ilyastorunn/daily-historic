@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "codex-deneme",
-    "slug": "codex-deneme",
+    "name": "Historiq",
+    "slug": "historiq",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "codexdeneme",
+    "scheme": "historiq",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "co.ilyastorunn.chrono-history.ios"
+      "bundleIdentifier": "com.ilyastorun.histora"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
-      "package": "co.ilyastorunn.chronohistory.android",
+      "package": "com.ilyastorun.histora",
       "predictiveBackGestureEnabled": false
     },
     "web": {

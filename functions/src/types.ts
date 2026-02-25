@@ -57,6 +57,8 @@ export interface SearchRequest {
   q?: string;
   categories?: string; // Comma-separated
   era?: EraOption;
+  month?: number; // 1-12
+  day?: number; // 1-31
   sort?: SortOption;
   cursor?: string;
   limit?: number;

@@ -1,0 +1,744 @@
+{
+  "generatedAt": "2025-12-09T10:10:48.958Z",
+  "summary": {
+    "totalEvents": 1014,
+    "yearsCovered": 124,
+    "richYears": 18,
+    "sparseYears": 52,
+    "missingYears": 1
+  },
+  "featuredYears": [
+    {
+      "year": 2013,
+      "eventCount": 16,
+      "categoryCount": 4,
+      "categories": [
+        "surprise",
+        "art-culture",
+        "exploration",
+        "natural-disasters"
+      ],
+      "events": [
+        {
+          "id": "00f9e6f5bf67733ba33dd3692ccc8d54",
+          "dateISO": "2013-01-01",
+          "title": "After a fatal car accident in the Little India region of Singapore, angry mobs of passers-by attacked the bus involved and emergency vehicles, the first riot in the country in over 40 years.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "160aae16611eb7831de1d291ba670068",
+          "dateISO": "2013-01-01",
+          "title": "British YouTube collective the Sidemen were formed as a Rockstar Games Social Club group in Grand Theft Auto Online.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "2be40024b3c7b899b51c2b9028214a2e",
+          "dateISO": "2013-01-01",
+          "title": "During the Hindu festival of Navaratri at a temple in Madhya Pradesh, India, rumours about an impending bridge collapse caused a stampede that resulted in 115 deaths.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "330f10f44dfc9787f0ba4ca96d1548d1",
+          "dateISO": "2013-01-01",
+          "title": "The first terrorist attack in Beijing's recent history took place when members of the Turkistan Islamic Party drove a vehicle into a crowd, killing five people and injuring thirty-eight others.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "5290ecf546191d214c8c6bf77b5f9889",
+          "dateISO": "2013-01-01",
+          "title": "English-Irish boy band One Direction released their third studio album Midnight Memories which debuted at number one on the Billboard 200 and became the best-selling album of 2013.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "5e9ed710c7a203b78c285ffca8d3410a",
+          "dateISO": "2013-01-01",
+          "title": "A double suicide bombing at the Iranian embassy in Beirut, Lebanon, killed 23 people and injured at least 160 others.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "6a4ae3e7805085b5d415f72358ba4e38",
+          "dateISO": "2013-01-01",
+          "title": "Metallica (pictured) played a concert in Antarctica, becoming the first band to perform on all seven continents.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "852aa2c5970083d25cc0fd52bfab0504",
+          "dateISO": "2013-01-01",
+          "title": "The Indian Space Research Organisation launched the Mars Orbiter Mission, India's first interplanetary probe.",
+          "hasImage": false,
+          "categories": [
+            "exploration"
+          ]
+        },
+        {
+          "id": "95b4bca99fc24c2761527d7add3a8d14",
+          "dateISO": "2013-01-01",
+          "title": "In Laos's deadliest air accident, Lao Airlines Flight 301 crashed into the Mekong River, resulting in the deaths of all 49 people aboard.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "9ba3e5e36480d5a5c8a781b40689bfbb",
+          "dateISO": "2013-01-01",
+          "title": "A 7.2-magnitude earthquake struck Bohol in the Philippines, resulting in 222 deaths.",
+          "hasImage": false,
+          "categories": [
+            "natural-disasters",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "b09a3a8185b7ce1a6feebc8bb2e1daef",
+          "dateISO": "2013-01-01",
+          "title": "The first phase of the Marmaray project opened with an undersea rail tunnel (train pictured) across the Bosphorus strait.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "b0d7231a6ac30acf898eba5a69323a93",
+          "dateISO": "2013-01-01",
+          "title": "Tatarstan Airlines Flight 363 crashed during an aborted landing at Kazan International Airport, Russia, killing all 50 people on board and leading to the revocation of the airline's operating certificate.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "bf4a602699a3a4519e6fb5002ea2494f",
+          "dateISO": "2013-01-01",
+          "title": "Typhoon Haiyan made landfall in the Visayas region of the Philippines, killing at least 6,300 people, making it the deadliest Philippine typhoon recorded in modern history.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "c39d96d9f2d74840b33d6953e7be7286",
+          "dateISO": "2013-01-01",
+          "title": "An outbreak of 77 confirmed tornadoes occurred in seven U.S. states; it became the largest November tornado outbreak in Illinois and Indiana.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "c95d2411824edb35ec9a5ad0409e1a14",
+          "dateISO": "2013-01-01",
+          "title": "Norwegian chess grandmaster Magnus Carlsen (pictured) defeated India's Viswanathan Anand to become world chess champion.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "f039bde5277b95ffbcbd9e2aa41402e3",
+          "dateISO": "2013-01-01",
+          "title": "Twelve people were killed in an apartment-building collapse in Medellín, leading to new construction laws being passed in Colombia.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1991,
+      "eventCount": 14,
+      "categoryCount": 6,
+      "categories": [
+        "world-wars",
+        "surprise",
+        "politics",
+        "art-culture",
+        "exploration",
+        "natural-disasters"
+      ],
+      "events": [
+        {
+          "id": "1b276486e90fbf4bcccf56f47adecae1",
+          "dateISO": "1991-01-01",
+          "title": "Croatian War of Independence: The Yugoslav People's Army captured the Croatian city of Vukovar, ending an 87-day siege.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "1d1cf09d494e6f5c9ef78d69755e88f1",
+          "dateISO": "1991-01-01",
+          "title": "Galileo became the first spacecraft to visit an asteroid when it made a flyby of 951 Gaspra.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "21b2704284b9117c4f0b243785e222e7",
+          "dateISO": "1991-01-01",
+          "title": "Belarusian, Russian and Ukrainian leaders signed the Belovezh Accords, agreeing to dissolve the Soviet Union and establish the Commonwealth of Independent States.",
+          "hasImage": false,
+          "categories": [
+            "politics"
+          ]
+        },
+        {
+          "id": "368a3f8584c0e366e0e3dfc9f31e8a8f",
+          "dateISO": "1991-01-01",
+          "title": "Mexican singer Luis Miguel released the album Romance, which led to a revival of interest in bolero music.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "5ed997d2d536a780cc0f79c351223aab",
+          "dateISO": "1991-01-01",
+          "title": "Croatian War of Independence: Croatian naval commandos attacked the Yugoslav patrol boat Mukos, starting the Battle of the Dalmatian Channels.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "638b537b5ecadb19bcdea5e113fc7980",
+          "dateISO": "1991-01-01",
+          "title": "The Madrid Conference, an attempt by the international community to revive the Israeli–Palestinian peace process through negotiations, convened.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "66d591b929ec9b8bb96c8e4dd09dd02c",
+          "dateISO": "1991-01-01",
+          "title": "A man drove his vehicle through the window of a Luby's Cafeteria in Killeen, Texas, and opened fire, killing 23 people before fatally shooting himself.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "7268bf4f32e9a35e2ff458542fab3304",
+          "dateISO": "1991-01-01",
+          "title": "Indonesian forces opened fire on student demonstrators protesting the occupation of East Timor in the capital Dili, killing at least 250 people.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "92e4d0a5244427a79da3f3813799147d",
+          "dateISO": "1991-01-01",
+          "title": "The current flag of Uzbekistan was adopted, making the country the first newly independent republic in Central Asia to choose a new flag.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "a1e133a90d95e31ec082087cfab56d1e",
+          "dateISO": "1991-01-01",
+          "title": "Operations at the Reagan Test Site were disrupted due to the nearby formation of Tropical Storm Zelda.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "d7f7cf5818bb9ea3d0c4b177fc8c4fea",
+          "dateISO": "1991-01-01",
+          "title": "First Nagorno-Karabakh War: An Azerbaijani military helicopter carrying a peacekeeping mission team was shot down in Nagorno-Karabakh, disrupting ongoing peace talks.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "exploration"
+          ]
+        },
+        {
+          "id": "daebae28166f152767cde2a3b24f4e20",
+          "dateISO": "1991-01-01",
+          "title": "An earthquake struck the Indian state of Uttarakhand, killing at least 768 people and destroying thousands of homes.",
+          "hasImage": false,
+          "categories": [
+            "natural-disasters",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "e2f432096f3e92f34a3dbcec57379dc0",
+          "dateISO": "1991-01-01",
+          "title": "Magic Johnson announced his retirement from professional basketball due to HIV infection.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "fc130635a5a64f94fb409876d388680a",
+          "dateISO": "1991-01-01",
+          "title": "A referendum held to ratify the Act of Declaration of Independence of Ukraine passed with more than 92 percent of the vote.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1987,
+      "eventCount": 14,
+      "categoryCount": 6,
+      "categories": [
+        "surprise",
+        "civil-rights",
+        "world-wars",
+        "natural-disasters",
+        "art-culture",
+        "politics"
+      ],
+      "events": [
+        {
+          "id": "1d2af32eacb0f554398105a1774e2898",
+          "dateISO": "1987-01-01",
+          "title": "A Provisional Irish Republican Army bomb exploded during a Remembrance Sunday ceremony in Enniskillen, Northern Ireland, killing 12 people and injuring 63 others.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "269e30e09842146b5f537dd1e29487a3",
+          "dateISO": "1987-01-01",
+          "title": "Two television stations in Chicago had their broadcast signals hijacked with footage of an unknown person wearing a Max Headroom mask and costume.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "2e919c4906bc2166ab150c458c7d1e1c",
+          "dateISO": "1987-01-01",
+          "title": "Arab–Israeli conflict: An Israeli army tank transporter killed four Palestinian refugees and injured seven others during a traffic accident at the Erez Crossing on the Israel–Gaza Strip border, sparking the First Intifada.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "34bb16d0cd9ba4291b1b02db2b444f79",
+          "dateISO": "1987-01-01",
+          "title": "A time bomb planted by North Korean agents on Korean Air Flight 858 detonated over the Andaman Sea, killing all 115 people on board.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "35932fd9f740ef6bcd2b768d4622f124",
+          "dateISO": "1987-01-01",
+          "title": "An underground fire killed 31 people at King's Cross St Pancras tube station in London.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "37fbd7023a44d6e983edbab2c18213ed",
+          "dateISO": "1987-01-01",
+          "title": "A man shot and killed eight people at the Australia Post building in Melbourne, before jumping to his death.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "3df7f199e72416ac42c5fed6da59f9eb",
+          "dateISO": "1987-01-01",
+          "title": "The Dow Jones Industrial Average fell by 22.6 percent on Black Monday, the largest one-day percentage decline in the stock market index's history.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "46d860eb7900d65fb2e0298ba36288dd",
+          "dateISO": "1987-01-01",
+          "title": "An estimated 750,000 people attended the \"Great March\" in Washington, D.C., to demand greater civil rights for the LGBT community.",
+          "hasImage": false,
+          "categories": [
+            "civil-rights"
+          ]
+        },
+        {
+          "id": "53e921655fbeddd632b62158f3f0367f",
+          "dateISO": "1987-01-01",
+          "title": "Iran–Iraq War: U.S. Navy forces destroyed two Iranian oil platforms in the Persian Gulf in response to an Iranian missile attack on a Kuwaiti oil tanker three days earlier.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "natural-disasters"
+          ]
+        },
+        {
+          "id": "78db3f96a9fb30ba4123ff7c64ba784f",
+          "dateISO": "1987-01-01",
+          "title": "Singapore's first Mass Rapid Transit line opened, with train services running between Yio Chu Kang and Toa Payoh.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "78e8f937e9d880357984c2825fec225c",
+          "dateISO": "1987-01-01",
+          "title": "South African Airways Flight 295 suffered a catastrophic in-flight fire and crashed into the Indian Ocean east of Mauritius, killing all 159 people on board.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "7a7d2f0eaac0226d87399131b8d06e1c",
+          "dateISO": "1987-01-01",
+          "title": "Sri Lankan Civil War: The Indian Peace Keeping Force began Operation Pawan to take control of Jaffna from the Tamil Tigers and enforce their disarmament as a part of the Indo-Sri Lanka Accord.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture",
+            "politics"
+          ]
+        },
+        {
+          "id": "7adca8755f726711e4e12bf7f82b7e68",
+          "dateISO": "1987-01-01",
+          "title": "John Adams' (pictured) opera Nixon in China premiered.",
+          "hasImage": false,
+          "categories": [
+            "art-culture"
+          ]
+        },
+        {
+          "id": "af71eb418ac08fa45b2857e5400ea560",
+          "dateISO": "1987-01-01",
+          "title": "Tunisian prime minister Zine El Abidine Ben Ali deposed and replaced President Habib Bourguiba by declaring him medically unfit for the duties of the office.",
+          "hasImage": false,
+          "categories": [
+            "politics"
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1943,
+      "eventCount": 14,
+      "categoryCount": 5,
+      "categories": [
+        "surprise",
+        "politics",
+        "world-wars",
+        "art-culture",
+        "natural-disasters"
+      ],
+      "events": [
+        {
+          "id": "0707ef66512ca07ee9021385c95ca21f",
+          "dateISO": "1943-01-01",
+          "title": "The Holocaust: In the Romani Holocaust, Nazi official Heinrich Himmler ordered that the Romani were to be put \"on the same level as Jews and placed in concentration camps\".",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "1f74fb35ce8fdab5af96d1cbf8f0dfdd",
+          "dateISO": "1943-01-01",
+          "title": "The Holocaust: The largest massacre of Jews by German forces began at Majdanek concentration camp",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "1f8e5f8bb59b2789a9a765c9b2b378cf",
+          "dateISO": "1943-01-01",
+          "title": "The Second Philippine Republic, a Japanese puppet state, was established with Jose P. Laurel as its first president.",
+          "hasImage": false,
+          "categories": [
+            "politics"
+          ]
+        },
+        {
+          "id": "2b86f207afed367f627810cd53aebb70",
+          "dateISO": "1943-01-01",
+          "title": "World War II: Following the American capture of Makin Atoll, USS Liscome Bay was sunk by a torpedo from Japanese submarine I-175, killing 644.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "2e9f380a56321a9bcb4f942509a8c0bd",
+          "dateISO": "1943-01-01",
+          "title": "World War II: Australian forces began the Battle of Wareo by conducting clearing operations between Bonga and North Hill.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "5346f16a6ca3c92bbd19a3156a164b40",
+          "dateISO": "1943-01-01",
+          "title": "The Holocaust: The Gestapo conducted a raid on the Roman Ghetto, capturing 1,259 members of the Jewish community, most of whom were sent to Auschwitz.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "538fe7f8f42eaa13fe9d9e392fdc6976",
+          "dateISO": "1943-01-01",
+          "title": "World War II: Australian forces launched an assault on Sattelberg, New Guinea, against Japanese forces, initiating the Battle of Sattelberg.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "8cf533629b6aebafb2978b660f843890",
+          "dateISO": "1943-01-01",
+          "title": "World War II: The Luftwaffe conducted a surprise air raid on Allied ships in Bari, Italy, sinking twenty-eight vessels and releasing one ship's secret cargo of mustard gas.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "9d7b5367a49b5fdb84572ce0be8e4502",
+          "dateISO": "1943-01-01",
+          "title": "World War II: During the second raid on Schweinfurt, the U.S. 8th Air Force suffered so many losses that it lost air supremacy over Germany for several months.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "b1cd1bc23609e382e139bce87ac1ebfd",
+          "dateISO": "1943-01-01",
+          "title": "World War II: A U.S. Navy task force turned away an Imperial Japanese Navy formation at the Battle of Empress Augusta Bay, thus protecting the landings at Cape Torokina.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "c6b6188b138b7f580c0d91eeb04bdd45",
+          "dateISO": "1943-01-01",
+          "title": "The Holocaust: Prisoners at Sobibor extermination camp revolted, killing 11 SS officers and staging a mass escape.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "deef0255ddf714254806a795aa685a9c",
+          "dateISO": "1943-01-01",
+          "title": "World War II: An unknown aircraft dropped four bombs on Vatican City, which maintained neutrality during the war.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "e74a352532d73022c1664d4290ed31f2",
+          "dateISO": "1943-01-01",
+          "title": "World War II: The Kempeitai, the military police arm of the Imperial Japanese Army, arrested and tortured fifty-seven civilians and civilian internees on suspicion of their involvement in a raid on Singapore Harbour.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "ff4a28743dde5c4f3ce239509e18643e",
+          "dateISO": "1943-01-01",
+          "title": "World War II: Allied aircraft sank the German cargo ship Sinfra, killing mostly Italian POWs.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "natural-disasters"
+          ]
+        }
+      ]
+    },
+    {
+      "year": 1944,
+      "eventCount": 14,
+      "categoryCount": 4,
+      "categories": [
+        "world-wars",
+        "art-culture",
+        "surprise",
+        "exploration"
+      ],
+      "events": [
+        {
+          "id": "087ce9377cc7a33d5d3de0977aaa065f",
+          "dateISO": "1944-01-01",
+          "title": "Between 3,500 and 4,000 tonnes of ordnance exploded at the RAF Fauld underground munitions storage depot in the largest non-nuclear explosion in the United Kingdom.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "0f38f082814bcfc8000751cba75cef22",
+          "dateISO": "1944-01-01",
+          "title": "Second World War: In Operation Catechism, the Royal Air Force sank the German battleship Tirpitz  (video featured) near Tromsø, Norway, killing about 1,000 sailors on board.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "2183759e76f3c481b176592a6a9ebe3b",
+          "dateISO": "1944-01-01",
+          "title": "Heinrich Himmler ordered a crackdown on the Edelweiss Pirates, a nonconformist youth group that assisted army deserters and others hiding from the Nazis.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "2e9d96686f5e8c591c4532f93183887c",
+          "dateISO": "1944-01-01",
+          "title": "World War II: An American F-13 Superfortress made the first flight by an Allied aircraft over Tokyo since the Doolittle Raid in April 1942.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "402c4b9dcfa4e1ca0148a00428f024f3",
+          "dateISO": "1944-01-01",
+          "title": "World War II: Operation Queen commenced with one of the heaviest Allied tactical bombings of the war, attacking German targets in the Rur valley.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "43c83b0b598c0f302a58b1a8bf256de6",
+          "dateISO": "1944-01-01",
+          "title": "USS Tang, the U.S. Navy submarine credited with sinking more ships than any other American submarine, sank when it was struck by its own torpedo.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "44f5cb0f9d9df536104d3d7eb47ee3d4",
+          "dateISO": "1944-01-01",
+          "title": "World War II: The three-week-long Battle of Aachen concluded, making the city the first on German soil to be captured by the Allies.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "46522fb32d9a8123165eaa0b5def1a51",
+          "dateISO": "1944-01-01",
+          "title": "The Guatemalan Revolution began with a small group of army officers led by Francisco Javier Arana and Jacobo Árbenz launching a coup against dictator Jorge Ubico.",
+          "hasImage": false,
+          "categories": [
+            "surprise"
+          ]
+        },
+        {
+          "id": "49a6b0d1720e282cafeecd426f0a7d46",
+          "dateISO": "1944-01-01",
+          "title": "World War II: The Japanese battleship Musashi, one of the heaviest and most powerfully armed ever constructed, was sunk by American aircraft during the Battle of Leyte Gulf.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "7ab623787107a782683d9dc4912c720b",
+          "dateISO": "1944-01-01",
+          "title": "World War II: Fulfilling a promise he made two years previously, General Douglas MacArthur landed on Leyte to begin the recapture of the Philippines.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "9f3ee4ccf80f6e300319ea80b3993c0f",
+          "dateISO": "1944-01-01",
+          "title": "Second World War: Allied forces completed Operation Pheasant, a major operation to clear German troops from the province of North Brabant in the Netherlands.",
+          "hasImage": false,
+          "categories": [
+            "world-wars",
+            "art-culture"
+          ]
+        },
+        {
+          "id": "c3c47e840a068a56f9d3a7ffd9bc0218",
+          "dateISO": "1944-01-01",
+          "title": "World War II: Allied forces began a military campaign on Japanese-occupied Singapore.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "d165d00c88ed41c55f1c81e7adcdb6f5",
+          "dateISO": "1944-01-01",
+          "title": "A  four-day air battle over Taiwan ended with a decisive American victory, destroying hundreds of Japanese aircraft and military facilities.",
+          "hasImage": false,
+          "categories": [
+            "world-wars"
+          ]
+        },
+        {
+          "id": "d4235ef7ad7900c39c1802755672aee9",
+          "dateISO": "1944-01-01",
+          "title": "The B Reactor at the Hanford Site in the U.S. state of Washington began producing plutonium, with the facility later going on to create more for nearly the entire American nuclear arsenal.",
+          "hasImage": false,
+          "categories": [
+            "exploration"
+          ]
+        }
+      ]
+    }
+  ]
+}

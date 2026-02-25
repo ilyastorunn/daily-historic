@@ -14,6 +14,7 @@ import {
   StepAccount,
   StepCategories,
   StepEras,
+  StepName,
   StepNotificationPermission,
   StepNotificationTime,
   StepPreview,
@@ -21,6 +22,13 @@ import {
 } from '@/components/onboarding/steps';
 
 const steps: StepDefinition[] = [
+  {
+    key: 'name',
+    title: 'Your Name',
+    Component: StepName,
+    nextLabel: 'Get Started',
+    shouldDisableNext: (state) => !state.displayName.trim(),
+  },
   {
     key: 'welcome',
     title: 'Welcome',
@@ -134,6 +142,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 
     if (state.stepIndex === totalSteps - 1) {
       const onboardingData: OnboardingCompletionData = {
+        displayName: state.displayName.trim() || undefined,
         accountSelection: state.accountSelection,
         categories: state.categories,
         categoriesSkipped: state.categoriesSkipped,
@@ -178,7 +187,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   };
 
   const shouldShowFooter =
-    !isFirstStep &&
+    currentStepDef.key !== 'welcome' &&
     currentStepDef.key !== 'notification-permission' &&
     currentStepDef.key !== 'account';
 
