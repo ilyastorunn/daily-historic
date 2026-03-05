@@ -10,8 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.ilyastorun.histora"
+      "googleServicesFile": "$GOOGLE_SERVICES_PLIST",
+      "bundleIdentifier": "com.ilyastorun.histora",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -59,6 +62,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0a726bd7-ebfe-4119-a928-1492199af645"
+      }
     }
   }
 }
