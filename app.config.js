@@ -1,0 +1,76 @@
+const { withInfoPlist } = require('@expo/config-plugins');
+
+/** @type {import('expo/config').ExpoConfig} */
+const config = {
+  name: "Historiq",
+  slug: "historiq",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/images/icon.png",
+  scheme: "historiq",
+  userInterfaceStyle: "automatic",
+  newArchEnabled: true,
+  ios: {
+    supportsTablet: false,
+    googleServicesFile: process.env.GOOGLE_SERVICES_PLIST ?? "./GoogleService-Info.plist",
+    bundleIdentifier: "com.ilyastorun.histora",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
+  },
+  android: {
+    adaptiveIcon: {
+      backgroundColor: "#E6F4FE",
+      foregroundImage: "./assets/images/android-icon-foreground.png",
+      backgroundImage: "./assets/images/android-icon-background.png",
+      monochromeImage: "./assets/images/android-icon-monochrome.png",
+    },
+    edgeToEdgeEnabled: true,
+    googleServicesFile: "./google-services.json",
+    package: "com.ilyastorun.histora",
+    predictiveBackGestureEnabled: false,
+  },
+  web: {
+    output: "static",
+    favicon: "./assets/images/favicon.png",
+  },
+  plugins: [
+    "@react-native-firebase/app",
+    "@react-native-firebase/auth",
+    "expo-router",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          useFrameworks: "static",
+          buildReactNativeFromSource: true,
+        },
+      },
+    ],
+    [
+      "expo-splash-screen",
+      {
+        image: "./assets/images/splash-icon.png",
+        imageWidth: 200,
+        resizeMode: "contain",
+        backgroundColor: "#ffffff",
+        dark: {
+          backgroundColor: "#000000",
+        },
+      },
+    ],
+    "expo-web-browser",
+  ],
+  experiments: {
+    typedRoutes: true,
+    reactCompiler: true,
+  },
+  extra: {
+    router: {},
+    eas: {
+      projectId: "0a726bd7-ebfe-4119-a928-1492199af645",
+    },
+  },
+};
+
+module.exports = config;
