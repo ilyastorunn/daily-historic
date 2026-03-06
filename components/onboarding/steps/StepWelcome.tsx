@@ -16,10 +16,6 @@ const StepWelcome = ({ onNext }: StepComponentProps) => {
     onNext();
   };
 
-  const handlePreview = () => {
-    updateState({ heroPreviewSeen: true });
-  };
-
   const handleLogin = () => {
     router.replace('/(tabs)');
   };
@@ -30,7 +26,7 @@ const StepWelcome = ({ onNext }: StepComponentProps) => {
         <HeroCollage />
         <Text style={styles.heroGreeting}>Welcome, Time Voyager!</Text>
         <Text style={styles.heroBody}>
-          Chrono curates one luminous moment from history every day. Let’s tune the timeline so it fits your curiosity.
+          Chrono curates one luminous moment from history every day. Let's tune the timeline so it fits your curiosity.
         </Text>
       </View>
 
@@ -41,22 +37,11 @@ const StepWelcome = ({ onNext }: StepComponentProps) => {
         >
           <Text style={styles.primaryButtonText}>Start Your Journey</Text>
         </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressedButton]}
-          onPress={handlePreview}
-        >
-          <Text style={styles.secondaryButtonText}>Preview Today’s Highlight</Text>
-        </Pressable>
       </View>
 
       <Pressable onPress={handleLogin}>
         <Text style={styles.ghostLink}>Already have a pass? Sign in</Text>
       </Pressable>
-
-      <Text style={styles.heroFootnote}>
-        Curated stories, gentle reminders, nothing spammy. You can tweak everything later in settings.
-      </Text>
     </ScrollView>
   );
 };

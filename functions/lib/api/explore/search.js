@@ -129,11 +129,13 @@ async function exploreSearch(request, response) {
         // STEP 6: Apply limit
         const requestedLimit = params.limit || 20;
         const fetchLimit = Math.min(requestedLimit + 1, 51); // Max 50 results + 1 for hasMore
-        if (categoryArray.length > 1) {
-            // Multi-category: fetch limited set and filter client-side
-            // Limit to 50 to prevent timeout
-            console.log("[Search API] Multi-category mode, fetching up to 50 for client-side filtering");
-            firestoreQuery = firestoreQuery.limit(50);
+        // Text search and multi-category filtering are done client-side after Firestore fetch.
+        // Fetch a larger set so there are enough candidates to filter from.
+        const hasTextQuery = params.q && params.q.length > 0;
+        const needsClientSideFilter = categoryArray.length > 1 || hasTextQuery;
+        if (needsClientSideFilter) {
+            console.log("[Search API] Client-side filter mode (text or multi-category), fetching up to 200");
+            firestoreQuery = firestoreQuery.limit(200);
         }
         else {
             firestoreQuery = firestoreQuery.limit(fetchLimit);
@@ -184,7 +186,9 @@ async function exploreSearch(request, response) {
             // No additional sorting needed
         }
         // Determine next cursor and slice results
-        const hasMore = events.length > requestedLimit;
+        // Cursor-based pagination is not reliable after client-side text/category filtering,
+        // so disable hasMore when client-side filtering was applied.
+        const hasMore = needsClientSideFilter ? false : events.length > requestedLimit;
         const items = events.slice(0, requestedLimit);
         const nextCursor = hasMore && items.length > 0
             ? items[items.length - 1].eventId

@@ -6,7 +6,7 @@ import { EditorialCard } from '@/components/ui/editorial-card';
 import { PeekCarousel } from '@/components/ui/peek-carousel';
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
-import { buildWikimediaFileUrl } from '@/utils/wikimedia';
+import { buildWikimediaImageSource } from '@/utils/wikimedia';
 
 import { styles as onboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
@@ -27,7 +27,7 @@ const previewCards: PreviewCard[] = [
     title: 'First footsteps on lunar soil',
     summary: 'Neil Armstrong steps onto the Moon and marks a new chapter for exploration.',
     meta: 'Sea of Tranquility, NASA Archive',
-    image: { uri: buildWikimediaFileUrl('File:Neil_Armstrong_pose.jpg') },
+    image: buildWikimediaImageSource('File:Neil_Armstrong_pose.jpg'),
   },
   {
     id: 'empire-destruction-1836',
@@ -35,9 +35,7 @@ const previewCards: PreviewCard[] = [
     title: 'Empire at the brink',
     summary: 'Thomas Cole paints the fall of an empire in sweeping colour and detail.',
     meta: 'New York, Cole Collection',
-    image: {
-      uri: buildWikimediaFileUrl('File:Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg'),
   },
   {
     id: 'caesar-death-44bc',
@@ -45,9 +43,7 @@ const previewCards: PreviewCard[] = [
     title: 'A turning point for Rome',
     summary: 'Julius Caesar is assassinated in the Senate and republic tremors begin.',
     meta: 'Rome, Curia Pompeia',
-    image: {
-      uri: buildWikimediaFileUrl('File:Vincenzo_Camuccini_-_Morte_di_Cesare.jpg'),
-    },
+    image: buildWikimediaImageSource('File:Vincenzo_Camuccini_-_Morte_di_Cesare.jpg'),
   },
 ];
 
@@ -62,7 +58,7 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     container: {
       gap: spacing.lg,
-      paddingBottom: spacing.xxl,
+      paddingBottom: spacing.lg,
     },
     title: {
       fontFamily: serifFamily,
@@ -100,7 +96,7 @@ const StepPreview = (_props: StepComponentProps) => {
       contentContainerStyle={[onboardingStyles.stackGap, themedStyles.container]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={themedStyles.title}>A glimpse of today’s moment</Text>
+      <Text style={themedStyles.title}>A glimpse of today's moment</Text>
       <Text style={themedStyles.body}>
         Swipe through editorial cards and feel how Chrono curates a single, focused story each day.
       </Text>

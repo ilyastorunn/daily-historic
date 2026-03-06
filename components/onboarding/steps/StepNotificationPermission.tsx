@@ -1,18 +1,12 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useOnboardingContext } from '@/contexts/onboarding-context';
-import { useAppTheme } from '@/theme';
 
 import type { StepComponentProps } from '../types';
 import { styles } from '../styles';
 
 const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
-  const {
-    colors: { accentPrimary },
-  } = useAppTheme();
-  const reminderTime = state.notificationTime ?? '09:00';
 
   const handleEnable = () => {
     updateState({
@@ -29,48 +23,16 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.stepScroll}>
+    <ScrollView contentContainerStyle={[styles.stepScroll, { flex: 1 }]}>
       <Text style={styles.stepTitle}>Stay in sync with gentle reminders</Text>
       <Text style={styles.sectionCopy}>
-        We’ll nudge you once per day with a handpicked moment. No streak-busting spam—just pure inspiration when you want it.
+        We'll nudge you once per day with a handpicked moment. No streak-busting spam—just pure inspiration when you want it.
       </Text>
 
-      <View style={styles.permissionCard}>
-        <View style={styles.permissionCardHeader}>
-          <View style={styles.permissionBadge}>
-            <IconSymbol name="bell.fill" size={20} color={accentPrimary} />
-          </View>
-
-          <View style={styles.permissionHeaderText}>
-            <Text style={styles.permissionAppName}>Chrono Moment</Text>
-            <Text style={styles.permissionMeta}>Mindful reminders that match your rhythm</Text>
-          </View>
-        </View>
-
-        <View style={styles.permissionCardContent}>
-          <Text style={styles.permissionTitle}>Allow mindful notifications</Text>
-          <Text style={styles.permissionHint}>
-            Turn on a single nudge at <Text style={styles.permissionHighlight}>{reminderTime}</Text> to stay in sync without
-            the pressure.
-          </Text>
-        </View>
-
-        <View style={styles.permissionBulletList}>
-          <View style={styles.permissionBulletRow}>
-            <View style={styles.permissionBulletDot} />
-            <Text style={styles.permissionBulletText}>Daily inspiration chosen just for your timeline</Text>
-          </View>
-
-          <View style={styles.permissionBulletRow}>
-            <View style={styles.permissionBulletDot} />
-            <Text style={styles.permissionBulletText}>Pause or adjust alerts anytime from settings</Text>
-          </View>
-        </View>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#f0ece6', borderRadius: 16, minHeight: 180 }}>
+        <Text style={{ color: '#999', fontSize: 14 }}>Illustration placeholder</Text>
       </View>
-
-      <Text style={styles.helperText}>
-        {"After you tap \"Allow notifications\", confirm by pressing \"Allow\" on the system prompt."}
-      </Text>
 
       <View style={styles.heroActions}>
         <Pressable

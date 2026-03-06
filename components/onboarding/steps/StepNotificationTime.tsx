@@ -112,6 +112,17 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
           <Text style={styles.timeOptionLabel}>Other time</Text>
           <Text style={styles.timeOptionHint}>Choose a specific schedule</Text>
         </Pressable>
+
+        <Pressable
+          onPress={() => { updateState({ notificationEnabled: false }); onNext(); }}
+          style={({ pressed }) => [
+            styles.timeOption,
+            pressed && styles.cardPressed,
+          ]}
+        >
+          <Text style={styles.timeOptionLabel}>Skip for now</Text>
+          <Text style={styles.timeOptionHint}>You can enable reminders later</Text>
+        </Pressable>
       </View>
 
       {selected === 'custom' && (
@@ -129,18 +140,6 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
           {showError && <Text style={styles.errorText}>Enter time as HH:MM (24-hour).</Text>}
         </View>
       )}
-
-      <Pressable
-        onPress={() => {
-          updateState({ notificationEnabled: false });
-          onNext();
-        }}
-        style={({ pressed }) => [styles.inlineGhostButton, pressed && styles.inlineGhostButtonPressed]}
-      >
-        <Text style={[styles.inlineGhostButtonText, styles.inlineGhostButtonTextActive]}>
-          Skip reminders for now
-        </Text>
-      </Pressable>
     </ScrollView>
   );
 };

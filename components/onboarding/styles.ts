@@ -1,12 +1,18 @@
 import { Platform, StyleSheet } from 'react-native';
 
-import { lightTheme, radius as radiusScale, spacing as spacingScale } from '@/theme';
+import { lightTheme, radius as radiusScale, spacing as spacingScale, type ThemeDefinition } from '@/theme';
 
-const theme = lightTheme;
-const { colors } = theme;
-const accentColor = colors.accentPrimary;
 const serifFamily = Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' });
 const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
+
+const buildOnboardingStyles = (t: ThemeDefinition) => {
+  const colors = t.colors;
+  const accentColor = colors.accentPrimary;
+
+  return {
+    colors,
+    accentColor,
+    styles: StyleSheet.create({
 
 const styles = StyleSheet.create({
   safeArea: {

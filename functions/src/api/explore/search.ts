@@ -19,14 +19,22 @@ function calculateRelevanceScore(
 ): number {
   let score = 0;
 
-  // Text match scoring (0-50 points)
+  // Text match scoring (0-60 points)
   if (query.length > 0) {
     const queryLower = query.toLowerCase();
     const textLower = (event.text || "").toLowerCase();
     const summaryLower = (event.summary || "").toLowerCase();
 
+    // Title match (relatedPages displayTitle/canonicalTitle): 60 points (highest)
+    const titleMatch = event.relatedPages?.some((page: any) =>
+      page.displayTitle?.toLowerCase().includes(queryLower) ||
+      page.canonicalTitle?.toLowerCase().includes(queryLower)
+    );
+    if (titleMatch) {
+      score += 60;
+    }
     // Exact match in text: 50 points
-    if (textLower.includes(queryLower)) {
+    else if (textLower.includes(queryLower)) {
       score += 50;
     }
     // Exact match in summary: 30 points
@@ -36,6 +44,13 @@ function calculateRelevanceScore(
     // Tag match: 20 points
     else if (event.tags?.some((tag) => tag.toLowerCase().includes(queryLower))) {
       score += 20;
+    }
+    // relatedPages description/extract match: 15 points
+    else if (event.relatedPages?.some((page: any) =>
+      page.description?.toLowerCase().includes(queryLower) ||
+      page.extract?.toLowerCase().includes(queryLower)
+    )) {
+      score += 15;
     }
   }
 
@@ -168,11 +183,14 @@ export async function exploreSearch(
     const requestedLimit = params.limit || 20;
     const fetchLimit = Math.min(requestedLimit + 1, 51); // Max 50 results + 1 for hasMore
 
-    if (categoryArray.length > 1) {
-      // Multi-category: fetch limited set and filter client-side
-      // Limit to 50 to prevent timeout
-      console.log("[Search API] Multi-category mode, fetching up to 50 for client-side filtering");
-      firestoreQuery = firestoreQuery.limit(50);
+    // Text search and multi-category filtering are done client-side after Firestore fetch.
+    // Fetch a larger set so there are enough candidates to filter from.
+    const hasTextQuery = params.q && params.q.length > 0;
+    const needsClientSideFilter = categoryArray.length > 1 || hasTextQuery;
+
+    if (needsClientSideFilter) {
+      console.log("[Search API] Client-side filter mode (text or multi-category), fetching up to 200");
+      firestoreQuery = firestoreQuery.limit(200);
     } else {
       firestoreQuery = firestoreQuery.limit(fetchLimit);
     }
@@ -210,7 +228,7 @@ export async function exploreSearch(
       );
     }
 
-    // Text search (case-insensitive, searches in text, summary, tags)
+    // Text search (case-insensitive, searches in text, summary, tags, relatedPages)
     if (params.q && params.q.length > 0) {
       const queryLower = params.q.toLowerCase();
       events = events.filter((event) => {
@@ -219,7 +237,13 @@ export async function exploreSearch(
         const tagsMatch = event.tags?.some((tag) =>
           tag.toLowerCase().includes(queryLower)
         );
-        return textMatch || summaryMatch || tagsMatch;
+        const pagesMatch = event.relatedPages?.some((page: any) =>
+          page.displayTitle?.toLowerCase().includes(queryLower) ||
+          page.canonicalTitle?.toLowerCase().includes(queryLower) ||
+          page.description?.toLowerCase().includes(queryLower) ||
+          page.extract?.toLowerCase().includes(queryLower)
+        );
+        return textMatch || summaryMatch || tagsMatch || pagesMatch;
       });
     }
 
@@ -238,7 +262,9 @@ export async function exploreSearch(
     }
 
     // Determine next cursor and slice results
-    const hasMore = events.length > requestedLimit;
+    // Cursor-based pagination is not reliable after client-side text/category filtering,
+    // so disable hasMore when client-side filtering was applied.
+    const hasMore = needsClientSideFilter ? false : events.length > requestedLimit;
     const items = events.slice(0, requestedLimit);
     const nextCursor = hasMore && items.length > 0
       ? items[items.length - 1].eventId

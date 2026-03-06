@@ -35,6 +35,7 @@ import { formatIsoDateLabel, getDateParts, parseIsoDate } from '@/utils/dates';
 import {
   getEventImageUri,
   getEventLocation,
+  buildEventSearchText,
   getEventSummary,
   getEventTitle,
   getEventYearLabel
@@ -1037,38 +1038,39 @@ const ExploreScreen = () => {
       return digestEvents;
     }
 
-    // If date is selected, always use digestEvents (filter client-side)
-    if (isDateSelected) {
-      let filtered = digestEvents;
+    // Client-side filter on digestEvents (works for any date, zero extra cost)
+    let localFiltered = digestEvents;
 
-      // Apply category filter
-      if (filters.categories.size > 0) {
-        filtered = filtered.filter((event) =>
-          event.categories?.some((cat) => filters.categories.has(cat as CategoryOption))
-        );
-      }
-
-      // Apply era filter
-      if (filters.era) {
-        filtered = filtered.filter((event) => event.era === filters.era);
-      }
-
-      // Apply text search
-      if (debouncedQuery.length > 0) {
-        const queryLower = debouncedQuery.toLowerCase();
-        filtered = filtered.filter((event) => {
-          const textMatch = event.text?.toLowerCase().includes(queryLower);
-          const summaryMatch = event.summary?.toLowerCase().includes(queryLower);
-          const tagsMatch = event.tags?.some((tag) => tag.toLowerCase().includes(queryLower));
-          return textMatch || summaryMatch || tagsMatch;
-        });
-      }
-
-      return filtered;
+    if (filters.categories.size > 0) {
+      localFiltered = localFiltered.filter((event) =>
+        event.categories?.some((cat) => filters.categories.has(cat as CategoryOption))
+      );
     }
 
-    // Use API results for search/filter on current date
-    return apiResults;
+    if (filters.era) {
+      localFiltered = localFiltered.filter((event) => event.era === filters.era);
+    }
+
+    if (debouncedQuery.length > 0) {
+      const queryLower = debouncedQuery.toLowerCase();
+      localFiltered = localFiltered.filter((event) => {
+        const searchText = buildEventSearchText(event);
+        const tagsMatch = event.tags?.some((tag) => tag.toLowerCase().includes(queryLower));
+        return searchText.includes(queryLower) || tagsMatch;
+      });
+    }
+
+    // If a specific date is selected, only use local results (no backend needed)
+    if (isDateSelected) {
+      return localFiltered;
+    }
+
+    // For today's date: merge local digest matches with broader API results.
+    // Local matches appear first (immediately available, relevant to today),
+    // then API results that aren't already in the digest.
+    const localIds = new Set(localFiltered.map((e) => e.eventId));
+    const apiOnly = apiResults.filter((e) => !localIds.has(e.eventId));
+    return [...localFiltered, ...apiOnly];
   }, [isDateSelected, showResults, apiResults, digestEvents, filters.categories, filters.era, debouncedQuery]);
 
   const activeFilterCount = (categoriesKey ? categoriesKey.split(',').length : 0) + (filters.era ? 1 : 0);
