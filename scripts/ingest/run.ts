@@ -3,10 +3,12 @@
 import { exit } from 'node:process';
 
 import { bootstrapFirestore } from './firestore-admin';
+import { upsertAlgoliaRecords } from '../algolia-admin';
 import { buildCacheKey, fetchOnThisDaySelected, normalizeEvent } from './wikimedia-client';
 import { enrichEvents } from './enrichment';
 import { logInfo } from './logger';
 import { assertValidPayload } from './validation';
+import { toAlgoliaSearchRecord } from '../../search/algolia-record';
 import type { CachedPayload, DailyDigestRecord, HistoricalEventRecord } from './types';
 
 interface CliOptions {
@@ -224,6 +226,15 @@ const main = async () => {
     }
 
     await writeToFirestore(payload, enrichedEvents, digest, options);
+
+    try {
+      const records = enrichedEvents
+        .map((event) => toAlgoliaSearchRecord(event))
+        .filter((record): record is NonNullable<typeof record> => record !== null);
+      await upsertAlgoliaRecords(records);
+    } catch (algoliaError) {
+      console.warn('Algolia sync failed after Firestore write; relying on function trigger as fallback.', algoliaError);
+    }
 
     logInfo('ingestion-completed', summary);
   } catch (error) {

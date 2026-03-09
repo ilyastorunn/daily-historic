@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { fetchYMBI, type YMBIResponse } from '@/services/you-might-be-interested';
 import type { CategoryOption } from '@/contexts/onboarding-context';
@@ -34,10 +34,18 @@ export const useYMBI = ({
   homeEventIds = [],
   limit = 8,
   enabled = true,
-  timezone,
 }: UseYMBIArgs) => {
   const [state, setState] = useState<YMBIState>(() => createInitialState());
   const [reloadKey, setReloadKey] = useState(0);
+  const userCategoriesKey = useMemo(
+    () => [...userCategories].sort().join('|'),
+    [userCategories]
+  );
+  const savedEventIdsKey = useMemo(() => [...savedEventIds].sort().join('|'), [savedEventIds]);
+  const homeEventIdsKey = useMemo(() => [...homeEventIds].sort().join('|'), [homeEventIds]);
+  const stableUserCategories = useMemo(() => [...userCategories], [userCategoriesKey]);
+  const stableSavedEventIds = useMemo(() => [...savedEventIds], [savedEventIdsKey]);
+  const stableHomeEventIds = useMemo(() => [...homeEventIds], [homeEventIdsKey]);
 
   const refresh = useCallback(() => {
     setReloadKey((value) => value + 1);
@@ -65,11 +73,10 @@ export const useYMBI = ({
       try {
         const result = await fetchYMBI(
           userId,
-          userCategories,
-          savedEventIds,
-          homeEventIds,
-          limit,
-          timezone
+          stableUserCategories,
+          stableSavedEventIds,
+          stableHomeEventIds,
+          limit
         );
         if (cancelled) {
           return;
@@ -102,7 +109,18 @@ export const useYMBI = ({
     return () => {
       cancelled = true;
     };
-  }, [userId, enabled, limit, timezone, reloadKey]);
+  }, [
+    enabled,
+    homeEventIdsKey,
+    limit,
+    reloadKey,
+    savedEventIdsKey,
+    stableHomeEventIds,
+    stableSavedEventIds,
+    stableUserCategories,
+    userCategoriesKey,
+    userId,
+  ]);
 
   return {
     ...state,
