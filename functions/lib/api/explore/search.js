@@ -6,15 +6,24 @@ const index_1 = require("../../index");
  * Calculate relevance score for an event
  */
 function calculateRelevanceScore(event, query, selectedCategories) {
-    var _a;
+    var _a, _b, _c;
     let score = 0;
-    // Text match scoring (0-50 points)
+    // Text match scoring (0-60 points)
     if (query.length > 0) {
         const queryLower = query.toLowerCase();
         const textLower = (event.text || "").toLowerCase();
         const summaryLower = (event.summary || "").toLowerCase();
+        // Title match (relatedPages displayTitle/canonicalTitle): 60 points (highest)
+        const titleMatch = (_a = event.relatedPages) === null || _a === void 0 ? void 0 : _a.some((page) => {
+            var _a, _b;
+            return ((_a = page.displayTitle) === null || _a === void 0 ? void 0 : _a.toLowerCase().includes(queryLower)) ||
+                ((_b = page.canonicalTitle) === null || _b === void 0 ? void 0 : _b.toLowerCase().includes(queryLower));
+        });
+        if (titleMatch) {
+            score += 60;
+        }
         // Exact match in text: 50 points
-        if (textLower.includes(queryLower)) {
+        else if (textLower.includes(queryLower)) {
             score += 50;
         }
         // Exact match in summary: 30 points
@@ -22,8 +31,16 @@ function calculateRelevanceScore(event, query, selectedCategories) {
             score += 30;
         }
         // Tag match: 20 points
-        else if ((_a = event.tags) === null || _a === void 0 ? void 0 : _a.some((tag) => tag.toLowerCase().includes(queryLower))) {
+        else if ((_b = event.tags) === null || _b === void 0 ? void 0 : _b.some((tag) => tag.toLowerCase().includes(queryLower))) {
             score += 20;
+        }
+        // relatedPages description/extract match: 15 points
+        else if ((_c = event.relatedPages) === null || _c === void 0 ? void 0 : _c.some((page) => {
+            var _a, _b;
+            return ((_a = page.description) === null || _a === void 0 ? void 0 : _a.toLowerCase().includes(queryLower)) ||
+                ((_b = page.extract) === null || _b === void 0 ? void 0 : _b.toLowerCase().includes(queryLower));
+        })) {
+            score += 15;
         }
     }
     // Category match bonus (0-30 points)
@@ -42,6 +59,9 @@ function calculateRelevanceScore(event, query, selectedCategories) {
 /**
  * Search API endpoint for Explore page
  * GET /api/explore/search?q=&categories=&era=&sort=&cursor=&limit=
+ *
+ * Deprecated: the client now queries Algolia directly for Explore search.
+ * This endpoint remains in place during rollout as a rollback path only.
  */
 async function exploreSearch(request, response) {
     try {
@@ -160,15 +180,22 @@ async function exploreSearch(request, response) {
         if (categoryArray.length > 1) {
             events = events.filter((event) => { var _a; return (_a = event.categories) === null || _a === void 0 ? void 0 : _a.some((cat) => categoryArray.includes(cat)); });
         }
-        // Text search (case-insensitive, searches in text, summary, tags)
+        // Text search (case-insensitive, searches in text, summary, tags, relatedPages)
         if (params.q && params.q.length > 0) {
             const queryLower = params.q.toLowerCase();
             events = events.filter((event) => {
-                var _a, _b, _c;
+                var _a, _b, _c, _d;
                 const textMatch = (_a = event.text) === null || _a === void 0 ? void 0 : _a.toLowerCase().includes(queryLower);
                 const summaryMatch = (_b = event.summary) === null || _b === void 0 ? void 0 : _b.toLowerCase().includes(queryLower);
                 const tagsMatch = (_c = event.tags) === null || _c === void 0 ? void 0 : _c.some((tag) => tag.toLowerCase().includes(queryLower));
-                return textMatch || summaryMatch || tagsMatch;
+                const pagesMatch = (_d = event.relatedPages) === null || _d === void 0 ? void 0 : _d.some((page) => {
+                    var _a, _b, _c, _d;
+                    return ((_a = page.displayTitle) === null || _a === void 0 ? void 0 : _a.toLowerCase().includes(queryLower)) ||
+                        ((_b = page.canonicalTitle) === null || _b === void 0 ? void 0 : _b.toLowerCase().includes(queryLower)) ||
+                        ((_c = page.description) === null || _c === void 0 ? void 0 : _c.toLowerCase().includes(queryLower)) ||
+                        ((_d = page.extract) === null || _d === void 0 ? void 0 : _d.toLowerCase().includes(queryLower));
+                });
+                return textMatch || summaryMatch || tagsMatch || pagesMatch;
             });
         }
         // Apply sorting

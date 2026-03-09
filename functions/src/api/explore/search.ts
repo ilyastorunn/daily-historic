@@ -75,6 +75,9 @@ function calculateRelevanceScore(
 /**
  * Search API endpoint for Explore page
  * GET /api/explore/search?q=&categories=&era=&sort=&cursor=&limit=
+ *
+ * Deprecated: the client now queries Algolia directly for Explore search.
+ * This endpoint remains in place during rollout as a rollback path only.
  */
 export async function exploreSearch(
   request: Request,

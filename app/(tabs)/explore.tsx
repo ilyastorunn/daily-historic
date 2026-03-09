@@ -24,29 +24,17 @@ import { heroEvent } from '@/constants/events';
 import { formatCategoryLabel } from '@/constants/personalization';
 import type { CategoryOption } from '@/contexts/onboarding-context';
 import { useUserContext } from '@/contexts/user-context';
-import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
-import { useStoryOfTheDay } from '@/hooks/use-story-of-the-day';
 import { useYMBI } from '@/hooks/use-ymbi';
 import { trackEvent } from '@/services/analytics';
-import { useAppTheme, type ThemeDefinition } from '@/theme';
-import type { FirestoreEventDocument } from '@/types/events';
-import { formatIsoDateLabel, getDateParts, parseIsoDate } from '@/utils/dates';
 import {
-  getEventImageUri,
-  getEventLocation,
-  buildEventSearchText,
-  getEventSummary,
-  getEventTitle,
-  getEventYearLabel
-} from '@/utils/event-presentation';
+  searchExploreEvents,
+  type ExploreSearchResultItem,
+} from '@/services/explore-search';
+import { useAppTheme, type ThemeDefinition } from '@/theme';
+import { formatIsoDateLabel, getDateParts, parseIsoDate } from '@/utils/dates';
 import { createLinearGradientSource } from '@/utils/gradient';
-
-// API Configuration
-// TODO: Move to environment config
-const API_BASE_URL = __DEV__
-  ? 'https://us-central1-chrono-history-b4003.cloudfunctions.net/api' // Use production for now (emulator not running)
-  : 'https://us-central1-chrono-history-b4003.cloudfunctions.net/api';
+import { createImageSource } from '@/utils/wikimedia-image-source';
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -574,10 +562,10 @@ const createStyles = (theme: ThemeDefinition) => {
   });
 };
 
-const shareEvent = async (event: FirestoreEventDocument) => {
+const shareEvent = async (event: ExploreSearchResultItem) => {
   try {
-    const title = getEventTitle(event);
-    const summary = getEventSummary(event);
+    const title = event.title;
+    const summary = event.summary;
     await Share.share({
       title,
       message: `${title} — ${summary}`,
@@ -595,7 +583,7 @@ const EventResultCard = ({
   styles,
   theme,
 }: {
-  event: FirestoreEventDocument;
+  event: ExploreSearchResultItem;
   onOpenDetail: () => void;
   styles: ExploreStyles;
   theme: ThemeDefinition;
@@ -613,12 +601,12 @@ const EventResultCard = ({
       ),
     []
   );
-  const imageUri = useMemo(() => getEventImageUri(event), [event]);
-  const imageSource = imageUri ? { uri: imageUri } : heroEvent.image;
-  const yearLabel = getEventYearLabel(event);
-  const title = getEventTitle(event);
-  const summary = getEventSummary(event);
-  const locationText = getEventLocation(event);
+  const imageUri = event.imageUrl;
+  const imageSource = createImageSource(imageUri) ?? heroEvent.image;
+  const yearLabel = event.year ? String(event.year) : 'Today';
+  const title = event.title;
+  const summary = event.summary;
+  const locationText = event.location ?? '';
   const categoryLabels = (event.categories ?? []).slice(0, 1).map((category) => formatCategoryLabel(category));
 
   const handleImageLoad = useCallback(
@@ -776,16 +764,13 @@ const ExploreScreen = () => {
   // Date state
   const [selectedDate, setSelectedDate] = useState<string>(today.isoDate);
   const [calendarVisible, setCalendarVisible] = useState(false);
-  const [eventCache, setEventCache] = useState<Record<string, FirestoreEventDocument>>({});
-
-  // Pagination state (backend API)
-  const [paginationState, setPaginationState] = useState({
-    cursor: null as string | null,
-    hasMore: true,
+  const [searchResults, setSearchResults] = useState<ExploreSearchResultItem[]>([]);
+  const [searchState, setSearchState] = useState({
+    page: 0,
+    hasMore: false,
     loading: false,
-    loadedIds: new Set<string>(),
+    error: null as Error | null,
   });
-  const [apiResults, setApiResults] = useState<FirestoreEventDocument[]>([]);
 
   // Debounce search query
   useEffect(() => {
@@ -801,6 +786,7 @@ const ExploreScreen = () => {
 
   // Ref to track ongoing pagination fetch
   const paginationFetchingRef = useRef(false);
+  const searchBaseKeyRef = useRef<string | null>(null);
 
   // Handle category parameter from navigation
   useEffect(() => {
@@ -818,23 +804,21 @@ const ExploreScreen = () => {
   }, [params.category]);
 
   const activeDate = useMemo(() => parseIsoDate(selectedDate) ?? today, [selectedDate, today]);
-
-  // Data hooks
-  const {
-    events: digestEvents,
-    digest,
-    loading: digestLoading,
-    error: digestError,
-  } = useDailyDigestEvents({ month: activeDate.month, day: activeDate.day, year: activeDate.year });
-
-  // SOTD temporarily disabled - set enabled to false
-  const { story, loading: sotdLoading, refresh: refreshSOTD } = useStoryOfTheDay({ enabled: false });
+  const normalizedQuery = debouncedQuery.trim();
+  const categoriesArray = useMemo(() => Array.from(filters.categories).sort(), [filters.categories]);
+  const categoriesKey = categoriesArray.join(',');
+  const isDateSelected = selectedDate !== today.isoDate;
+  const showResults =
+    normalizedQuery.length > 0 ||
+    categoriesArray.length > 0 ||
+    filters.era !== null ||
+    isDateSelected;
 
   const { items: ymbiItems, loading: ymbiLoading, refresh: refreshYMBI } = useYMBI({
     userId: authUser?.uid ?? '',
     userCategories: profile?.categories ?? [],
     savedEventIds: profile?.savedEventIds ?? [],
-    homeEventIds: [], // TODO: Track Home event IDs to avoid duplicates
+    homeEventIds: [],
     limit: 8,
     enabled: !showResults,
     timezone: profile?.timezone,
@@ -843,235 +827,129 @@ const ExploreScreen = () => {
   // Pull to refresh
   const [refreshing, setRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      // SOTD temporarily disabled
-      // await clearSOTDCache();
-      // refreshSOTD();
-
-      // Trigger refresh for YMBI only
-      refreshYMBI();
-
-      // Wait a bit for the data to load
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.error('[Explore] Refresh failed', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refreshYMBI]);
-
-  useEffect(() => {
-    if (digestError) {
-      console.error('Failed to load explore digest', digestError);
-    }
-  }, [digestError]);
-
-  useEffect(() => {
-    if (digestEvents.length === 0) {
-      return;
-    }
-    setEventCache((prev) => {
-      const next = { ...prev };
-      let changed = false;
-      for (const event of digestEvents) {
-        const existing = next[event.eventId];
-        const existingStamp = existing?.updatedAt ? String(existing.updatedAt) : '';
-        const incomingStamp = event.updatedAt ? String(event.updatedAt) : '';
-        if (!existing || existingStamp !== incomingStamp) {
-          next[event.eventId] = event;
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-  }, [digestEvents]);
-
   const highlightedDates = useMemo(() => {
     const set = new Set<string>();
     return set;
   }, []);
 
-  const normalizedQuery = debouncedQuery.trim().toLowerCase();
-
-  // Convert filters to stable primitives for dependency tracking
-  const categoriesArray = useMemo(() => Array.from(filters.categories).sort(), [filters.categories]);
-  const categoriesKey = categoriesArray.join(',');
-
-  // Determine if we're showing results or default layout
-  const showResults = debouncedQuery.length > 0 || categoriesKey.length > 0 || filters.era !== null || selectedDate !== today.isoDate;
-
-  // Fetch search results from backend API
+  // Fetch search results from Algolia
   const fetchSearchResults = useCallback(
-    async (cursor?: string | null, isNewSearch = false) => {
-      // For pagination (cursor present), use ref-based guard
-      if (cursor && !isNewSearch) {
+    async (page = 0, append = false) => {
+      const baseKey = JSON.stringify([
+        normalizedQuery,
+        categoriesKey,
+        filters.era ?? '',
+        sortMode,
+        isDateSelected ? selectedDate : '',
+      ]);
+
+      if (append) {
         if (paginationFetchingRef.current) {
           console.log('[Explore] Skipping pagination - already fetching');
           return;
         }
-        paginationFetchingRef.current = true;
-        setPaginationState((prev) => ({ ...prev, loading: true }));
-      }
-      // For new searches, skip loading check entirely
-      else if (!isNewSearch) {
-        let shouldProceed = false;
-        setPaginationState((prev) => {
-          if (prev.loading) {
-            shouldProceed = false;
-            return prev;
-          }
-          shouldProceed = true;
-          return { ...prev, loading: true };
-        });
 
-        if (!shouldProceed) {
-          console.log('[Explore] Skipping fetch - already loading');
-          return;
-        }
+        paginationFetchingRef.current = true;
       } else {
-        // New search - just set loading without checking
-        setPaginationState((prev) => ({ ...prev, loading: true }));
+        searchBaseKeyRef.current = baseKey;
       }
+
+      setSearchState((previous) => ({ ...previous, loading: true, error: null }));
 
       try {
-        // Build query params
-        const params = new URLSearchParams();
-        if (normalizedQuery) params.append('q', normalizedQuery);
-        if (categoriesKey) params.append('categories', categoriesKey);
-        if (filters.era) params.append('era', filters.era);
-        params.append('sort', sortMode);
-        if (cursor) params.append('cursor', cursor);
-        // Load 5 items initially, 10 for pagination
-        params.append('limit', cursor ? '10' : '5');
-
-        const url = `${API_BASE_URL}/explore/search?${params.toString()}`;
-        console.log('[Explore] Fetching:', url);
-
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('[Explore] API Response:', {
-          itemCount: data.items?.length,
-          nextCursor: data.nextCursor,
+        const result = await searchExploreEvents({
+          query: normalizedQuery,
+          categories: categoriesArray,
+          era: filters.era,
+          month: isDateSelected ? activeDate.month : undefined,
+          day: isDateSelected ? activeDate.day : undefined,
+          page,
+          hitsPerPage: page === 0 ? 8 : 10,
+          sortMode,
         });
 
-        // Update state
-        const newItems = data.items || [];
-
-        setPaginationState((prev) => {
-          const newIds = new Set(prev.loadedIds);
-          newItems.forEach((item: FirestoreEventDocument) => newIds.add(item.eventId));
-
-          // hasMore = true only if we got items AND there's a nextCursor
-          const hasMore = newItems.length > 0 && !!data.nextCursor;
-
-          return {
-            ...prev,
-            cursor: data.nextCursor || null,
-            hasMore,
-            loading: false,
-            loadedIds: newIds,
-          };
-        });
-
-        // Reset pagination fetching flag
-        if (cursor) {
-          paginationFetchingRef.current = false;
+        if (searchBaseKeyRef.current !== baseKey) {
+          return;
         }
 
-        // Append or replace results
-        setApiResults((prev) => (cursor ? [...prev, ...newItems] : newItems));
+        setSearchResults((previous) => {
+          if (!append) {
+            return result.items;
+          }
 
-        // Track analytics
-        trackEvent(!cursor ? 'explore_search_results_loaded' : 'explore_pagination_loaded', {
+          return [
+            ...previous,
+            ...result.items.filter(
+              (item) => !previous.some((existing) => existing.eventId === item.eventId)
+            ),
+          ];
+        });
+        setSearchState({
+          page: result.page,
+          hasMore: result.hasMore,
+          loading: false,
+          error: null,
+        });
+
+        trackEvent(!append ? 'explore_search_results_loaded' : 'explore_pagination_loaded', {
           q_len: normalizedQuery.length,
-          categories_count: categoriesKey ? categoriesKey.split(',').length : 0,
+          categories_count: categoriesArray.length,
           era_selected: filters.era || 'none',
-          results_count: newItems.length,
+          results_count: result.items.length,
         });
       } catch (error) {
-        console.error('[Explore] API error:', error);
-        setPaginationState((prev) => ({ ...prev, loading: false }));
-        // Reset pagination fetching flag on error
-        if (cursor) {
-          paginationFetchingRef.current = false;
+        if (searchBaseKeyRef.current !== baseKey) {
+          return;
         }
+
+        console.error('[Explore] Algolia search error:', error);
+        setSearchState((previous) => ({
+          ...previous,
+          loading: false,
+          error: error instanceof Error ? error : new Error('Search failed'),
+        }));
+      } finally {
+        paginationFetchingRef.current = false;
       }
     },
-    [normalizedQuery, categoriesKey, filters.era, sortMode]
+    [
+      activeDate.day,
+      activeDate.month,
+      categoriesArray,
+      categoriesKey,
+      filters.era,
+      isDateSelected,
+      normalizedQuery,
+      selectedDate,
+      sortMode,
+    ]
   );
 
-  // Fetch next page - read state atomically with setPaginationState
   const fetchNextPage = useCallback(() => {
-    setPaginationState((prev) => {
-      // Atomically check conditions and trigger fetch if ready
-      if (prev.hasMore && !prev.loading && prev.cursor && !paginationFetchingRef.current) {
-        console.log('[Explore] Triggering next page fetch, cursor:', prev.cursor);
-        fetchSearchResults(prev.cursor, false);
+    if (!searchState.hasMore || searchState.loading || paginationFetchingRef.current) {
+      return;
+    }
+
+    void fetchSearchResults(searchState.page + 1, true);
+  }, [fetchSearchResults, searchState.hasMore, searchState.loading, searchState.page]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (showResults) {
+        await fetchSearchResults(0, false);
       } else {
-        console.log('[Explore] Skipping next page fetch:', {
-          hasMore: prev.hasMore,
-          loading: prev.loading,
-          cursor: prev.cursor,
-          alreadyFetching: paginationFetchingRef.current,
-        });
+        refreshYMBI();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      return prev; // Don't modify state here, fetchSearchResults will do it
-    });
-  }, [fetchSearchResults]);
-
-  // Check if date is selected (different from today)
-  const isDateSelected = selectedDate !== today.isoDate;
-
-  // Check if only date is selected (no search/filter)
-  const isDateOnlySelection = isDateSelected && debouncedQuery.length === 0 && categoriesKey.length === 0 && filters.era === null;
-
-  // Determine results source (API or local filtering)
-  const results = useMemo(() => {
-    // If showing default layout (no search/filter/date), use digestEvents
-    if (!showResults) {
-      return digestEvents;
+    } catch (error) {
+      console.error('[Explore] Refresh failed', error);
+    } finally {
+      setRefreshing(false);
     }
+  }, [fetchSearchResults, refreshYMBI, showResults]);
 
-    // Client-side filter on digestEvents (works for any date, zero extra cost)
-    let localFiltered = digestEvents;
-
-    if (filters.categories.size > 0) {
-      localFiltered = localFiltered.filter((event) =>
-        event.categories?.some((cat) => filters.categories.has(cat as CategoryOption))
-      );
-    }
-
-    if (filters.era) {
-      localFiltered = localFiltered.filter((event) => event.era === filters.era);
-    }
-
-    if (debouncedQuery.length > 0) {
-      const queryLower = debouncedQuery.toLowerCase();
-      localFiltered = localFiltered.filter((event) => {
-        const searchText = buildEventSearchText(event);
-        const tagsMatch = event.tags?.some((tag) => tag.toLowerCase().includes(queryLower));
-        return searchText.includes(queryLower) || tagsMatch;
-      });
-    }
-
-    // If a specific date is selected, only use local results (no backend needed)
-    if (isDateSelected) {
-      return localFiltered;
-    }
-
-    // For today's date: merge local digest matches with broader API results.
-    // Local matches appear first (immediately available, relevant to today),
-    // then API results that aren't already in the digest.
-    const localIds = new Set(localFiltered.map((e) => e.eventId));
-    const apiOnly = apiResults.filter((e) => !localIds.has(e.eventId));
-    return [...localFiltered, ...apiOnly];
-  }, [isDateSelected, showResults, apiResults, digestEvents, filters.categories, filters.era, debouncedQuery]);
+  const results = searchResults;
 
   const activeFilterCount = (categoriesKey ? categoriesKey.split(',').length : 0) + (filters.era ? 1 : 0);
 
@@ -1090,17 +968,6 @@ const ExploreScreen = () => {
     }
   }, [debouncedQuery]);
 
-  // Track SOTD shown when story is loaded and visible
-  // SOTD temporarily disabled
-  // useEffect(() => {
-  //   if (story && !showResults && !sotdLoading) {
-  //     trackEvent('sotd_shown', {
-  //       source: story.source,
-  //       matched: story.matched ?? (story.source === 'wikimedia'),
-  //     });
-  //   }
-  // }, [story, showResults, sotdLoading]);
-
   // Track YMBI shown when items are loaded and visible
   useEffect(() => {
     if (ymbiItems.length > 0 && !showResults && !ymbiLoading) {
@@ -1110,47 +977,36 @@ const ExploreScreen = () => {
     }
   }, [ymbiItems, showResults, ymbiLoading]);
 
-  // Fetch search results when query or filters change (but not when date is selected)
+  // Fetch search results when query, filters, sort, or date change.
   useEffect(() => {
-    // Only fetch from API if there's search/filter AND date is today
-    const hasSearchOrFilter = debouncedQuery.length > 0 || categoriesKey.length > 0 || filters.era !== null;
-
-    console.log('[Explore] Search effect triggered:', {
-      hasSearchOrFilter,
-      isDateSelected,
-      debouncedQuery,
-      categoriesKey,
-      era: filters.era,
-    });
-
-    // Don't fetch if date is selected (we use client-side filtering instead)
-    if (hasSearchOrFilter && !isDateSelected) {
-      console.log('[Explore] Resetting pagination and fetching results');
-      // Reset pagination ref and state
+    if (!showResults) {
+      searchBaseKeyRef.current = null;
       paginationFetchingRef.current = false;
-      setPaginationState({
-        items: [],
-        cursor: null,
-        hasMore: true,
-        loading: false, // Reset loading state
-        loadedIds: new Set(),
+      setSearchResults([]);
+      setSearchState({
+        page: 0,
+        hasMore: false,
+        loading: false,
+        error: null,
       });
-      setApiResults([]);
-      // Use forceFetch=true to bypass loading check for new searches
-      fetchSearchResults(null, true);
+      return;
     }
-  }, [debouncedQuery, categoriesKey, filters.era, sortMode, isDateSelected]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    paginationFetchingRef.current = false;
+    setSearchResults([]);
+    void fetchSearchResults(0, false);
+  }, [fetchSearchResults, showResults]);
 
   // Track no results when search/filters yield empty results
   useEffect(() => {
-    if (showResults && results.length === 0 && !paginationState.loading) {
+    if (showResults && results.length === 0 && !searchState.loading) {
       trackEvent('explore_no_results', {
-        q_len: debouncedQuery.length,
-        categories_count: categoriesKey ? categoriesKey.split(',').length : 0,
+        q_len: normalizedQuery.length,
+        categories_count: categoriesArray.length,
         era_selected: filters.era ?? 'none',
       });
     }
-  }, [showResults, results.length, paginationState.loading, debouncedQuery.length, categoriesKey, filters.era]);
+  }, [categoriesArray.length, filters.era, normalizedQuery.length, results.length, searchState.loading, showResults]);
 
   const handleOpenDetail = useCallback(
     (id: string) => {
@@ -1158,15 +1014,6 @@ const ExploreScreen = () => {
     },
     [router]
   );
-
-  const handleSOTDPress = useCallback(() => {
-    if (story?.eventId) {
-      trackEvent('sotd_opened', {
-        matched: story.matched ?? (story.source === 'wikimedia'),
-      });
-      handleOpenDetail(story.eventId);
-    }
-  }, [story, handleOpenDetail]);
 
   const handleYMBICardPress = useCallback(
     (eventId: string) => {
@@ -1246,15 +1093,9 @@ const ExploreScreen = () => {
     setSelectedDate(today.isoDate);
   };
 
-  const selectedDateDisplay = formatIsoDateLabel(digest?.date ?? selectedDate, {
+  const selectedDateDisplay = formatIsoDateLabel(selectedDate, {
     timeZone: profile?.timezone,
   });
-
-  const statusMessage = digestLoading
-    ? 'Fetching daily stories…'
-    : digestError
-      ? 'Showing the latest cached set while we refresh.'
-      : undefined;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -1272,7 +1113,7 @@ const ExploreScreen = () => {
           }
           onScroll={(event) => {
             // Disable pagination when date is selected (all events already loaded)
-            if (!showResults || isDateSelected || !paginationState.hasMore || paginationState.loading) return;
+            if (!showResults || !searchState.hasMore || searchState.loading) return;
 
             const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
             const scrollPercentage =
@@ -1290,7 +1131,6 @@ const ExploreScreen = () => {
             <Text style={styles.helperText}>
               Search the archive, skim collections, or jump to a date.
             </Text>
-            {statusMessage ? <Text style={styles.helperText}>{statusMessage}</Text> : null}
           </View>
 
           {/* Search Section */}
@@ -1465,7 +1305,7 @@ const ExploreScreen = () => {
                   theme={theme}
                 />
               ))}
-              {!isDateSelected && paginationState.loading && (
+              {searchState.loading && (
                 <View style={{ paddingVertical: theme.spacing.xl, alignItems: 'center' }}>
                   <ActivityIndicator size="large" color={theme.colors.accentPrimary} />
                   <Text style={{ ...styles.emptyStateText, marginTop: theme.spacing.sm }}>
@@ -1473,10 +1313,12 @@ const ExploreScreen = () => {
                   </Text>
                 </View>
               )}
-              {!paginationState.loading && results.length === 0 ? (
+              {!searchState.loading && results.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateText}>
-                    No matches found. Try fewer filters or a different search term.
+                    {searchState.error
+                      ? 'Search is temporarily unavailable. Please try again shortly.'
+                      : 'No matches found. Try fewer filters or a different search term.'}
                   </Text>
                 </View>
               ) : null}
