@@ -301,12 +301,11 @@ const createStyles = (theme: ThemeDefinition) => {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.card,
-      paddingVertical: spacing.sm,
       borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       backgroundColor: colors.surface,
-      minHeight: 48,
+      height: 48,
     },
     searchInput: {
       flex: 1,
@@ -1146,6 +1145,8 @@ const ExploreScreen = () => {
                   placeholderTextColor={theme.colors.textTertiary}
                   style={styles.searchInput}
                   returnKeyType="search"
+                  multiline={false}
+                  numberOfLines={1}
                 />
                 {showResults && (
                   <Pressable
@@ -1194,7 +1195,7 @@ const ExploreScreen = () => {
           </View>
 
           {/* Active Filter Chips */}
-          {showResults && (
+          {showResults && (categoriesArray.length > 0 || filters.era !== null || isDateSelected) && (
             <View style={styles.activeChipsContainer}>
               {/* Category chips */}
               {Array.from(filters.categories).map((category) => (

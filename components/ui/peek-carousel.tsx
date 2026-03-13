@@ -111,6 +111,10 @@ export const PeekCarousel = <T,>({
       const middleSetStartIndex = data.length + 1; // +1 for left spacer
       const initialOffset = middleSetStartIndex * fullItemWidth;
 
+      // Set scrollX immediately so scale/translateY animations render correctly
+      // before the FlatList physically scrolls (scrollToOffset does not trigger onScroll)
+      scrollX.setValue(initialOffset);
+
       setTimeout(() => {
         flatListRef.current?.scrollToOffset({
           offset: initialOffset,
@@ -118,7 +122,7 @@ export const PeekCarousel = <T,>({
         });
       }, 100);
     }
-  }, [data.length, fullItemWidth]);
+  }, [data.length, fullItemWidth, scrollX]);
 
   const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (data.length === 0) return;
