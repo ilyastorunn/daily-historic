@@ -74,7 +74,7 @@ const createStyles = (theme: ThemeDefinition) => {
   return StyleSheet.create({
     container: {
       paddingHorizontal: 20,
-      paddingBottom: spacing.xxl,
+      paddingBottom: spacing.md,
       gap: spacing.xl,
     },
     header: {

@@ -58,7 +58,6 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     container: {
       gap: spacing.lg,
-      paddingBottom: spacing.lg,
     },
     title: {
       fontFamily: serifFamily,

@@ -1,18 +1,13 @@
 import { Platform, StyleSheet } from 'react-native';
 
-import { lightTheme, radius as radiusScale, spacing as spacingScale, type ThemeDefinition } from '@/theme';
+import { lightTheme, radius as radiusScale, spacing as spacingScale } from '@/theme';
 
 const serifFamily = Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' });
 const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
 
-const buildOnboardingStyles = (t: ThemeDefinition) => {
-  const colors = t.colors;
-  const accentColor = colors.accentPrimary;
-
-  return {
-    colors,
-    accentColor,
-    styles: StyleSheet.create({
+const theme = lightTheme;
+const colors = theme.colors;
+const accentColor = colors.accentPrimary;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -68,16 +63,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.screen,
     paddingHorizontal: spacingScale.xl,
     paddingTop: spacingScale.lg,
-    paddingBottom: spacingScale.xxl,
+    paddingBottom: spacingScale.md,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacingScale.lg,
     paddingHorizontal: spacingScale.xl,
-    paddingVertical: spacingScale.card,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderSubtle,
+    paddingTop: spacingScale.sm,
+    paddingBottom: spacingScale.lg,
     backgroundColor: colors.screen,
   },
   primaryButton: {
@@ -135,11 +129,11 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   stepScroll: {
-    paddingBottom: spacingScale.xxl,
+    paddingBottom: spacingScale.lg,
     gap: spacingScale.xl,
   },
   welcomeScroll: {
-    paddingBottom: spacingScale.xxl,
+    paddingBottom: spacingScale.lg,
     gap: spacingScale.xxl,
   },
   heroMasthead: {
