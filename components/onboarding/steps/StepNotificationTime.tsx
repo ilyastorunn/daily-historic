@@ -1,10 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
+import { useAppTheme } from '@/theme';
 
+import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
-import { styles } from '../styles';
+import { createOnboardingStyles } from '../styles';
+
+const muhammadIllustration = require('@/assets/illustrations/muhammad.png');
 
 type TimeOption = {
   value: string;
@@ -19,8 +23,16 @@ const quickOptions: TimeOption[] = [
 
 const isCompleteTime = (value: string) => /^\d{2}:\d{2}$/.test(value);
 
+const localStyles = StyleSheet.create({
+  illustrationScene: {
+    bottom: -72,
+  },
+});
+
 const StepNotificationTime = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
+  const theme = useAppTheme();
+  const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
   const isQuickMatch = useMemo(
     () => quickOptions.some((option) => option.value === state.notificationTime),
@@ -76,11 +88,21 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.stepScroll}>
+    <ScrollView contentContainerStyle={styles.stepScroll} showsVerticalScrollIndicator={false}>
+      <View
+        pointerEvents="box-none"
+        style={[styles.footerAnchoredScene, localStyles.illustrationScene]}
+      >
+        <DecorativeIllustration
+          source={muhammadIllustration}
+          widthRatio={0.34}
+          minWidth={122}
+          maxWidth={154}
+        />
+      </View>
+
       <Text style={styles.stepTitle}>When should we ping you?</Text>
-      <Text style={styles.sectionCopy}>
-        Pick a moment in the day for Chrono to deliver your highlight. You can change this anytime.
-      </Text>
+      <Text style={styles.sectionCopy}>Pick a moment in the day for Chrono to deliver your highlight. You can change this anytime.</Text>
 
       <View style={styles.timeOptionGroup}>
         {quickOptions.map((option) => {
@@ -114,11 +136,11 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
         </Pressable>
 
         <Pressable
-          onPress={() => { updateState({ notificationEnabled: false }); onNext(); }}
-          style={({ pressed }) => [
-            styles.timeOption,
-            pressed && styles.cardPressed,
-          ]}
+          onPress={() => {
+            updateState({ notificationEnabled: false });
+            onNext();
+          }}
+          style={({ pressed }) => [styles.timeOption, pressed && styles.cardPressed]}
         >
           <Text style={styles.timeOptionLabel}>Skip for now</Text>
           <Text style={styles.timeOptionHint}>You can enable reminders later</Text>

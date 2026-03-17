@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -16,8 +17,31 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme } from '@/theme';
 
+import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
-import { spacingScale, styles } from '../styles';
+import { createOnboardingStyles, spacingScale } from '../styles';
+
+const leftHandIllustration = require('@/assets/illustrations/adamleft.png');
+const rightHandIllustration = require('@/assets/illustrations/adamright.png');
+
+const localStyles = StyleSheet.create({
+  heroScene: {
+    minHeight: 220,
+  },
+  heroCopy: {
+    maxWidth: 250,
+  },
+  disabledAuthButton: {
+    opacity: 0.45,
+  },
+  disabledAuthHelper: {
+    maxWidth: 280,
+    textAlign: 'center',
+    color: '#6B7280',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+});
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
@@ -36,7 +60,8 @@ const withAlpha = (hex: string, alpha: number) => {
 };
 
 const StepAccount = ({ onNext }: StepComponentProps) => {
-  const { colors: dynamicColors } = useAppTheme();
+  const theme = useAppTheme();
+  const { styles, colors: dynamicColors } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const { state, updateState } = useOnboardingContext();
 
   const [email, setEmail] = useState(state.emailAddress);
@@ -124,9 +149,27 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
       >
         <View style={styles.accountContent}>
           <View style={styles.accountHeroContainer}>
-            <Text accessibilityRole="header" style={styles.accountHero}>
-              Your moment in history awaits.
-            </Text>
+            <View pointerEvents="box-none" style={[styles.inlineActionScene, localStyles.heroScene]}>
+              <DecorativeIllustration
+                source={leftHandIllustration}
+                widthRatio={0.2}
+                minWidth={70}
+                maxWidth={86}
+                top={18}
+                left={-spacingScale.lg}
+              />
+              <Text accessibilityRole="header" style={[styles.accountHero, localStyles.heroCopy]}>
+                {`Your moment in\nhistory awaits.`}
+              </Text>
+              <DecorativeIllustration
+                source={rightHandIllustration}
+                widthRatio={0.2}
+                minWidth={70}
+                maxWidth={86}
+                top={18}
+                right={-spacingScale.lg}
+              />
+            </View>
           </View>
 
           <View style={styles.accountActions}>
@@ -134,10 +177,13 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
               <Pressable
                 accessibilityLabel="Continue with Apple"
                 accessibilityRole="button"
+                accessibilityState={{ disabled: true }}
+                disabled
                 hitSlop={spacingScale.xs}
                 onPress={() => handleSelectProvider('apple')}
                 style={({ pressed, focused }) => [
                   styles.authButton,
+                  localStyles.disabledAuthButton,
                   pressed && styles.authButtonPressed,
                   focused && styles.authButtonFocused,
                 ]}
@@ -148,10 +194,13 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
               <Pressable
                 accessibilityLabel="Continue with Google"
                 accessibilityRole="button"
+                accessibilityState={{ disabled: true }}
+                disabled
                 hitSlop={spacingScale.xs}
                 onPress={() => handleSelectProvider('google')}
                 style={({ pressed, focused }) => [
                   styles.authButton,
+                  localStyles.disabledAuthButton,
                   pressed && styles.authButtonPressed,
                   focused && styles.authButtonFocused,
                 ]}
@@ -162,10 +211,13 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
               <Pressable
                 accessibilityLabel="Continue with Email"
                 accessibilityRole="button"
+                accessibilityState={{ disabled: true }}
+                disabled
                 hitSlop={spacingScale.xs}
                 onPress={openEmailSheet}
                 style={({ pressed, focused }) => [
                   styles.authButton,
+                  localStyles.disabledAuthButton,
                   pressed && styles.authButtonPressed,
                   focused && styles.authButtonFocused,
                 ]}
@@ -173,6 +225,10 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
                 <Ionicons name="mail-outline" size={28} style={styles.authButtonIcon} />
               </Pressable>
             </View>
+
+            <Text style={localStyles.disabledAuthHelper}>
+              Apple, Google, and email sign-in are not live yet. Continue as guest for now.
+            </Text>
 
             <Pressable
               accessibilityLabel="Continue without sign up"
@@ -197,7 +253,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
             </Pressable>
 
             <Text style={styles.accountLegal}>
-              By continuing, you agree to Chrono’s{' '}
+              Guest mode still follows Chrono&apos;s{' '}
               <Text style={styles.accountLegalLink}>Terms</Text> and{' '}
               <Text style={styles.accountLegalLink}>Privacy</Text>.
             </Text>
@@ -260,9 +316,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
 
               <Pressable onPress={toggleTerms} style={styles.checkboxRow}>
                 <View style={[styles.checkbox, state.termsAccepted && styles.checkboxChecked]} />
-                <Text style={styles.checkboxLabel}>
-                  I agree to the Terms of Service and Privacy Policy
-                </Text>
+                <Text style={styles.checkboxLabel}>I agree to the Terms of Service and Privacy Policy</Text>
               </Pressable>
 
               <Pressable

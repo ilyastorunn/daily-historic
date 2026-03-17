@@ -8,7 +8,8 @@ import {
   useOnboardingContext,
 } from '@/contexts/onboarding-context';
 import { useUserContext, type OnboardingCompletionData } from '@/contexts/user-context';
-import { styles } from '@/components/onboarding/styles';
+import { useAppTheme } from '@/theme';
+import { createOnboardingStyles } from '@/components/onboarding/styles';
 import type { StepDefinition } from '@/components/onboarding/types';
 import {
   StepAccount,
@@ -94,6 +95,8 @@ const steps: StepDefinition[] = [
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   const { state, goNext, goBack, goToStep, totalSteps } = useOnboardingContext();
   const { completeOnboarding } = useUserContext();
+  const theme = useAppTheme();
+  const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
   const isFirstStep = state.stepIndex === 0;
 
@@ -250,10 +253,12 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 };
 
 const ProgressBar = ({ current, total }: { current: number; total: number }) => {
+  const theme = useAppTheme();
+  const { styles: pbStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const progress = total <= 0 ? 0 : Math.min(current / total, 1);
   return (
-    <View style={styles.progressBarTrack}>
-      <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+    <View style={pbStyles.progressBarTrack}>
+      <View style={[pbStyles.progressBarFill, { width: `${progress * 100}%` }]} />
     </View>
   );
 };

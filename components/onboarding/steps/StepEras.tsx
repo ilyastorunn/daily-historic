@@ -4,8 +4,11 @@ import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 're
 import { type EraOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
+import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
-import { styles as onboardingStyles } from '../styles';
+import { createOnboardingStyles } from '../styles';
+
+const paintingIllustration = require('@/assets/illustrations/painting.png');
 
 const options: { value: EraOption; label: string; icon: any }[] = [
   { value: 'prehistory', label: 'Prehistory', icon: require('@/assets/icons/Prehistory.png') },
@@ -74,6 +77,8 @@ const createStyles = (theme: ThemeDefinition) => {
       flex: 1,
       paddingHorizontal: 20,
       justifyContent: 'center',
+      position: 'relative',
+      overflow: 'visible',
     },
     header: {
       gap: spacing.sm,
@@ -86,6 +91,9 @@ const createStyles = (theme: ThemeDefinition) => {
       letterSpacing: -0.6,
       color: colors.textPrimary,
       fontWeight: '400',
+    },
+    illustrationScene: {
+      bottom: -76,
     },
     cardGrid: {
       flexDirection: 'row',
@@ -123,10 +131,11 @@ const createStyles = (theme: ThemeDefinition) => {
   });
 };
 
-const StepEras = ({ onNext }: StepComponentProps) => {
+const StepEras = (_props: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
+  const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const eras = state.eras;
 
   const toggleOption = (option: EraOption) => {
@@ -139,6 +148,19 @@ const StepEras = ({ onNext }: StepComponentProps) => {
 
   return (
     <View style={[onboardingStyles.stepScroll, themedStyles.container]}>
+      <View
+        pointerEvents="box-none"
+        style={[onboardingStyles.footerAnchoredScene, themedStyles.illustrationScene]}
+      >
+        <DecorativeIllustration
+          source={paintingIllustration}
+          widthRatio={0.42}
+          minWidth={148}
+          maxWidth={194}
+          right={12}
+        />
+      </View>
+
       <View style={themedStyles.header}>
         <Text style={themedStyles.title}>Which eras do you{'\n'}prefer?</Text>
       </View>

@@ -51,7 +51,7 @@ const buildStyles = (theme: ThemeDefinition) => {
       color: colors.textSecondary,
     },
     chipLabelSelected: {
-      color: colors.surface,
+      color: colors.overlayText,
       fontWeight: '600',
     },
     pinIndicator: {

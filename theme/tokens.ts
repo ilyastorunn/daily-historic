@@ -20,6 +20,7 @@ type ColorScale = {
   progressTrack: string;
   shadowColor: string;
   heroBorder: string;
+  overlayText: string;
 };
 
 type SpacingScale = {
@@ -143,6 +144,7 @@ const lightColors: ColorScale = {
   progressTrack: 'rgba(82, 77, 67, 0.16)',
   shadowColor: 'rgba(23, 18, 12, 0.12)',
   heroBorder: 'rgba(82, 77, 67, 0.24)',
+  overlayText: '#ffffff',
 };
 
 const darkColors: ColorScale = {
@@ -165,6 +167,7 @@ const darkColors: ColorScale = {
   progressTrack: 'rgba(214, 206, 192, 0.24)',
   shadowColor: 'rgba(5, 4, 3, 0.6)',
   heroBorder: 'rgba(214, 206, 192, 0.32)',
+  overlayText: '#ffffff',
 };
 
 export const createTheme = (mode: ThemeMode = 'light'): ThemeDefinition => ({

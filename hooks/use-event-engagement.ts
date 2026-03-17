@@ -9,6 +9,7 @@ import {
   arrayUnion,
   arrayRemove,
   deleteField,
+  serverTimestamp,
 } from '@/services/firebase';
 import type { ReactionValue } from '@/types/user';
 
@@ -23,6 +24,8 @@ type UseEventEngagementReturn = {
   toggleReaction: (type: ReactionType) => void;
 };
 
+const USER_SAVED_EVENTS_SUBCOLLECTION = 'savedEvents';
+
 export const useEventEngagement = (eventId: string): UseEventEngagementReturn => {
   const { authUser, profile } = useUserContext();
   const [optimisticSave, setOptimisticSave] = useState<boolean | null>(null);
@@ -31,10 +34,14 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
     undefined
   );
 
-  const savedEventIds = profile?.savedEventIds ?? [];
-  const likedEventIds = profile?.likedEventIds ?? [];
-  const defaultSaved = useMemo(() => savedEventIds.includes(eventId), [savedEventIds, eventId]);
-  const defaultLiked = useMemo(() => likedEventIds.includes(eventId), [likedEventIds, eventId]);
+  const defaultSaved = useMemo(
+    () => (profile?.savedEventIds ?? []).includes(eventId),
+    [profile?.savedEventIds, eventId]
+  );
+  const defaultLiked = useMemo(
+    () => (profile?.likedEventIds ?? []).includes(eventId),
+    [profile?.likedEventIds, eventId]
+  );
   const defaultReaction = profile?.reactions?.[eventId] ?? null;
 
   const isSaved = optimisticSave ?? defaultSaved;
@@ -78,10 +85,28 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
     setOptimisticSave(nextSaved);
 
     const docRef = doc(firebaseFirestore, USERS_COLLECTION, authUser.uid);
+    const savedEventDocRef = firebaseFirestore
+      .collection(USERS_COLLECTION)
+      .doc(authUser.uid)
+      .collection(USER_SAVED_EVENTS_SUBCOLLECTION)
+      .doc(eventId);
 
     const mutation = nextSaved
-      ? setDoc(docRef, { savedEventIds: arrayUnion(eventId) }, { merge: true })
-      : setDoc(docRef, { savedEventIds: arrayRemove(eventId) }, { merge: true });
+      ? Promise.all([
+          savedEventDocRef.set(
+            {
+              eventId,
+              savedAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          ),
+          setDoc(docRef, { savedEventIds: arrayRemove(eventId) }, { merge: true }),
+        ])
+      : Promise.all([
+          savedEventDocRef.delete(),
+          setDoc(docRef, { savedEventIds: arrayRemove(eventId) }, { merge: true }),
+        ]);
 
     mutation.catch((error) => {
       console.error('Failed to toggle save state', error);

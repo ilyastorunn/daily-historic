@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
+import { useAppTheme } from '@/theme';
 
 import type { StepComponentProps } from '../types';
-import { accentColor, styles } from '../styles';
+import { createOnboardingStyles } from '../styles';
 
 const StepPersonalizing = ({ onNext }: StepComponentProps) => {
   const { state } = useOnboardingContext();
+  const theme = useAppTheme();
+  const { styles, accentColor } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const eraSummary = state.eras.length > 0 ? `${state.eras.length}` : 'your';
 
   useEffect(() => {

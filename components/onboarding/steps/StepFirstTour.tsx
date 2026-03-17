@@ -1,12 +1,16 @@
+import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
+import { useAppTheme } from '@/theme';
 
 import type { StepComponentProps } from '../types';
-import { styles } from '../styles';
+import { createOnboardingStyles } from '../styles';
 
 const StepFirstTour = (_: StepComponentProps) => {
   const { state } = useOnboardingContext();
+  const theme = useAppTheme();
+  const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
   return (
     <ScrollView contentContainerStyle={styles.stepScroll}>
