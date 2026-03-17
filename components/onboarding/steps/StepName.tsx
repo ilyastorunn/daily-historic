@@ -1,17 +1,29 @@
-import { useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useState } from "react";
+import { Platform, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { useOnboardingContext } from '@/contexts/onboarding-context';
-import { useAppTheme } from '@/theme';
+import { useOnboardingContext } from "@/contexts/onboarding-context";
+import { useAppTheme } from "@/theme";
 
-import type { StepComponentProps } from '../types';
+import DecorativeIllustration from "../DecorativeIllustration";
+import { createOnboardingStyles } from "../styles";
+import type { StepComponentProps } from "../types";
 
-const serifFamily = Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' });
-const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
+const serifFamily = Platform.select({
+  ios: "Times New Roman",
+  android: "serif",
+  default: "serif",
+});
+const sansFamily = Platform.select({
+  ios: "System",
+  android: "sans-serif",
+  default: "System",
+});
+const moonLandingIllustration = require("@/assets/illustrations/MoonLanding2.png");
 
 const StepName = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
+  const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const [focused, setFocused] = useState(false);
 
   const handleNameChange = (text: string) => {
@@ -19,55 +31,87 @@ const StepName = ({ onNext }: StepComponentProps) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.masthead}>
-        <Text style={[styles.greeting, { color: theme.colors.textPrimary }]}>
-          Welcome, Time Voyager
-        </Text>
-        <Text style={[styles.subtext, { color: theme.colors.textSecondary }]}>
-          How should we call you? Let's personalize your journey through history.
-        </Text>
+    <View style={localStyles.container}>
+      <View
+        pointerEvents="box-none"
+        style={[
+          onboardingStyles.footerAnchoredScene,
+          localStyles.illustrationScene,
+        ]}
+      >
+        <DecorativeIllustration
+          source={moonLandingIllustration}
+          widthRatio={0.55}
+          minWidth={222}
+          maxWidth={273}
+          right={0}
+          bottom={-28}
+        />
       </View>
 
-      <View style={styles.inputArea}>
-        <TextInput
-          style={[
-            styles.nameInput,
-            {
-              color: theme.colors.textPrimary,
-              borderBottomColor: focused
-                ? theme.colors.accentPrimary
-                : theme.colors.borderSubtle,
-            },
-          ]}
-          placeholder="Your name"
-          placeholderTextColor={theme.colors.textTertiary}
-          value={state.displayName}
-          onChangeText={handleNameChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          autoCapitalize="words"
-          autoCorrect={false}
-          returnKeyType="done"
-          onSubmitEditing={onNext}
-          maxLength={50}
-          textAlign="center"
-          autoFocus
-        />
+      <View style={localStyles.content}>
+        <View style={localStyles.masthead}>
+          <Text
+            style={[localStyles.greeting, { color: theme.colors.textPrimary }]}
+          >
+            Welcome, Time Voyager
+          </Text>
+          <Text
+            style={[localStyles.subtext, { color: theme.colors.textSecondary }]}
+          >
+            How should we call you? Let&apos;s personalize your journey through
+            history.
+          </Text>
+        </View>
+
+        <View style={localStyles.inputArea}>
+          <TextInput
+            style={[
+              localStyles.nameInput,
+              {
+                color: theme.colors.textPrimary,
+                borderBottomColor: focused
+                  ? theme.colors.accentPrimary
+                  : theme.colors.borderSubtle,
+              },
+            ]}
+            placeholder="Your name"
+            placeholderTextColor={theme.colors.textTertiary}
+            value={state.displayName}
+            onChangeText={handleNameChange}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={onNext}
+            maxLength={50}
+            textAlign="center"
+            autoFocus
+          />
+        </View>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const localStyles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
+    paddingBottom: 0,
+    position: "relative",
+    overflow: "visible",
+  },
+  content: {
     gap: 48,
-    paddingBottom: 40,
+    position: "relative",
+  },
+  illustrationScene: {
+    bottom: -10,
   },
   masthead: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 12,
   },
   greeting: {
@@ -75,16 +119,16 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 36,
     letterSpacing: -0.6,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtext: {
     fontFamily: sansFamily,
     fontSize: 16,
     lineHeight: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   inputArea: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: 16,
   },
   nameInput: {
@@ -92,7 +136,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 36,
     letterSpacing: -0.4,
-    width: '100%',
+    width: "100%",
     borderBottomWidth: 1.5,
     paddingBottom: 10,
     paddingTop: 4,

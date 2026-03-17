@@ -51,13 +51,13 @@ const buildStyles = (theme: ThemeDefinition) => {
       ...serif,
       fontSize: typography.headingMd.fontSize + 4,
       lineHeight: typography.headingMd.lineHeight + 6,
-      color: colors.surface,
+      color: colors.overlayText,
       letterSpacing: -0.4,
     },
     subtitle: {
       ...sans,
       fontSize: typography.helper.fontSize,
-      color: colors.surface,
+      color: colors.overlayText,
       opacity: 0.85,
       marginTop: spacing.xs,
     },
@@ -68,7 +68,7 @@ const buildStyles = (theme: ThemeDefinition) => {
       paddingVertical: spacing.xs,
       borderRadius: radius.pill,
       backgroundColor: 'rgba(255, 255, 255, 0.16)',
-      color: colors.surface,
+      color: colors.overlayText,
       fontSize: typography.helper.fontSize,
       fontWeight: '600',
       marginBottom: spacing.sm,
@@ -81,7 +81,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     loadingText: {
       ...sans,
-      color: colors.surface,
+      color: colors.overlayText,
       fontSize: typography.helper.fontSize,
     },
     skeletonContainer: {

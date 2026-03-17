@@ -8,7 +8,7 @@ import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import { buildWikimediaImageSource } from '@/utils/wikimedia';
 
-import { styles as onboardingStyles } from '../styles';
+import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
 
 type PreviewCard = {
@@ -80,6 +80,7 @@ const StepPreview = (_props: StepComponentProps) => {
   const { updateState } = useOnboardingContext();
   const theme = useAppTheme();
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
+  const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const carouselWidth = useMemo(() => {
     const { width } = Dimensions.get('window');
     return Math.max(width - theme.spacing.xl * 2, 0);

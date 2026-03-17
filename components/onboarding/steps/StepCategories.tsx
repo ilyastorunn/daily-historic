@@ -4,8 +4,11 @@ import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 're
 import { type CategoryOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
+import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
-import { styles as onboardingStyles } from '../styles';
+import { createOnboardingStyles } from '../styles';
+
+const frenchRevolutionIllustration = require('@/assets/illustrations/FrenchRevolution.png');
 
 const categoryOptions: { value: CategoryOption; label: string; icon: any }[] = [
   { value: 'world-wars', label: 'World Wars', icon: require('@/assets/icons/World-Wars.png') },
@@ -76,6 +79,8 @@ const createStyles = (theme: ThemeDefinition) => {
       paddingHorizontal: 20,
       paddingBottom: spacing.md,
       gap: spacing.xl,
+      position: 'relative',
+      overflow: 'visible',
     },
     header: {
       gap: spacing.sm,
@@ -88,6 +93,9 @@ const createStyles = (theme: ThemeDefinition) => {
       letterSpacing: -0.6,
       color: colors.textPrimary,
       fontWeight: '400',
+    },
+    illustrationScene: {
+      bottom: -74,
     },
     cardGrid: {
       flexDirection: 'row',
@@ -126,10 +134,11 @@ const createStyles = (theme: ThemeDefinition) => {
   });
 };
 
-const StepCategories = ({ onNext }: StepComponentProps) => {
+const StepCategories = (_props: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
+  const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
   const toggleCategory = (value: CategoryOption) => {
     if (value === 'surprise') {
@@ -144,13 +153,20 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
     updateState({ categories: next, categoriesSkipped: false });
   };
 
-  const handleSkip = () => {
-    updateState({ categories: [], categoriesSkipped: true });
-    onNext();
-  };
-
   return (
     <View style={[onboardingStyles.stepScroll, themedStyles.container]}>
+      <View
+        pointerEvents="box-none"
+        style={[onboardingStyles.footerAnchoredScene, themedStyles.illustrationScene]}
+      >
+        <DecorativeIllustration
+          source={frenchRevolutionIllustration}
+          widthRatio={0.42}
+          minWidth={144}
+          maxWidth={188}
+        />
+      </View>
+
       <View style={themedStyles.header}>
         <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
       </View>

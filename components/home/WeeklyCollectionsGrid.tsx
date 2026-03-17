@@ -91,7 +91,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     tileTitle: {
       fontFamily: Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' }),
-      color: colors.surface,
+      color: colors.overlayText,
       fontSize: typography.headingMd.fontSize,
       lineHeight: typography.headingMd.lineHeight,
     },
