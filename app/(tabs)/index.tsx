@@ -45,6 +45,8 @@ import { getImageUri } from '@/utils/image-source';
 
 // Reactions removed - using Like + Deep Dive + Save + Share instead
 
+const HOME_SAVED_STORIES_LIMIT = 20;
+
 type HeroCarouselItem = {
   id: string;
   title: string;
@@ -671,9 +673,18 @@ const HomeScreen = () => {
     }
   }, [digestError]);
 
+  const savedEventIdsKey = useMemo(
+    () => JSON.stringify(profile?.savedEventIds ?? []),
+    [profile?.savedEventIds]
+  );
+  const stableSavedEventIds = useMemo(
+    () => JSON.parse(savedEventIdsKey) as string[],
+    [savedEventIdsKey]
+  );
+
   // Fetch saved events from Firestore when savedEventIds change
   useEffect(() => {
-    const savedIds = profile?.savedEventIds ?? [];
+    const savedIds = stableSavedEventIds.slice(0, HOME_SAVED_STORIES_LIMIT);
     if (savedIds.length === 0) {
       setSavedEventsData([]);
       setSavedEventsLoading(false);
@@ -702,7 +713,7 @@ const HomeScreen = () => {
     return () => {
       cancelled = true;
     };
-  }, [profile?.savedEventIds]);
+  }, [stableSavedEventIds]);
 
   const handleOpenEvent = useCallback(
     (eventId: string, source?: string, carouselIndex?: number, carouselItemIds?: string[]) => {

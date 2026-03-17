@@ -21,12 +21,20 @@ service cloud.firestore {
         && (!('createdAt' in existingData) || !('createdAt' in incomingData) || incomingData.createdAt == existingData.createdAt)
         // Validate data types
         && (!('savedEventIds' in incomingData) || incomingData.savedEventIds is list)
+        && (!('likedEventIds' in incomingData) || incomingData.likedEventIds is list)
         && (!('reactions' in incomingData) || incomingData.reactions is map)
         && (!('categories' in incomingData) || incomingData.categories is list)
         && (!('eras' in incomingData) || incomingData.eras is list)
         && (!('onboardingCompleted' in incomingData) || incomingData.onboardingCompleted is bool)
         && (!('categoriesSkipped' in incomingData) || incomingData.categoriesSkipped is bool)
         && (!('notificationEnabled' in incomingData) || incomingData.notificationEnabled is bool);
+    }
+
+    function isValidSavedEventWrite(eventId) {
+      return request.resource.data.keys().hasOnly(['eventId', 'savedAt', 'updatedAt'])
+        && request.resource.data.eventId == eventId
+        && (!('savedAt' in request.resource.data) || request.resource.data.savedAt is timestamp)
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp);
     }
 
     // Users collection - users can only read and write their own document with validation
@@ -44,6 +52,12 @@ service cloud.firestore {
 
       // Prevent deletion of user documents
       allow delete: if false;
+
+      match /savedEvents/{eventId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidSavedEventWrite(eventId);
+        allow delete: if isOwner(userId);
+      }
     }
 
     // Content events - readable by all authenticated users (including anonymous)

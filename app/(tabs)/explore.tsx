@@ -43,6 +43,8 @@ const reactions = [
   { id: 'insight', emoji: '💡', label: 'Insight' },
 ] as const;
 
+const MIN_SEARCH_QUERY_LENGTH = 2;
+
 type ReactionOption = (typeof reactions)[number]['id'];
 
 type CalendarModalProps = {
@@ -786,6 +788,7 @@ const ExploreScreen = () => {
   // Ref to track ongoing pagination fetch
   const paginationFetchingRef = useRef(false);
   const searchBaseKeyRef = useRef<string | null>(null);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Handle category parameter from navigation
   useEffect(() => {
@@ -804,11 +807,13 @@ const ExploreScreen = () => {
 
   const activeDate = useMemo(() => parseIsoDate(selectedDate) ?? today, [selectedDate, today]);
   const normalizedQuery = debouncedQuery.trim();
+  const effectiveQuery =
+    normalizedQuery.length >= MIN_SEARCH_QUERY_LENGTH ? normalizedQuery : '';
   const categoriesArray = useMemo(() => Array.from(filters.categories).sort(), [filters.categories]);
   const categoriesKey = categoriesArray.join(',');
   const isDateSelected = selectedDate !== today.isoDate;
   const showResults =
-    normalizedQuery.length > 0 ||
+    effectiveQuery.length > 0 ||
     categoriesArray.length > 0 ||
     filters.era !== null ||
     isDateSelected;
@@ -834,8 +839,9 @@ const ExploreScreen = () => {
   // Fetch search results from Algolia
   const fetchSearchResults = useCallback(
     async (page = 0, append = false) => {
+      const controller = !append ? new AbortController() : null;
       const baseKey = JSON.stringify([
-        normalizedQuery,
+        effectiveQuery,
         categoriesKey,
         filters.era ?? '',
         sortMode,
@@ -850,6 +856,8 @@ const ExploreScreen = () => {
 
         paginationFetchingRef.current = true;
       } else {
+        searchAbortControllerRef.current?.abort();
+        searchAbortControllerRef.current = controller;
         searchBaseKeyRef.current = baseKey;
       }
 
@@ -857,7 +865,7 @@ const ExploreScreen = () => {
 
       try {
         const result = await searchExploreEvents({
-          query: normalizedQuery,
+          query: effectiveQuery,
           categories: categoriesArray,
           era: filters.era,
           month: isDateSelected ? activeDate.month : undefined,
@@ -865,6 +873,7 @@ const ExploreScreen = () => {
           page,
           hitsPerPage: page === 0 ? 8 : 10,
           sortMode,
+          signal: controller?.signal,
         });
 
         if (searchBaseKeyRef.current !== baseKey) {
@@ -891,13 +900,20 @@ const ExploreScreen = () => {
         });
 
         trackEvent(!append ? 'explore_search_results_loaded' : 'explore_pagination_loaded', {
-          q_len: normalizedQuery.length,
+          q_len: effectiveQuery.length,
           categories_count: categoriesArray.length,
           era_selected: filters.era || 'none',
           results_count: result.items.length,
         });
       } catch (error) {
         if (searchBaseKeyRef.current !== baseKey) {
+          return;
+        }
+
+        if (
+          controller?.signal.aborted ||
+          (error instanceof Error && error.name === 'AbortError')
+        ) {
           return;
         }
 
@@ -908,6 +924,9 @@ const ExploreScreen = () => {
           error: error instanceof Error ? error : new Error('Search failed'),
         }));
       } finally {
+        if (!append && searchAbortControllerRef.current === controller) {
+          searchAbortControllerRef.current = null;
+        }
         paginationFetchingRef.current = false;
       }
     },
@@ -916,9 +935,9 @@ const ExploreScreen = () => {
       activeDate.month,
       categoriesArray,
       categoriesKey,
+      effectiveQuery,
       filters.era,
       isDateSelected,
-      normalizedQuery,
       selectedDate,
       sortMode,
     ]
@@ -979,6 +998,8 @@ const ExploreScreen = () => {
   // Fetch search results when query, filters, sort, or date change.
   useEffect(() => {
     if (!showResults) {
+      searchAbortControllerRef.current?.abort();
+      searchAbortControllerRef.current = null;
       searchBaseKeyRef.current = null;
       paginationFetchingRef.current = false;
       setSearchResults([]);
@@ -1000,12 +1021,12 @@ const ExploreScreen = () => {
   useEffect(() => {
     if (showResults && results.length === 0 && !searchState.loading) {
       trackEvent('explore_no_results', {
-        q_len: normalizedQuery.length,
+        q_len: effectiveQuery.length,
         categories_count: categoriesArray.length,
         era_selected: filters.era ?? 'none',
       });
     }
-  }, [categoriesArray.length, filters.era, normalizedQuery.length, results.length, searchState.loading, showResults]);
+  }, [categoriesArray.length, effectiveQuery.length, filters.era, results.length, searchState.loading, showResults]);
 
   const handleOpenDetail = useCallback(
     (id: string) => {

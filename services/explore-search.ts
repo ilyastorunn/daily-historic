@@ -12,6 +12,7 @@ type ExploreSearchParams = {
   page?: number;
   hitsPerPage?: number;
   sortMode?: ExploreSearchSortMode;
+  signal?: AbortSignal;
 };
 
 type AlgoliaSearchResponse = {
@@ -24,6 +25,19 @@ type AlgoliaSearchResponse = {
 const ALGOLIA_APP_ID = process.env.EXPO_PUBLIC_ALGOLIA_APP_ID;
 const ALGOLIA_SEARCH_API_KEY = process.env.EXPO_PUBLIC_ALGOLIA_SEARCH_API_KEY;
 const ALGOLIA_INDEX_EVENTS = process.env.EXPO_PUBLIC_ALGOLIA_INDEX_EVENTS;
+const SEARCH_CACHE_TTL_MS = 30_000;
+
+type CachedSearchResult = {
+  expiresAt: number;
+  value: {
+    items: ExploreSearchResultItem[];
+    page: number;
+    hasMore: boolean;
+    totalHits: number;
+  };
+};
+
+const searchCache = new Map<string, CachedSearchResult>();
 
 const getAlgoliaConfig = () => {
   if (!ALGOLIA_APP_ID || !ALGOLIA_SEARCH_API_KEY || !ALGOLIA_INDEX_EVENTS) {
@@ -48,6 +62,7 @@ export const searchExploreEvents = async ({
   page = 0,
   hitsPerPage = 10,
   sortMode = "relevance",
+  signal,
 }: ExploreSearchParams) => {
   const { appId, apiKey, indexName } = getAlgoliaConfig();
   const { indexName: resolvedIndexName, payload } = buildAlgoliaSearchPayload(
@@ -65,11 +80,18 @@ export const searchExploreEvents = async ({
     },
     indexName
   );
+  const cacheKey = JSON.stringify([resolvedIndexName, payload]);
+  const cached = searchCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
 
   const response = await fetch(
     `https://${appId}-dsn.algolia.net/1/indexes/${encodeURIComponent(resolvedIndexName)}/query`,
     {
       method: "POST",
+      signal,
       headers: {
         "Content-Type": "application/json",
         "X-Algolia-API-Key": apiKey,
@@ -90,10 +112,17 @@ export const searchExploreEvents = async ({
     objectID: hit.objectID ?? hit.eventId,
   }));
 
-  return {
+  const result = {
     items,
     page: data.page,
     hasMore: data.page + 1 < data.nbPages,
     totalHits: data.nbHits,
   };
+
+  searchCache.set(cacheKey, {
+    expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+    value: result,
+  });
+
+  return result;
 };

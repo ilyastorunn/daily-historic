@@ -15,7 +15,6 @@ import {
   firebaseAuth,
   firebaseFirestore,
   doc,
-  getDoc,
   setDoc,
   onSnapshot,
   serverTimestamp,
@@ -41,15 +40,75 @@ type UserProviderProps = {
   children: ReactNode;
 };
 
+const USER_SAVED_EVENTS_SUBCOLLECTION = 'savedEvents';
+const SAVED_EVENT_MIGRATION_BATCH_SIZE = 400;
 const defaultError = null;
+
+const chunkArray = <T,>(items: T[], chunkSize: number) => {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+
+  return chunks;
+};
+
+const sanitizeSavedEventIds = (value: unknown) =>
+  Array.isArray(value)
+    ? value.filter((eventId): eventId is string => typeof eventId === 'string' && eventId.length > 0)
+    : [];
+
+const mergeSavedEventIds = (subcollectionIds: string[] | null, legacyIds: string[]) => {
+  if (subcollectionIds === null) {
+    return legacyIds;
+  }
+
+  const merged: string[] = [];
+  const seen = new Set<string>();
+
+  [...subcollectionIds, ...legacyIds].forEach((eventId) => {
+    if (eventId.length === 0 || seen.has(eventId)) {
+      return;
+    }
+
+    seen.add(eventId);
+    merged.push(eventId);
+  });
+
+  return merged;
+};
+
+const normalizeProfileSnapshot = (data: UserProfile): UserProfile => {
+  const savedEventIds = sanitizeSavedEventIds(data.savedEventIds);
+  const likedEventIds = sanitizeSavedEventIds(data.likedEventIds);
+  const reactions = data.reactions && typeof data.reactions === 'object' ? data.reactions : {};
+  const categories = Array.isArray(data.categories) ? data.categories : [];
+  const eras = Array.isArray(data.eras) ? data.eras : [];
+  const categoriesSkipped =
+    typeof data.categoriesSkipped === 'boolean' ? data.categoriesSkipped : false;
+
+  return {
+    ...data,
+    categories,
+    eras,
+    savedEventIds,
+    likedEventIds,
+    reactions,
+    categoriesSkipped,
+  };
+};
 
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [authUser, setAuthUser] = useState<FirebaseAuthTypes.User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileDocument, setProfileDocument] = useState<UserProfile | null>(null);
+  const [savedEventIdsState, setSavedEventIdsState] = useState<string[] | null>(null);
   const [authInitializing, setAuthInitializing] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [savedEventsLoading, setSavedEventsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(defaultError);
   const signingInRef = useRef(false);
+  const savedMigrationInFlightRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (currentUser) => {
@@ -82,8 +141,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   useEffect(() => {
     if (!authUser) {
-      setProfile(null);
+      setProfileDocument(null);
+      setSavedEventIdsState(null);
       setProfileLoading(false);
+      setSavedEventsLoading(false);
+      savedMigrationInFlightRef.current = false;
       return;
     }
 
@@ -94,33 +156,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       docRef,
       (snapshot) => {
         if (!snapshot.exists) {
-          setProfile(null);
+          setProfileDocument(null);
         } else {
           const data = snapshot.data();
-
-          if (!data) {
-            setProfile(null);
-          } else {
-            const savedEventIds = Array.isArray(data.savedEventIds) ? data.savedEventIds : [];
-            const likedEventIds = Array.isArray(data.likedEventIds) ? data.likedEventIds : [];
-            const reactions =
-              data.reactions && typeof data.reactions === 'object' ? data.reactions : {};
-            const categories = Array.isArray(data.categories) ? data.categories : [];
-            const eras = Array.isArray(data.eras) ? data.eras : [];
-            const categoriesSkipped =
-              typeof data.categoriesSkipped === 'boolean' ? data.categoriesSkipped : false;
-
-            setProfile({
-              ...(data as UserProfile),
-              categories,
-              eras,
-              savedEventIds,
-              likedEventIds,
-              reactions,
-              categoriesSkipped,
-            });
-          }
+          setProfileDocument(data ? normalizeProfileSnapshot(data as UserProfile) : null);
         }
+
         setError(null);
         setProfileLoading(false);
       },
@@ -138,6 +179,116 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     return unsubscribe;
   }, [authUser]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setSavedEventIdsState(null);
+      setSavedEventsLoading(false);
+      return;
+    }
+
+    setSavedEventsLoading(true);
+    const unsubscribe = firebaseFirestore
+      .collection(USERS_COLLECTION)
+      .doc(authUser.uid)
+      .collection(USER_SAVED_EVENTS_SUBCOLLECTION)
+      .orderBy('savedAt', 'desc')
+      .onSnapshot(
+        (snapshot) => {
+          const nextSavedEventIds = snapshot.docs
+            .map((savedDoc) => savedDoc.id)
+            .filter((eventId) => eventId.length > 0);
+
+          setSavedEventIdsState(nextSavedEventIds);
+          setError(null);
+          setSavedEventsLoading(false);
+        },
+        (savedEventsError) => {
+          console.error('Failed to fetch saved events', savedEventsError);
+          setError(
+            savedEventsError instanceof Error
+              ? savedEventsError
+              : new Error('Failed to fetch saved events')
+          );
+          setSavedEventsLoading(false);
+        }
+      );
+
+    return unsubscribe;
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!authUser || !profileDocument || savedEventIdsState === null || savedMigrationInFlightRef.current) {
+      return;
+    }
+
+    const legacySavedEventIds = sanitizeSavedEventIds(profileDocument.savedEventIds);
+    const missingSavedEventIds = legacySavedEventIds.filter(
+      (eventId) => !savedEventIdsState.includes(eventId)
+    );
+
+    if (missingSavedEventIds.length === 0) {
+      return;
+    }
+
+    savedMigrationInFlightRef.current = true;
+    let cancelled = false;
+
+    const migrateLegacySavedEvents = async () => {
+      try {
+        const userRef = firebaseFirestore.collection(USERS_COLLECTION).doc(authUser.uid);
+
+        for (const chunk of chunkArray(missingSavedEventIds, SAVED_EVENT_MIGRATION_BATCH_SIZE)) {
+          const batch = firebaseFirestore.batch();
+
+          chunk.forEach((eventId) => {
+            batch.set(
+              userRef.collection(USER_SAVED_EVENTS_SUBCOLLECTION).doc(eventId),
+              {
+                eventId,
+                savedAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              },
+              { merge: true }
+            );
+          });
+
+          await batch.commit();
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        await setDoc(
+          doc(firebaseFirestore, USERS_COLLECTION, authUser.uid),
+          { savedEventIds: [] },
+          { merge: true }
+        );
+      } catch (migrationError) {
+        console.error('Failed to migrate legacy saved events', migrationError);
+      } finally {
+        savedMigrationInFlightRef.current = false;
+      }
+    };
+
+    void migrateLegacySavedEvents();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser, profileDocument, savedEventIdsState]);
+
+  const profile = useMemo<UserProfile | null>(() => {
+    if (!profileDocument) {
+      return null;
+    }
+
+    return {
+      ...profileDocument,
+      savedEventIds: mergeSavedEventIds(savedEventIdsState, profileDocument.savedEventIds ?? []),
+    };
+  }, [profileDocument, savedEventIdsState]);
+
   const completeOnboarding = useCallback(
     async (data: OnboardingCompletionData) => {
       if (!authUser) {
@@ -145,9 +296,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       }
 
       const docRef = doc(firebaseFirestore, USERS_COLLECTION, authUser.uid);
-
       const timestamp = serverTimestamp();
-
       const sanitizedData = Object.fromEntries(
         Object.entries(data).filter(([, value]) => value !== undefined)
       ) as Partial<OnboardingData>;
@@ -158,7 +307,6 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         onboardingCompleted: true,
         updatedAt: timestamp,
         ...(profile?.createdAt ? {} : { createdAt: timestamp }),
-        savedEventIds: profile?.savedEventIds ?? [],
         likedEventIds: profile?.likedEventIds ?? [],
         reactions: profile?.reactions ?? {},
       };
@@ -175,7 +323,6 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       }
 
       const docRef = doc(firebaseFirestore, USERS_COLLECTION, authUser.uid);
-
       const timestamp = serverTimestamp();
       const sanitized = Object.fromEntries(
         Object.entries(data).filter(([, value]) => value !== undefined)
@@ -209,7 +356,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   }, []);
 
   const onboardingCompleted = profile?.onboardingCompleted ?? false;
-  const initializing = authInitializing || profileLoading;
+  const initializing = authInitializing || profileLoading || savedEventsLoading;
 
   const contextValue = useMemo<UserContextValue>(
     () => ({
