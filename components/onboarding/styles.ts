@@ -136,7 +136,7 @@ const createOnboardingStyles = (theme: ThemeDefinition) => {
     },
     welcomeScroll: {
       paddingBottom: spacingScale.lg,
-      gap: spacingScale.xxl,
+      gap: spacingScale.xl,
     },
     heroMasthead: {
       alignItems: 'center',
