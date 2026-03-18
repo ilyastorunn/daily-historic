@@ -160,10 +160,12 @@ const localStyles = StyleSheet.create({
     flex: 1,
   },
   pyramidWrap: {
-    width: '100%',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    // Sit flush against footer: cancel contentWrapper paddingBottom (12) + footer paddingTop (8)
+    bottom: -20,
     alignItems: 'center',
-    // Cancel out contentWrapper paddingBottom (12) + footer paddingTop (8)
-    marginBottom: -20,
   },
 });
 
