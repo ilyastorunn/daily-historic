@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Dimensions, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { Dimensions, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ImageSource } from 'expo-image';
 
 import { EditorialCard } from '@/components/ui/editorial-card';
@@ -8,8 +8,14 @@ import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import { buildWikimediaImageSource } from '@/utils/wikimedia';
 
+import DecorativeIllustration from '../DecorativeIllustration';
 import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
+
+const pyramidsIllustration = require('@/assets/illustrations/pyramids2.png');
+
+// pyramids2.png is 329×70 px
+const PYRAMIDS_ASPECT_RATIO = 329 / 70;
 
 type PreviewCard = {
   id: string;
@@ -57,7 +63,7 @@ const createStyles = (theme: ThemeDefinition) => {
       flex: 1,
     },
     container: {
-      gap: spacing.lg,
+      gap: spacing.md,
     },
     title: {
       fontFamily: serifFamily,
@@ -91,34 +97,57 @@ const StepPreview = (_props: StepComponentProps) => {
   }, [updateState]);
 
   return (
-    <ScrollView
-      style={themedStyles.scroll}
-      contentContainerStyle={[onboardingStyles.stackGap, themedStyles.container]}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={themedStyles.title}>A glimpse of today's moment</Text>
-      <Text style={themedStyles.body}>
-        Swipe through editorial cards and feel how Chrono curates a single, focused story each day.
-      </Text>
+    <View style={localStyles.root}>
+      <ScrollView
+        style={themedStyles.scroll}
+        contentContainerStyle={[onboardingStyles.stackGap, themedStyles.container]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={themedStyles.title}>A glimpse of today's moment</Text>
+        <Text style={themedStyles.body}>
+          Swipe through editorial cards and feel how Chrono curates a single, focused story each day.
+        </Text>
 
-      <PeekCarousel
-        data={previewCards}
-        renderItem={({ item }) => (
-          <EditorialCard
-            badge={item.badge}
-            title={item.title}
-            summary={item.summary}
-            meta={item.meta}
-            imageSource={item.image}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        itemWidth={carouselWidth}
-        gap={0}
-        testID="onboarding-preview-carousel"
-      />
-    </ScrollView>
+        <PeekCarousel
+          data={previewCards}
+          renderItem={({ item }) => (
+            <EditorialCard
+              badge={item.badge}
+              title={item.title}
+              summary={item.summary}
+              meta={item.meta}
+              imageSource={item.image}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          itemWidth={carouselWidth}
+          gap={0}
+          testID="onboarding-preview-carousel"
+        />
+      </ScrollView>
+
+      {/* Pyramids sit flush above the Continue button — no gap */}
+      <View pointerEvents="box-none" style={localStyles.pyramidWrap}>
+        <DecorativeIllustration
+          source={pyramidsIllustration}
+          widthRatio={1}
+          aspectRatio={PYRAMIDS_ASPECT_RATIO}
+        />
+      </View>
+    </View>
   );
 };
+
+const localStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  pyramidWrap: {
+    width: '100%',
+    alignItems: 'center',
+    // Cancel out contentWrapper paddingBottom (12) + footer paddingTop (8)
+    marginBottom: -20,
+  },
+});
 
 export default StepPreview;
