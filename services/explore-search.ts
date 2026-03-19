@@ -82,9 +82,19 @@ export const searchExploreEvents = async ({
   );
   const cacheKey = JSON.stringify([resolvedIndexName, payload]);
   const cached = searchCache.get(cacheKey);
+  const now = Date.now();
 
-  if (cached && cached.expiresAt > Date.now()) {
+  if (cached && cached.expiresAt > now) {
     return cached.value;
+  }
+
+  // Evict all expired entries to prevent unbounded growth over long sessions.
+  if (cached) {
+    for (const [key, entry] of searchCache) {
+      if (entry.expiresAt <= now) {
+        searchCache.delete(key);
+      }
+    }
   }
 
   const response = await fetch(
