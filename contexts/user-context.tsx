@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import type { AccountSelection } from '@/contexts/onboarding-context';
 
 import {
   USERS_COLLECTION,
@@ -19,17 +20,41 @@ import {
   onSnapshot,
   serverTimestamp,
 } from '@/services/firebase';
+import {
+  clearProviderSessions,
+  linkWithAppleCredential,
+  linkWithEmailCredential,
+  linkWithGoogleCredential,
+  reauthenticateWithAppleCredentialAndGetAuthorizationCode,
+  reauthenticateWithEmailCredential,
+  reauthenticateWithGoogleCredential,
+  signInWithAppleCredential,
+  signInWithEmailCredential,
+  signInWithGoogleCredential,
+} from '@/services/auth';
 import type { OnboardingData, UserDocument, UserProfile } from '@/types/user';
 
 type OnboardingCompletionData = OnboardingData;
 
 type UserContextValue = {
   authUser: FirebaseAuthTypes.User | null;
+  authAccountSelection: AccountSelection | null;
   profile: UserProfile | null;
   initializing: boolean;
   onboardingCompleted: boolean;
+  isAnonymousSession: boolean;
+  authBusy: boolean;
+  authError: string | null;
   error: Error | null;
+  clearAuthError: () => void;
   completeOnboarding: (data: OnboardingCompletionData) => Promise<void>;
+  linkWithGoogle: () => Promise<void>;
+  linkWithApple: () => Promise<void>;
+  linkWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  deleteAccount: (options?: { password?: string }) => Promise<void>;
   updateProfile: (data: Partial<UserDocument>) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -43,6 +68,84 @@ type UserProviderProps = {
 const USER_SAVED_EVENTS_SUBCOLLECTION = 'savedEvents';
 const SAVED_EVENT_MIGRATION_BATCH_SIZE = 400;
 const defaultError = null;
+const defaultAuthError = null;
+
+const firebaseProviderMap: Partial<Record<string, AccountSelection>> = {
+  'google.com': 'google',
+  'apple.com': 'apple',
+  password: 'email',
+};
+
+const inferAccountSelectionFromUser = (
+  user: FirebaseAuthTypes.User | null
+): AccountSelection | null => {
+  if (!user || user.isAnonymous) {
+    return null;
+  }
+
+  for (const providerInfo of user.providerData) {
+    const mappedProvider = firebaseProviderMap[providerInfo.providerId];
+
+    if (mappedProvider) {
+      return mappedProvider;
+    }
+  }
+
+  return null;
+};
+
+const createAuthFlowError = (code: string, message: string) => {
+  const error = new Error(message) as Error & { code?: string };
+  error.code = code;
+  return error;
+};
+
+const formatAuthErrorMessage = (authError: unknown) => {
+  const code =
+    typeof authError === 'object' && authError && 'code' in authError
+      ? String((authError as { code?: unknown }).code)
+      : '';
+
+  switch (code) {
+    case 'auth/account-exists-with-different-credential':
+      return 'This email is already attached to another sign-in method.';
+    case 'auth/credential-already-in-use':
+      return 'That account is already linked elsewhere. Use Sign in instead.';
+    case 'auth/email-already-in-use':
+      return 'This email is already in use. Use Sign in instead.';
+    case 'auth/invalid-email':
+      return 'Enter a valid email address.';
+    case 'auth/invalid-credential':
+      return 'Those credentials are invalid or expired. Try again.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    case 'auth/operation-not-allowed':
+      return 'This sign-in method is not enabled in Firebase yet.';
+    case 'auth/provider-already-linked':
+      return 'This provider is already linked to your account.';
+    case 'auth/requires-recent-login':
+      return 'Please sign in again and retry this action.';
+    case 'auth/requires-password':
+      return 'Enter your password to delete this account.';
+    case 'auth/unsupported-provider':
+      return 'This account type is not supported for in-app deletion yet.';
+    case 'auth/guest-session':
+      return 'Guest sessions cannot be deleted.';
+    case 'auth/user-not-found':
+      return 'No account found for that email.';
+    case 'auth/wrong-password':
+      return 'The password is incorrect.';
+    case 'ERR_REQUEST_CANCELED':
+    case 'SIGN_IN_CANCELLED':
+      return 'Sign-in was cancelled.';
+    case 'IN_PROGRESS':
+      return 'Another sign-in attempt is already in progress.';
+    case 'PLAY_SERVICES_NOT_AVAILABLE':
+      return 'Google Play services are not available on this device.';
+    default:
+      return authError instanceof Error ? authError.message : 'Authentication failed. Try again.';
+  }
+};
 
 const chunkArray = <T,>(items: T[], chunkSize: number) => {
   const chunks: T[][] = [];
@@ -106,38 +209,83 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [authInitializing, setAuthInitializing] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [savedEventsLoading, setSavedEventsLoading] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(defaultAuthError);
   const [error, setError] = useState<Error | null>(defaultError);
   const signingInRef = useRef(false);
   const savedMigrationInFlightRef = useRef(false);
+
+  const clearAuthError = useCallback(() => {
+    setAuthError(null);
+  }, []);
+
+  const ensureAnonymousSession = useCallback(async () => {
+    if (firebaseAuth.currentUser || signingInRef.current) {
+      return;
+    }
+
+    signingInRef.current = true;
+
+    try {
+      await firebaseAuth.signInAnonymously();
+      setError(null);
+    } catch (signInError) {
+      console.error('Anonymous sign-in failed', signInError);
+      setError(signInError instanceof Error ? signInError : new Error('Anonymous sign-in failed'));
+      setAuthInitializing(false);
+      throw signInError;
+    } finally {
+      signingInRef.current = false;
+    }
+  }, []);
+
+  const runAuthAction = useCallback(async <T,>(action: () => Promise<T>) => {
+    setAuthBusy(true);
+    setAuthError(null);
+
+    try {
+      const result = await action();
+      setError(null);
+      return result;
+    } catch (actionError) {
+      console.error('Authentication action failed', actionError);
+      setAuthError(formatAuthErrorMessage(actionError));
+      throw actionError;
+    } finally {
+      setAuthBusy(false);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (currentUser) => {
       if (!currentUser) {
         setAuthUser(null);
-        if (signingInRef.current) {
-          return;
+        setProfileDocument(null);
+        setSavedEventIdsState(null);
+        setProfileLoading(false);
+        setSavedEventsLoading(false);
+        setAuthInitializing(true);
+        savedMigrationInFlightRef.current = false;
+
+        try {
+          await ensureAnonymousSession();
+        } catch {
+          // Error state is handled in ensureAnonymousSession.
         }
 
-        signingInRef.current = true;
-        try {
-          await firebaseAuth.signInAnonymously();
-        } catch (authError) {
-          console.error('Anonymous sign-in failed', authError);
-          setError(authError instanceof Error ? authError : new Error('Anonymous sign-in failed'));
-          setAuthInitializing(false);
-        } finally {
-          signingInRef.current = false;
-        }
         return;
       }
 
+      setProfileLoading(true);
+      setSavedEventsLoading(true);
       setAuthUser(currentUser);
+      setAuthError(null);
       setError(null);
       setAuthInitializing(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [ensureAnonymousSession]);
 
   useEffect(() => {
     if (!authUser) {
@@ -300,16 +448,22 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       const sanitizedData = Object.fromEntries(
         Object.entries(data).filter(([, value]) => value !== undefined)
       ) as Partial<OnboardingData>;
+      const resolvedAccountSelection =
+        data.accountSelection ??
+        profile?.accountSelection ??
+        inferAccountSelectionFromUser(authUser) ??
+        'anonymous';
 
-      const payload: UserDocument = {
+      const payload = {
         uid: authUser.uid,
         ...sanitizedData,
+        accountSelection: resolvedAccountSelection,
         onboardingCompleted: true,
         updatedAt: timestamp,
         ...(profile?.createdAt ? {} : { createdAt: timestamp }),
         likedEventIds: profile?.likedEventIds ?? [],
         reactions: profile?.reactions ?? {},
-      };
+      } as UserDocument;
 
       await setDoc(docRef, payload, { merge: true });
     },
@@ -340,42 +494,171 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     [authUser]
   );
 
+  const linkWithGoogle = useCallback(async () => {
+    await runAuthAction(async () => {
+      await linkWithGoogleCredential();
+    });
+  }, [runAuthAction]);
+
+  const linkWithApple = useCallback(async () => {
+    await runAuthAction(async () => {
+      await linkWithAppleCredential();
+    });
+  }, [runAuthAction]);
+
+  const linkWithEmail = useCallback(
+    async (email: string, password: string) => {
+      await runAuthAction(async () => {
+        await linkWithEmailCredential(email, password);
+      });
+    },
+    [runAuthAction]
+  );
+
+  const signInWithGoogle = useCallback(async () => {
+    await runAuthAction(async () => {
+      await signInWithGoogleCredential();
+    });
+  }, [runAuthAction]);
+
+  const signInWithApple = useCallback(async () => {
+    await runAuthAction(async () => {
+      await signInWithAppleCredential();
+    });
+  }, [runAuthAction]);
+
+  const signInWithEmail = useCallback(
+    async (email: string, password: string) => {
+      await runAuthAction(async () => {
+        await signInWithEmailCredential(email, password);
+      });
+    },
+    [runAuthAction]
+  );
+
+  const deleteAccount = useCallback(
+    async (options?: { password?: string }) => {
+      await runAuthAction(async () => {
+        const currentUser = firebaseAuth.currentUser;
+
+        if (!currentUser || currentUser.isAnonymous) {
+          throw createAuthFlowError('auth/guest-session', 'Guest sessions cannot be deleted.');
+        }
+
+        const providerIds = new Set(
+          currentUser.providerData
+            .map((provider) => provider.providerId)
+            .filter((providerId): providerId is string => providerId.length > 0)
+        );
+
+        if (providerIds.has('apple.com')) {
+          const authorizationCode = await reauthenticateWithAppleCredentialAndGetAuthorizationCode();
+          await firebaseAuth.revokeToken(authorizationCode);
+        } else if (providerIds.has('google.com')) {
+          await reauthenticateWithGoogleCredential();
+        } else if (providerIds.has('password')) {
+          const password = options?.password?.trim();
+
+          if (!password) {
+            throw createAuthFlowError(
+              'auth/requires-password',
+              'Password is required for email account deletion.'
+            );
+          }
+
+          await reauthenticateWithEmailCredential(password, currentUser.email ?? undefined);
+        } else {
+          throw createAuthFlowError(
+            'auth/unsupported-provider',
+            'No supported sign-in provider was found for account deletion.'
+          );
+        }
+
+        await currentUser.delete();
+        await ensureAnonymousSession();
+        setError(null);
+      });
+    },
+    [ensureAnonymousSession, runAuthAction]
+  );
+
   const signOut = useCallback(async () => {
     if (!firebaseAuth.currentUser) {
       setError(null);
+      await ensureAnonymousSession();
       return;
     }
 
+    setAuthInitializing(true);
+    setAuthBusy(true);
+    setAuthError(null);
+
     try {
+      await clearProviderSessions();
       await firebaseAuth.signOut();
+      await ensureAnonymousSession();
       setError(null);
     } catch (signOutError) {
       console.error('Failed to sign out', signOutError);
       setError(signOutError instanceof Error ? signOutError : new Error('Failed to sign out'));
+      setAuthError(formatAuthErrorMessage(signOutError));
+      setAuthInitializing(false);
+      throw signOutError;
+    } finally {
+      setAuthBusy(false);
     }
-  }, []);
+  }, [ensureAnonymousSession]);
 
+  const authAccountSelection = useMemo(
+    () => inferAccountSelectionFromUser(authUser),
+    [authUser]
+  );
+  const isAnonymousSession = authUser?.isAnonymous ?? true;
   const onboardingCompleted = profile?.onboardingCompleted ?? false;
   const initializing = authInitializing || profileLoading || savedEventsLoading;
 
   const contextValue = useMemo<UserContextValue>(
     () => ({
       authUser,
+      authAccountSelection,
       profile,
       initializing,
       onboardingCompleted,
+      isAnonymousSession,
+      authBusy,
+      authError,
       error,
+      clearAuthError,
       completeOnboarding,
+      linkWithGoogle,
+      linkWithApple,
+      linkWithEmail,
+      signInWithGoogle,
+      signInWithApple,
+      signInWithEmail,
+      deleteAccount,
       updateProfile,
       signOut,
     }),
     [
       authUser,
+      authAccountSelection,
       profile,
       initializing,
       onboardingCompleted,
+      isAnonymousSession,
+      authBusy,
+      authError,
       error,
+      clearAuthError,
       completeOnboarding,
+      linkWithGoogle,
+      linkWithApple,
+      linkWithEmail,
+      signInWithGoogle,
+      signInWithApple,
+      signInWithEmail,
+      deleteAccount,
       updateProfile,
       signOut,
     ]
@@ -395,3 +678,4 @@ export const useUserContext = () => {
 };
 
 export type { UserProfile, OnboardingCompletionData };
+export { inferAccountSelectionFromUser };

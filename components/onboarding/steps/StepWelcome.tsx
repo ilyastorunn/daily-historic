@@ -41,7 +41,7 @@ const StepWelcome = ({ onNext }: StepComponentProps) => {
   };
 
   const handleLogin = () => {
-    router.replace("/(tabs)");
+    router.push("/sign-in");
   };
 
   return (

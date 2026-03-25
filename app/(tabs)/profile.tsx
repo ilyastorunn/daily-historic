@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
+  Alert,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -177,6 +180,27 @@ const createStyles = (theme: ThemeDefinition) => {
       color: colors.textSecondary,
       letterSpacing: 0.3,
     },
+    deleteButton: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: '#DC2626',
+      backgroundColor: 'transparent',
+    },
+    deleteLabel: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: '#DC2626',
+      letterSpacing: 0.3,
+    },
+    authErrorText: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: '#B42318',
+      lineHeight: 18,
+    },
     linkRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -187,6 +211,52 @@ const createStyles = (theme: ThemeDefinition) => {
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
       textDecorationLine: 'underline',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    modalCard: {
+      width: '100%',
+      maxWidth: 360,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      backgroundColor: colors.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.borderSubtle,
+      gap: spacing.md,
+    },
+    modalTitle: {
+      fontFamily: serifFamily,
+      fontSize: typography.headingMd.fontSize,
+      lineHeight: typography.headingMd.lineHeight,
+      color: colors.textPrimary,
+      letterSpacing: -0.2,
+    },
+    modalCopy: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      borderRadius: radius.md,
+      backgroundColor: colors.appBackground,
+      color: colors.textPrimary,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontFamily: sansFamily,
+      fontSize: typography.body.fontSize,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
     },
   });
 };
@@ -200,10 +270,22 @@ const detectTimezone = () => {
 };
 
 const ProfileScreen = () => {
-  const { profile, updateProfile, signOut } = useUserContext();
+  const {
+    authAccountSelection,
+    authBusy,
+    authError,
+    clearAuthError,
+    deleteAccount,
+    isAnonymousSession,
+    profile,
+    signOut,
+    updateProfile,
+  } = useUserContext();
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
+  const [showDeletePasswordModal, setShowDeletePasswordModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleToggleCategory = (value: CategoryOption) => {
     if (!profile) {
@@ -247,7 +329,93 @@ const ProfileScreen = () => {
     void updateProfile({ timezone });
   };
 
-  const accountLabel = accountLabels[profile?.accountSelection ?? 'anonymous'];
+  const handleSignOut = async () => {
+    clearAuthError();
+    await signOut();
+    router.replace('/');
+  };
+
+  const resolvedAccountSelection =
+    authAccountSelection ?? profile?.accountSelection ?? 'anonymous';
+  const accountLabel = accountLabels[resolvedAccountSelection];
+  const isEmailAccount = resolvedAccountSelection === 'email';
+
+  const runDeleteAccount = async (password?: string) => {
+    clearAuthError();
+
+    try {
+      await deleteAccount(password ? { password } : undefined);
+      setDeletePassword('');
+      setShowDeletePasswordModal(false);
+      Alert.alert('Account deleted', 'Your account was deleted successfully.', [
+        {
+          text: 'Continue',
+          onPress: () => router.replace('/onboarding'),
+        },
+      ]);
+    } catch {
+      // Error text comes from authError state.
+    }
+  };
+
+  const openDeleteConfirmation = () => {
+    if (authBusy || isAnonymousSession) {
+      return;
+    }
+
+    clearAuthError();
+
+    Alert.alert(
+      'Delete account?',
+      'This permanently deletes your account and saved data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Final confirmation',
+              'This action cannot be undone. You may be asked to verify your sign-in once more.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete account',
+                  style: 'destructive',
+                  onPress: () => {
+                    if (isEmailAccount) {
+                      setShowDeletePasswordModal(true);
+                      return;
+                    }
+
+                    void runDeleteAccount();
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  const closeDeletePasswordModal = () => {
+    if (authBusy) {
+      return;
+    }
+
+    setDeletePassword('');
+    setShowDeletePasswordModal(false);
+  };
+
+  const handleDeleteWithPassword = async () => {
+    if (deletePassword.trim().length === 0 || authBusy) {
+      return;
+    }
+
+    await runDeleteAccount(deletePassword);
+  };
+
   const timezoneLabel = profile?.timezone ?? detectTimezone();
   const reminderTime = profile?.notificationTime ?? '09:00';
   const digestEnabled = profile?.notificationEnabled ?? true;
@@ -313,7 +481,7 @@ const ProfileScreen = () => {
                   })}
                 </View>
                 <Text style={styles.preferenceMeta}>
-                  Current: {reminderTime}. Adjusting updates tomorrow's email.
+                  Current: {reminderTime}. Adjusting updates tomorrow&apos;s email.
                 </Text>
               </View>
             </View>
@@ -397,11 +565,31 @@ const ProfileScreen = () => {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => void signOut()}
-                style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.85 }]}
+                onPress={() => void handleSignOut()}
+                disabled={authBusy}
+                style={({ pressed }) => [
+                  styles.signOutButton,
+                  authBusy && { opacity: 0.65 },
+                  pressed && !authBusy && { opacity: 0.85 },
+                ]}
               >
                 <Text style={styles.signOutLabel}>Sign out</Text>
               </Pressable>
+              {!isAnonymousSession ? (
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={authBusy}
+                  onPress={openDeleteConfirmation}
+                  style={({ pressed }) => [
+                    styles.deleteButton,
+                    authBusy && { opacity: 0.65 },
+                    pressed && !authBusy && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text style={styles.deleteLabel}>Delete account</Text>
+                </Pressable>
+              ) : null}
+              {authError ? <Text style={styles.authErrorText}>{authError}</Text> : null}
             </View>
           </View>
 
@@ -422,6 +610,62 @@ const ProfileScreen = () => {
           </View>
         </ScrollView>
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showDeletePasswordModal}
+        onRequestClose={closeDeletePasswordModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Confirm your password</Text>
+            <Text style={styles.modalCopy}>
+              Enter your account password to permanently delete your account.
+            </Text>
+            <TextInput
+              accessibilityLabel="Account password"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={(value) => {
+                clearAuthError();
+                setDeletePassword(value);
+              }}
+              placeholder="Password"
+              secureTextEntry
+              style={styles.modalInput}
+              value={deletePassword}
+            />
+            {authError ? <Text style={styles.authErrorText}>{authError}</Text> : null}
+            <View style={styles.modalActions}>
+              <Pressable
+                accessibilityRole="button"
+                disabled={authBusy}
+                onPress={closeDeletePasswordModal}
+                style={({ pressed }) => [
+                  styles.signOutButton,
+                  authBusy && { opacity: 0.65 },
+                  pressed && !authBusy && { opacity: 0.85 },
+                ]}
+              >
+                <Text style={styles.signOutLabel}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                disabled={authBusy || deletePassword.trim().length === 0}
+                onPress={() => void handleDeleteWithPassword()}
+                style={({ pressed }) => [
+                  styles.deleteButton,
+                  (authBusy || deletePassword.trim().length === 0) && { opacity: 0.65 },
+                  pressed && !(authBusy || deletePassword.trim().length === 0) && { opacity: 0.85 },
+                ]}
+              >
+                <Text style={styles.deleteLabel}>{authBusy ? 'Deleting…' : 'Delete account'}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

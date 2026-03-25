@@ -25,6 +25,12 @@ Amac: is bittiginde alttaki test ve kotu senaryolari tek tek uygulayip sonucu is
 - Home, tum gecmisi degil, anlamli bir ust sinir ile son saved story'leri yukluyor.
 - Hedef: gorunmez Firestore okuma maliyetini dusurmek.
 
+### 5. Eski Explore backend route'u kodda kapatildi
+- `functions/src/index.ts` icinden eski public `api` HTTP function'i kaldirildi.
+- Eski `functions/src/api/explore/search.ts` kodu ve derlenmis ciktilari da silindi.
+- Yeni deploy sirasinda prod'daki `api` function'inin da silinmesi gerekiyor.
+- Hedef: kullanilmayan public search kapisinin maliyet ve suistimal riski olusturmasini durdurmak.
+
 ## Henuz Bu Branch'te Bitmeyen / Sonra Ele Alinacaklar
 
 ### 1. Gercek auth baglantisi
@@ -33,10 +39,10 @@ Amac: is bittiginde alttaki test ve kotu senaryolari tek tek uygulayip sonucu is
 - Gercek auth'a bagli olmayan placeholder Apple/Google/Email onboarding secenekleri guvenli hale getirilecek veya kaldirilacak.
 
 ### 2. Eski explore backend kapisi
-- Deploy'da acik kalmis eski search endpoint'i var mi kontrol edilecek.
-- Gerekirse kapatilacak veya auth / App Check / rate limit ile korunacak.
 - 2026-03-17 incelemesinde prod'da `api` HTTP function'inin aktif oldugu dogrulandi.
-- Canli probe sonucu eski route disaridan 200 donuyor: `/api/explore/search?limit=1`
+- Canli probe sonucu eski route disaridan 200 donuyordu: `/api/explore/search?limit=1`
+- Kod tarafi kaldirildi, fakat prod'un gercekten kapanmasi icin functions deploy'u ve `api` function silme adimi gerekiyor.
+- Deploy sonrasi endpoint'in `404` dondugu tekrar test edilecek.
 
 ### 3. User dokumani icin ek sertlestirme
 - Rules tarafinda sadece tip degil alan siniri, izinli alan listesi ve buyukluk stratejisi daha da sertlestirilecek.
@@ -69,5 +75,6 @@ Amac: is bittiginde alttaki test ve kotu senaryolari tek tek uygulayip sonucu is
 - [ ] Kotu senaryo: cok buyuk legacy saved listesi olan kullanicida acilis suresi kabul edilebilir mi kontrol et.
 
 - [ ] Guvenlik sonrasi: deploy'da eski explore search endpoint'i acik mi kontrol et.
+- [ ] Guvenlik sonrasi: eski `/api/explore/search` route'u deploy sonrasi `404` donuyor mu kontrol et.
 - [ ] Guvenlik sonrasi: sadece sahibinin kendi `savedEvents` kaydini okuyup yazabildigini dogrula.
 - [ ] Guvenlik sonrasi: manipule edilmis client ile saved alt koleksiyonuna bozuk payload yazilabiliyor mu dene.

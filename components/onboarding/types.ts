@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import type { OnboardingState } from '@/contexts/onboarding-context';
 
 type StepKey =
+  | 'name'
   | 'welcome'
   | 'preview'
   | 'categories'

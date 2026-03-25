@@ -33,15 +33,22 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanupUserDataOnDelete = exports.syncContentEventsToAlgolia = exports.getDb = void 0;
+exports.cleanupUserDataOnDelete = void 0;
 const admin = __importStar(require("firebase-admin"));
-const content_events_sync_1 = require("./triggers/content-events-sync");
-Object.defineProperty(exports, "syncContentEventsToAlgolia", { enumerable: true, get: function () { return content_events_sync_1.syncContentEventsToAlgolia; } });
-const user_cleanup_1 = require("./triggers/user-cleanup");
-Object.defineProperty(exports, "cleanupUserDataOnDelete", { enumerable: true, get: function () { return user_cleanup_1.cleanupUserDataOnDelete; } });
-// Initialize Firebase Admin SDK
-admin.initializeApp();
-// Get Firestore instance (lazy initialization)
-const getDb = () => admin.firestore();
-exports.getDb = getDb;
-//# sourceMappingURL=index.js.map
+const firebase_functions_1 = require("firebase-functions");
+const auth_1 = require("firebase-functions/v1/auth");
+const USERS_COLLECTION = "Users";
+exports.cleanupUserDataOnDelete = (0, auth_1.user)().onDelete(async (deletedUser) => {
+    const uid = deletedUser.uid;
+    const db = admin.firestore();
+    const userDocRef = db.collection(USERS_COLLECTION).doc(uid);
+    try {
+        await db.recursiveDelete(userDocRef);
+        firebase_functions_1.logger.info("User data cleanup completed after auth deletion.", { uid });
+    }
+    catch (error) {
+        firebase_functions_1.logger.error("User data cleanup failed after auth deletion.", { uid, error });
+        throw error;
+    }
+});
+//# sourceMappingURL=user-cleanup.js.map
