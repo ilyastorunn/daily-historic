@@ -14,6 +14,7 @@ const config = {
     supportsTablet: false,
     googleServicesFile: process.env.GOOGLE_SERVICES_PLIST ?? "./GoogleService-Info.plist",
     bundleIdentifier: "com.ilyastorun.histora",
+    usesAppleSignIn: true,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -37,7 +38,9 @@ const config = {
   plugins: [
     "@react-native-firebase/app",
     "@react-native-firebase/auth",
+    "@react-native-google-signin/google-signin",
     "expo-router",
+    "expo-apple-authentication",
     [
       "expo-build-properties",
       {

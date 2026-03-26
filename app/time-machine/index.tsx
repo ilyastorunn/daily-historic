@@ -21,7 +21,7 @@ import { ProgressTimeline } from '@/components/time-machine/ProgressTimeline';
 import { YearSelector } from '@/components/time-machine/YearSelector';
 import { trackEvent } from '@/services/analytics';
 import type { TimelineEvent } from '@/services/time-machine';
-import { isValidYear } from '@/services/time-machine';
+import { isValidYear, fetchAvailableYears } from '@/services/time-machine';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -38,6 +38,7 @@ const TimeMachineScreen = () => {
   // Screen state - start with year selector
   const [screenState, setScreenState] = useState<ScreenState>('year-selector');
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   const { timeline, loading, error, loadTimeline } = useTimeMachine({
     enabled: screenState === 'timeline' && selectedYear !== undefined,
@@ -47,6 +48,19 @@ const TimeMachineScreen = () => {
 
   const events = useMemo(() => timeline?.events ?? [], [timeline?.events]);
   const year = timeline?.year ?? selectedYear;
+
+  // Load available years on mount for dot indicators + nearby year navigation
+  React.useEffect(() => {
+    fetchAvailableYears().then(setAvailableYears).catch(() => {});
+  }, []);
+
+  // Find nearest available years to the selected year (for empty state navigation)
+  const nearbyYears = useMemo(() => {
+    if (!selectedYear || availableYears.length === 0) return { prev: undefined, next: undefined };
+    const prev = [...availableYears].filter((y) => y < selectedYear).pop();
+    const next = availableYears.find((y) => y > selectedYear);
+    return { prev, next };
+  }, [selectedYear, availableYears]);
 
   // Horizontal scroll state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -207,6 +221,7 @@ const TimeMachineScreen = () => {
             onYearSelect={handleYearSelect}
             onRandomYear={handleRandomYear}
             initialYear={selectedYear ?? 1969}
+            availableYears={availableYears}
           />
         </View>
       </SafeAreaView>
@@ -278,10 +293,37 @@ const TimeMachineScreen = () => {
         {/* Empty State */}
         {!loading && !error && events.length === 0 && (
           <View style={styles.centerContent}>
-            <Text style={styles.emptyTitle}>No events found</Text>
+            <Text style={styles.emptyIcon}>&#128368;</Text>
+            <Text style={styles.emptyTitle}>No events recorded{'\n'}for {selectedYear}</Text>
             <Text style={styles.emptySubtitle}>
-              We don&apos;t have events for {selectedYear} yet.
+              We haven&apos;t curated this year yet.{'\n'}Try a nearby year.
             </Text>
+            {(nearbyYears.prev !== undefined || nearbyYears.next !== undefined) && (
+              <View style={styles.nearbyYearsRow}>
+                {nearbyYears.prev !== undefined && (
+                  <Pressable
+                    onPress={() => handleYearSelect(nearbyYears.prev!)}
+                    style={({ pressed }) => [
+                      styles.nearbyButton,
+                      pressed && styles.retryButtonPressed,
+                    ]}
+                  >
+                    <Text style={styles.nearbyButtonText}>&#8592; {nearbyYears.prev}</Text>
+                  </Pressable>
+                )}
+                {nearbyYears.next !== undefined && (
+                  <Pressable
+                    onPress={() => handleYearSelect(nearbyYears.next!)}
+                    style={({ pressed }) => [
+                      styles.nearbyButton,
+                      pressed && styles.retryButtonPressed,
+                    ]}
+                  >
+                    <Text style={styles.nearbyButtonText}>{nearbyYears.next} &#8594;</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
             <Pressable
               onPress={handleBack}
               style={({ pressed }) => [
@@ -382,18 +424,40 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       color: theme.colors.borderStrong,
       textAlign: 'center',
     },
+    emptyIcon: {
+      fontSize: 40,
+      marginBottom: theme.spacing.md,
+    },
     emptyTitle: {
       fontFamily: sansFamily,
       fontSize: 18,
       fontWeight: '600',
       color: theme.colors.textPrimary,
       textAlign: 'center',
+      lineHeight: 26,
     },
     emptySubtitle: {
       fontFamily: sansFamily,
       fontSize: 14,
       color: theme.colors.textSecondary,
       textAlign: 'center',
+      lineHeight: 20,
+    },
+    nearbyYearsRow: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+    },
+    nearbyButton: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.radius.pill,
+      backgroundColor: theme.colors.accentPrimary,
+    },
+    nearbyButtonText: {
+      fontFamily: sansFamily,
+      fontSize: 15,
+      fontWeight: '600',
+      color: theme.colors.surface,
     },
     retryButton: {
       paddingHorizontal: theme.spacing.xl,

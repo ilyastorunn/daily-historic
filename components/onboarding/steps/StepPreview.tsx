@@ -1,15 +1,21 @@
-import { useEffect, useMemo } from 'react';
-import { Dimensions, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Dimensions, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ImageSource } from 'expo-image';
 
 import { EditorialCard } from '@/components/ui/editorial-card';
 import { PeekCarousel } from '@/components/ui/peek-carousel';
+import { EVENT_LIBRARY, HERO_EVENT_ID } from '@/constants/events';
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
-import { buildWikimediaImageSource } from '@/utils/wikimedia';
 
+import DecorativeIllustration from '../DecorativeIllustration';
 import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
+
+const pyramidsIllustration = require('@/assets/illustrations/pyramids2.png');
+
+// pyramids2.png is 329×70 px
+const PYRAMIDS_ASPECT_RATIO = 329 / 70;
 
 type PreviewCard = {
   id: string;
@@ -20,32 +26,48 @@ type PreviewCard = {
   image: ImageSource;
 };
 
-const previewCards: PreviewCard[] = [
-  {
-    id: 'moon-landing-1969',
-    badge: '1969',
-    title: 'First footsteps on lunar soil',
-    summary: 'Neil Armstrong steps onto the Moon and marks a new chapter for exploration.',
-    meta: 'Sea of Tranquility, NASA Archive',
-    image: buildWikimediaImageSource('File:Neil_Armstrong_pose.jpg'),
-  },
-  {
-    id: 'empire-destruction-1836',
-    badge: '1836',
-    title: 'Empire at the brink',
-    summary: 'Thomas Cole paints the fall of an empire in sweeping colour and detail.',
-    meta: 'New York, Cole Collection',
-    image: buildWikimediaImageSource('File:Thomas_Cole_-_The_Course_of_Empire_Destruction_1836.jpg'),
-  },
-  {
-    id: 'caesar-death-44bc',
-    badge: '44 BC',
-    title: 'A turning point for Rome',
-    summary: 'Julius Caesar is assassinated in the Senate and republic tremors begin.',
-    meta: 'Rome, Curia Pompeia',
-    image: buildWikimediaImageSource('File:Vincenzo_Camuccini_-_Morte_di_Cesare.jpg'),
-  },
-];
+const PREVIEW_EVENT_IDS = [
+  HERO_EVENT_ID,
+  'women-suffrage-usa',
+  'ada-lovelace-analytical',
+  'harlem-renaissance-jazz',
+  'rosetta-stone-decode',
+  'd-day-normandy-landing',
+  'marie-curie-nobel',
+  'rosa-parks-bus-boycott',
+  'magellan-circumnavigation',
+  'dna-structure-discovery',
+] as const;
+
+const mapEventToPreviewCard = (eventId: string): PreviewCard => {
+  const event = EVENT_LIBRARY.find((entry) => entry.id === eventId);
+
+  if (!event) {
+    throw new Error(`StepPreview is missing a configured event: ${eventId}`);
+  }
+
+  return {
+    id: event.id,
+    badge: event.year,
+    title: event.title,
+    summary: event.summary,
+    meta: event.location,
+    image: event.image,
+  };
+};
+
+const previewCardPool = PREVIEW_EVENT_IDS.map(mapEventToPreviewCard);
+
+const pickRandomCards = <T,>(items: readonly T[], count: number): T[] => {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex]!, shuffled[index]!];
+  }
+
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+};
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing } = theme;
@@ -57,7 +79,7 @@ const createStyles = (theme: ThemeDefinition) => {
       flex: 1,
     },
     container: {
-      gap: spacing.lg,
+      gap: spacing.md,
     },
     title: {
       fontFamily: serifFamily,
@@ -79,6 +101,7 @@ const createStyles = (theme: ThemeDefinition) => {
 const StepPreview = (_props: StepComponentProps) => {
   const { updateState } = useOnboardingContext();
   const theme = useAppTheme();
+  const [previewCards] = useState(() => pickRandomCards(previewCardPool, 3));
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
   const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const carouselWidth = useMemo(() => {
@@ -91,34 +114,59 @@ const StepPreview = (_props: StepComponentProps) => {
   }, [updateState]);
 
   return (
-    <ScrollView
-      style={themedStyles.scroll}
-      contentContainerStyle={[onboardingStyles.stackGap, themedStyles.container]}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={themedStyles.title}>A glimpse of today's moment</Text>
-      <Text style={themedStyles.body}>
-        Swipe through editorial cards and feel how Chrono curates a single, focused story each day.
-      </Text>
+    <View style={localStyles.root}>
+      <ScrollView
+        style={themedStyles.scroll}
+        contentContainerStyle={[onboardingStyles.stackGap, themedStyles.container]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={themedStyles.title}>A glimpse of today&apos;s moment</Text>
+        <Text style={themedStyles.body}>
+          Swipe through editorial cards and feel how Chrono curates a single, focused story each day.
+        </Text>
 
-      <PeekCarousel
-        data={previewCards}
-        renderItem={({ item }) => (
-          <EditorialCard
-            badge={item.badge}
-            title={item.title}
-            summary={item.summary}
-            meta={item.meta}
-            imageSource={item.image}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        itemWidth={carouselWidth}
-        gap={0}
-        testID="onboarding-preview-carousel"
-      />
-    </ScrollView>
+        <PeekCarousel
+          data={previewCards}
+          renderItem={({ item }) => (
+            <EditorialCard
+              badge={item.badge}
+              title={item.title}
+              summary={item.summary}
+              meta={item.meta}
+              imageSource={item.image}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          itemWidth={carouselWidth}
+          gap={0}
+          testID="onboarding-preview-carousel"
+        />
+      </ScrollView>
+
+      {/* Pyramids sit flush above the Continue button — no gap */}
+      <View pointerEvents="box-none" style={localStyles.pyramidWrap}>
+        <DecorativeIllustration
+          source={pyramidsIllustration}
+          widthRatio={1}
+          aspectRatio={PYRAMIDS_ASPECT_RATIO}
+        />
+      </View>
+    </View>
   );
 };
+
+const localStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  pyramidWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    // Sit flush against footer: cancel contentWrapper paddingBottom (12) + footer paddingTop (8)
+    bottom: -20,
+    alignItems: 'center',
+  },
+});
 
 export default StepPreview;

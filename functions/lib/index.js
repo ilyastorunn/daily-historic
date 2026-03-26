@@ -33,32 +33,15 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = exports.syncContentEventsToAlgolia = exports.getDb = void 0;
+exports.cleanupUserDataOnDelete = exports.syncContentEventsToAlgolia = exports.getDb = void 0;
 const admin = __importStar(require("firebase-admin"));
-const https_1 = require("firebase-functions/v2/https");
 const content_events_sync_1 = require("./triggers/content-events-sync");
 Object.defineProperty(exports, "syncContentEventsToAlgolia", { enumerable: true, get: function () { return content_events_sync_1.syncContentEventsToAlgolia; } });
+const user_cleanup_1 = require("./triggers/user-cleanup");
+Object.defineProperty(exports, "cleanupUserDataOnDelete", { enumerable: true, get: function () { return user_cleanup_1.cleanupUserDataOnDelete; } });
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 // Get Firestore instance (lazy initialization)
 const getDb = () => admin.firestore();
 exports.getDb = getDb;
-// Export HTTP functions (Gen2 format with built-in CORS)
-exports.api = (0, https_1.onRequest)({
-    cors: true, // Enable CORS for all origins
-    timeoutSeconds: 60,
-    memory: "256MiB",
-}, async (request, response) => {
-    // Deprecated: Explore search now queries Algolia directly from the client.
-    // Keep this route during the rollout window to preserve rollback safety.
-    // Lazy import to avoid top-level initialization issues
-    const { exploreSearch } = await Promise.resolve().then(() => __importStar(require("./api/explore/search")));
-    // Route requests
-    const path = request.path;
-    if (path === "/explore/search") {
-        await exploreSearch(request, response);
-        return;
-    }
-    response.status(404).json({ error: "Not found" });
-});
 //# sourceMappingURL=index.js.map

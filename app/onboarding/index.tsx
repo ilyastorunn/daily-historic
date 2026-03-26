@@ -94,7 +94,7 @@ const steps: StepDefinition[] = [
 
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   const { state, goNext, goBack, goToStep, totalSteps } = useOnboardingContext();
-  const { completeOnboarding } = useUserContext();
+  const { authAccountSelection, authUser, completeOnboarding } = useUserContext();
   const theme = useAppTheme();
   const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
@@ -144,12 +144,13 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
     }
 
     if (state.stepIndex === totalSteps - 1) {
+      const resolvedAccountSelection = state.accountSelection ?? authAccountSelection;
       const onboardingData: OnboardingCompletionData = {
         displayName: state.displayName.trim() || undefined,
-        accountSelection: state.accountSelection,
+        accountSelection: resolvedAccountSelection,
         categories: state.categories,
         categoriesSkipped: state.categoriesSkipped,
-        emailAddress: state.emailAddress ? state.emailAddress : undefined,
+        emailAddress: state.emailAddress || authUser?.email || undefined,
         eras: state.eras,
         heroPreviewSeen: state.heroPreviewSeen,
         notificationEnabled: state.notificationEnabled,
@@ -191,6 +192,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 
   const shouldShowFooter =
     currentStepDef.key !== 'welcome' &&
+    currentStepDef.key !== 'categories' &&
     currentStepDef.key !== 'notification-permission' &&
     currentStepDef.key !== 'account';
 

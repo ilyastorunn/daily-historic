@@ -1,8 +1,9 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { LogBox } from 'react-native';
 import 'react-native-reanimated';
 
 import { UserProvider } from '@/contexts/user-context';
@@ -15,6 +16,14 @@ export const unstable_settings = {
 
 function AppNavigator() {
   const { mode } = useThemeContext();
+
+  useEffect(() => {
+    // Ignore known non-blocking warnings that are noisy during auth/testing flows.
+    LogBox.ignoreLogs([
+      'This method is deprecated (as well as all React Native Firebase namespaced API)',
+      'SafeAreaView has been deprecated and will be removed in a future release.',
+    ]);
+  }, []);
 
   const navigationTheme = useMemo(() => {
     const appTheme = mode === 'dark' ? darkTheme : lightTheme;
@@ -34,6 +43,7 @@ function AppNavigator() {
     <NavigationThemeProvider value={navigationTheme}>
       <Stack initialRouteName="index">
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="event/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="collection/[id]" options={{ headerShown: false }} />

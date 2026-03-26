@@ -1013,8 +1013,12 @@ const ExploreScreen = () => {
     }
 
     paginationFetchingRef.current = false;
-    setSearchResults([]);
     void fetchSearchResults(0, false);
+
+    return () => {
+      searchAbortControllerRef.current?.abort();
+      searchAbortControllerRef.current = null;
+    };
   }, [fetchSearchResults, showResults]);
 
   // Track no results when search/filters yield empty results

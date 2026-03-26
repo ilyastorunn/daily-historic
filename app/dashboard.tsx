@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   Animated,
   Easing,
@@ -20,6 +21,7 @@ import type {
   ImageErrorEventData as RNImageErrorEventData,
   ImageLoadEventData as RNImageLoadEventData,
   NativeSyntheticEvent,
+  ViewToken,
 } from 'react-native';
 
 import type { CategoryOption } from '@/contexts/onboarding-context';
@@ -41,10 +43,6 @@ type EventCard = {
   summary: string;
   location: string;
   imageUri: string;
-};
-
-type ViewableItemsChangedParams = {
-  viewableItems: { item?: EventCard; index?: number }[];
 };
 
 const TIMELINE_OPTIONS: { id: TimelineFilter; label: string }[] = [
@@ -629,6 +627,7 @@ const DashboardScreen = () => {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { width } = useWindowDimensions();
+  const router = useRouter();
 
   const { profile, authUser, signOut } = useUserContext();
   const [activeFilter, setActiveFilter] = useState<TimelineFilter>('today');
@@ -638,6 +637,11 @@ const DashboardScreen = () => {
   const triggerLightHaptic = useCallback(() => {
     void Haptics.selectionAsync().catch(() => undefined);
   }, []);
+
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    router.replace('/');
+  }, [router, signOut]);
 
   useEffect(() => {
     Animated.timing(heroIntro, {
@@ -753,12 +757,15 @@ const DashboardScreen = () => {
     setActiveCardIndex(0);
   }, [activeFilter]);
 
-  const handleViewableItemsChanged = useRef((params: ViewableItemsChangedParams) => {
-    const firstVisible = params.viewableItems.find((item) => item.index !== undefined);
-    if (firstVisible?.index !== undefined) {
-      setActiveCardIndex(firstVisible.index);
+  const handleViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken<EventCard>[] }) => {
+      const firstVisible = viewableItems.find((item) => typeof item.index === 'number');
+
+      if (typeof firstVisible?.index === 'number') {
+        setActiveCardIndex(firstVisible.index);
+      }
     }
-  });
+  );
 
   const keyExtractor = useCallback((item: EventCard) => item.id, []);
 
@@ -779,11 +786,11 @@ const DashboardScreen = () => {
               style={styles.cardImage}
               resizeMode="cover"
               onLoad={(loadEvent: NativeSyntheticEvent<RNImageLoadEventData>) => {
-                const { width, height, url } = loadEvent.nativeEvent?.source ?? {};
+                const { width, height, uri } = loadEvent.nativeEvent?.source ?? {};
                 console.log('[Dashboard] timeline card image loaded', {
                   cardId: item.id,
                   uri: item.imageUri,
-                  resolvedUrl: url,
+                  resolvedUrl: uri,
                   width,
                   height,
                 });
@@ -924,7 +931,7 @@ const DashboardScreen = () => {
             </View>
 
             <Pressable
-              onPress={signOut}
+              onPress={() => void handleSignOut()}
               accessibilityRole="button"
               style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutButtonPressed]}
             >

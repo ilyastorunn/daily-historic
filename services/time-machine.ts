@@ -1,6 +1,6 @@
 import { getImageUri } from '@/utils/image-source';
 import { heroEvent } from '@/constants/events';
-import { firebaseFirestore, query, collection, getDocs, where, limit } from '@/services/firebase';
+import { firebaseFirestore, query, collection, getDocs, where, limit, doc, getDoc } from '@/services/firebase';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getEventImageUri, getEventSummary, getEventTitle } from '@/utils/event-presentation';
 import { fetchWithCache, CachePresets } from '@/services/api-helpers';
@@ -100,6 +100,34 @@ const mapFirestoreEventToTimelineEvent = (doc: FirestoreEventDocument): Timeline
     beforeContext: doc.beforeContext,
     afterContext: doc.afterContext,
   };
+};
+
+/**
+ * Fetch the list of years that have events in Firestore.
+ * Reads from contentMeta/yearIndex (published by check-year-coverage script).
+ * Cached for 24 hours since year coverage changes infrequently.
+ */
+export const fetchAvailableYears = async (): Promise<number[]> => {
+  return fetchWithCache(
+    'available-years',
+    async () => {
+      try {
+        const metaDoc = doc(firebaseFirestore, 'contentMeta', 'yearIndex');
+        const snapshot = await getDoc(metaDoc);
+        if (!snapshot.exists()) {
+          return [];
+        }
+        const data = snapshot.data() as { years?: number[] } | undefined;
+        return Array.isArray(data?.years) ? data.years : [];
+      } catch {
+        return [];
+      }
+    },
+    {
+      ...CachePresets.daily('time-machine'),
+      version: 1,
+    }
+  );
 };
 
 export const fetchTimeMachineTimeline = async (

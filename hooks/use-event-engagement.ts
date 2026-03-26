@@ -101,7 +101,7 @@ export const useEventEngagement = (eventId: string): UseEventEngagementReturn =>
             },
             { merge: true }
           ),
-          setDoc(docRef, { savedEventIds: arrayRemove(eventId) }, { merge: true }),
+          setDoc(docRef, { savedEventIds: arrayUnion(eventId) }, { merge: true }),
         ])
       : Promise.all([
           savedEventDocRef.delete(),
