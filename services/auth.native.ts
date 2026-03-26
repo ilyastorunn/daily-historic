@@ -8,6 +8,7 @@ import { Platform } from 'react-native';
 import { firebaseAuth } from '@/services/firebase';
 
 let googleConfigured = false;
+type LinkResult = 'linked' | 'signedIn';
 
 const assertGuestUser = () => {
   const currentUser = firebaseAuth.currentUser;
@@ -41,6 +42,7 @@ const ensureGoogleConfigured = () => {
   }
 
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
   if (!webClientId) {
     throw new Error(
@@ -50,6 +52,7 @@ const ensureGoogleConfigured = () => {
 
   GoogleSignin.configure({
     webClientId,
+    iosClientId,
     scopes: ['email', 'profile'],
   });
 
@@ -79,6 +82,16 @@ const getGoogleCredential = async () => {
 
   return auth.GoogleAuthProvider.credential(idToken);
 };
+
+const extractAuthErrorCode = (error: unknown) =>
+  typeof error === 'object' && error && 'code' in error
+    ? String((error as { code?: unknown }).code)
+    : '';
+
+const isCredentialCollisionAuthError = (code: string) =>
+  code === 'auth/credential-already-in-use' ||
+  code === 'auth/account-exists-with-different-credential' ||
+  code === 'auth/provider-already-linked';
 
 type AppleSignInPayload = {
   credential: FirebaseAuthTypes.AuthCredential;
@@ -129,16 +142,42 @@ const getAppleCredential = async () => {
   return payload.credential;
 };
 
-export const linkWithGoogleCredential = async () => {
+export const linkWithGoogleCredential = async (): Promise<LinkResult> => {
   const user = assertGuestUser();
   const credential = await getGoogleCredential();
-  await user.linkWithCredential(credential);
+
+  try {
+    await user.linkWithCredential(credential);
+    return 'linked';
+  } catch (error) {
+    const code = extractAuthErrorCode(error);
+
+    if (!isCredentialCollisionAuthError(code)) {
+      throw error;
+    }
+
+    await firebaseAuth.signInWithCredential(credential);
+    return 'signedIn';
+  }
 };
 
-export const linkWithAppleCredential = async () => {
+export const linkWithAppleCredential = async (): Promise<LinkResult> => {
   const user = assertGuestUser();
-  const credential = await getAppleCredential();
-  await user.linkWithCredential(credential);
+  const payload = await getAppleSignInPayload();
+
+  try {
+    await user.linkWithCredential(payload.credential);
+    return 'linked';
+  } catch (error) {
+    const code = extractAuthErrorCode(error);
+
+    if (!isCredentialCollisionAuthError(code)) {
+      throw error;
+    }
+
+    await firebaseAuth.signInWithCredential(payload.credential);
+    return 'signedIn';
+  }
 };
 
 export const linkWithEmailCredential = async (email: string, password: string) => {

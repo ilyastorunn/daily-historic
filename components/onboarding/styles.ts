@@ -699,6 +699,36 @@ const createOnboardingStyles = (theme: ThemeDefinition) => {
     emailSheetForm: {
       gap: spacingScale.md,
     },
+    termsToggle: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacingScale.sm,
+    },
+    termsCheckbox: {
+      width: 20,
+      height: 20,
+      borderRadius: radiusScale.sm,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 2,
+    },
+    termsCheckboxSelected: {
+      borderColor: accentColor,
+      backgroundColor: colors.accentSoft,
+    },
+    termsCheckIcon: {
+      color: accentColor,
+    },
+    termsCopy: {
+      flex: 1,
+      fontSize: 14,
+      lineHeight: 20,
+      color: colors.textSecondary,
+      fontFamily: sansFamily,
+    },
     permissionCard: {
       backgroundColor: colors.surface,
       borderRadius: radiusScale.lg,

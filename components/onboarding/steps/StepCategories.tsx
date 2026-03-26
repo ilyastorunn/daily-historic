@@ -5,8 +5,8 @@ import { type CategoryOption, useOnboardingContext } from '@/contexts/onboarding
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 import DecorativeIllustration from '../DecorativeIllustration';
-import type { StepComponentProps } from '../types';
 import { createOnboardingStyles } from '../styles';
+import type { StepComponentProps } from '../types';
 
 const frenchRevolutionIllustration = require('@/assets/illustrations/FrenchRevolution.png');
 
@@ -28,6 +28,13 @@ interface CategoryChipProps {
   onPress: () => void;
   themedStyles: any;
   theme: ThemeDefinition;
+}
+
+interface CategoriesContinueButtonProps {
+  disabled: boolean;
+  onPress: () => void;
+  buttonStyles: any;
+  themedStyles: any;
 }
 
 const CategoryChip = ({ option, selected, onPress, themedStyles, theme }: CategoryChipProps) => {
@@ -69,6 +76,49 @@ const CategoryChip = ({ option, selected, onPress, themedStyles, theme }: Catego
   );
 };
 
+const CategoriesContinueButton = ({
+  disabled,
+  onPress,
+  buttonStyles,
+  themedStyles,
+}: CategoriesContinueButtonProps) => {
+  return (
+    <View style={themedStyles.ctaSection}>
+      <View style={themedStyles.ctaFamily}>
+        <View pointerEvents="none" style={themedStyles.ctaIllustration}>
+          <DecorativeIllustration
+            source={frenchRevolutionIllustration}
+            widthRatio={0.2}
+            minWidth={82}
+            maxWidth={96}
+            style={themedStyles.ctaIllustrationImage}
+          />
+        </View>
+
+        <Pressable
+          onPress={onPress}
+          disabled={disabled}
+          style={({ pressed }) => [
+            buttonStyles.primaryButton,
+            themedStyles.fullWidthButton,
+            disabled && buttonStyles.primaryButtonDisabled,
+            pressed && !disabled && buttonStyles.primaryButtonPressed,
+          ]}
+        >
+          <Text
+            style={[
+              buttonStyles.primaryButtonText,
+              disabled && buttonStyles.primaryButtonTextDisabled,
+            ]}
+          >
+            Continue
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+};
+
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, mode } = theme;
   const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
@@ -76,11 +126,18 @@ const createStyles = (theme: ThemeDefinition) => {
 
   return StyleSheet.create({
     container: {
-      paddingHorizontal: 20,
-      paddingBottom: spacing.md,
-      gap: spacing.xl,
+      flex: 1,
       position: 'relative',
       overflow: 'visible',
+      paddingHorizontal: 20,
+    },
+    contentArea: {
+      flex: 1,
+      paddingBottom: spacing.lg,
+    },
+    topContent: {
+      gap: spacing.xl,
+      flexShrink: 1,
     },
     header: {
       gap: spacing.sm,
@@ -94,8 +151,26 @@ const createStyles = (theme: ThemeDefinition) => {
       color: colors.textPrimary,
       fontWeight: '400',
     },
-    illustrationScene: {
-      bottom: -74,
+    ctaSection: {
+      width: '100%',
+      marginTop: 'auto',
+    },
+    ctaFamily: {
+      width: '100%',
+      position: 'relative',
+      paddingTop: 66,
+    },
+    ctaIllustration: {
+      width: '100%',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      overflow: 'visible',
+    },
+    ctaIllustrationImage: {
+      marginBottom: -12,
     },
     cardGrid: {
       flexDirection: 'row',
@@ -103,6 +178,7 @@ const createStyles = (theme: ThemeDefinition) => {
       justifyContent: 'center',
       gap: spacing.sm,
       paddingTop: spacing.md,
+      alignContent: 'flex-start',
     },
     card: {
       borderRadius: radius.pill,
@@ -131,14 +207,20 @@ const createStyles = (theme: ThemeDefinition) => {
       fontWeight: '500',
       color: colors.textPrimary,
     },
+    fullWidthButton: {
+      flex: 0,
+      width: '100%',
+    },
   });
 };
 
-const StepCategories = (_props: StepComponentProps) => {
+const StepCategories = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
   const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
+
+  const isNextDisabled = !(state.categories.includes('surprise') || state.categories.length >= 1);
 
   const toggleCategory = (value: CategoryOption) => {
     if (value === 'surprise') {
@@ -154,37 +236,35 @@ const StepCategories = (_props: StepComponentProps) => {
   };
 
   return (
-    <View style={[onboardingStyles.stepScroll, themedStyles.container]}>
-      <View
-        pointerEvents="box-none"
-        style={[onboardingStyles.footerAnchoredScene, themedStyles.illustrationScene]}
-      >
-        <DecorativeIllustration
-          source={frenchRevolutionIllustration}
-          widthRatio={0.42}
-          minWidth={144}
-          maxWidth={188}
+    <View style={themedStyles.container}>
+      <View style={themedStyles.contentArea}>
+        <View style={themedStyles.topContent}>
+          <View style={themedStyles.header}>
+            <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
+          </View>
+
+          <View style={themedStyles.cardGrid}>
+            {categoryOptions.map((option) => {
+              const selected = state.categories.includes(option.value);
+              return (
+                <CategoryChip
+                  key={option.value}
+                  option={option}
+                  selected={selected}
+                  onPress={() => toggleCategory(option.value)}
+                  themedStyles={themedStyles}
+                  theme={theme}
+                />
+              );
+            })}
+          </View>
+        </View>
+        <CategoriesContinueButton
+          buttonStyles={onboardingStyles}
+          disabled={isNextDisabled}
+          onPress={onNext}
+          themedStyles={themedStyles}
         />
-      </View>
-
-      <View style={themedStyles.header}>
-        <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
-      </View>
-
-      <View style={themedStyles.cardGrid}>
-        {categoryOptions.map((option) => {
-          const selected = state.categories.includes(option.value);
-          return (
-            <CategoryChip
-              key={option.value}
-              option={option}
-              selected={selected}
-              onPress={() => toggleCategory(option.value)}
-              themedStyles={themedStyles}
-              theme={theme}
-            />
-          );
-        })}
       </View>
     </View>
   );

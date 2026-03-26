@@ -1,8 +1,10 @@
-export const linkWithGoogleCredential = async () => {
+type LinkResult = 'linked' | 'signedIn';
+
+export const linkWithGoogleCredential = async (): Promise<LinkResult> => {
   throw new Error('Google sign-in is only available in native builds.');
 };
 
-export const linkWithAppleCredential = async () => {
+export const linkWithAppleCredential = async (): Promise<LinkResult> => {
   throw new Error('Apple sign-in is only available in native iOS builds.');
 };
 

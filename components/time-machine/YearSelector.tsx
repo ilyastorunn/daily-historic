@@ -30,12 +30,14 @@ type YearSelectorProps = {
   onYearSelect: (year: number) => void;
   onRandomYear: () => void;
   initialYear?: number;
+  availableYears?: number[];
 };
 
 export const YearSelector: React.FC<YearSelectorProps> = ({
   onYearSelect,
   onRandomYear,
   initialYear = DEFAULT_YEAR,
+  availableYears,
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
@@ -129,6 +131,15 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
     onRandomYear();
   }, [onRandomYear]);
 
+  // Precompute dot positions for available years
+  const availableYearDots = useMemo(() => {
+    if (!availableYears?.length) return [];
+    return availableYears.map((year) => ({
+      year,
+      position: yearToPosition(year),
+    }));
+  }, [availableYears, yearToPosition]);
+
   // Generate tick marks
   const tickMarks = useMemo(() => {
     const ticks: { year: number; isMajor: boolean }[] = [];
@@ -189,6 +200,18 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
 
         {/* Slider Track */}
         <View style={styles.sliderTrack} />
+
+        {/* Available year dots */}
+        {availableYearDots.length > 0 && (
+          <View style={styles.dotsContainer} pointerEvents="none">
+            {availableYearDots.map(({ year, position }) => (
+              <View
+                key={year}
+                style={[styles.dot, { left: position - 1 }]}
+              />
+            ))}
+          </View>
+        )}
 
         {/* Draggable Thumb */}
         <Animated.View
@@ -370,6 +393,20 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 4,
+    },
+    dotsContainer: {
+      position: 'absolute',
+      width: '100%',
+      height: 4,
+      top: 47,
+    },
+    dot: {
+      position: 'absolute',
+      width: 2,
+      height: 4,
+      borderRadius: 1,
+      backgroundColor: theme.colors.accentPrimary,
+      opacity: 0.45,
     },
     labelsContainer: {
       position: 'absolute',

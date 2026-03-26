@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 
-import { colors, styles } from './styles';
+import { useAppTheme } from '@/theme';
+import { createOnboardingStyles } from './styles';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -26,36 +28,41 @@ const OptionRow = ({
   iconSelectedColor,
   onPress,
   variant = 'default',
-}: OptionRowProps) => (
-  <Pressable
-    onPress={onPress}
-    style={({ pressed }) => [
-      styles.socialButton,
-      variant === 'subtle' && styles.socialButtonSubtle,
-      selected && styles.socialButtonSelected,
-      pressed && styles.socialButtonPressed,
-    ]}
-  >
-    {iconName ? (
-      <View style={[styles.socialButtonIcon, selected && styles.socialButtonIconSelected]}>
-        <Ionicons
-          name={iconName}
-          size={20}
-          color={
-            selected
-              ? iconSelectedColor ?? iconColor ?? colors.surface
-              : iconColor ?? colors.textPrimary
-          }
-        />
-      </View>
-    ) : null}
+}: OptionRowProps) => {
+  const theme = useAppTheme();
+  const { colors, styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
-    <View style={styles.socialButtonContent}>
-      <Text style={styles.socialButtonText}>{label}</Text>
-      {subcopy ? <Text style={styles.socialButtonSubcopy}>{subcopy}</Text> : null}
-      {selected && !subcopy ? <Text style={styles.socialButtonSubcopy}>Selected</Text> : null}
-    </View>
-  </Pressable>
-);
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.socialButton,
+        variant === 'subtle' && styles.socialButtonSubtle,
+        selected && styles.socialButtonSelected,
+        pressed && styles.socialButtonPressed,
+      ]}
+    >
+      {iconName ? (
+        <View style={[styles.socialButtonIcon, selected && styles.socialButtonIconSelected]}>
+          <Ionicons
+            name={iconName}
+            size={20}
+            color={
+              selected
+                ? iconSelectedColor ?? iconColor ?? colors.surface
+                : iconColor ?? colors.textPrimary
+            }
+          />
+        </View>
+      ) : null}
+
+      <View style={styles.socialButtonContent}>
+        <Text style={styles.socialButtonText}>{label}</Text>
+        {subcopy ? <Text style={styles.socialButtonSubcopy}>{subcopy}</Text> : null}
+        {selected && !subcopy ? <Text style={styles.socialButtonSubcopy}>Selected</Text> : null}
+      </View>
+    </Pressable>
+  );
+};
 
 export default OptionRow;

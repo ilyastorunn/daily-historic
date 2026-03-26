@@ -103,16 +103,6 @@ const connectedLabels = {
   email: 'Email account is connected',
 };
 
-const extractAuthErrorCode = (error: unknown) =>
-  typeof error === 'object' && error && 'code' in error
-    ? String((error as { code?: unknown }).code)
-    : '';
-
-const isAlreadyLinkedAuthError = (code: string) =>
-  code === 'auth/credential-already-in-use' ||
-  code === 'auth/provider-already-linked' ||
-  code === 'auth/account-exists-with-different-credential';
-
 const StepAccount = ({ onNext }: StepComponentProps) => {
   const theme = useAppTheme();
   const { styles, colors: dynamicColors } = useMemo(() => createOnboardingStyles(theme), [theme]);
@@ -127,8 +117,6 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     linkWithApple,
     linkWithEmail,
     linkWithGoogle,
-    signInWithApple,
-    signInWithGoogle,
   } = useUserContext();
   const router = useRouter();
 
@@ -191,22 +179,17 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     runHaptic();
 
     try {
-      await linkWithGoogle();
-      updateState({ accountSelection: 'google', termsAccepted: true });
-      onNext();
-    } catch (error) {
-      const code = extractAuthErrorCode(error);
+      const result = await linkWithGoogle();
 
-      if (!isAlreadyLinkedAuthError(code)) {
+      if (result === 'signedIn') {
+        router.replace('/');
         return;
       }
 
-      try {
-        await signInWithGoogle();
-        router.replace('/');
-      } catch {
-        // Error text is surfaced from context.
-      }
+      updateState({ accountSelection: 'google', termsAccepted: true });
+      onNext();
+    } catch {
+      // Error text is surfaced from context.
     }
   };
 
@@ -215,22 +198,17 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     runHaptic();
 
     try {
-      await linkWithApple();
-      updateState({ accountSelection: 'apple', termsAccepted: true });
-      onNext();
-    } catch (error) {
-      const code = extractAuthErrorCode(error);
+      const result = await linkWithApple();
 
-      if (!isAlreadyLinkedAuthError(code)) {
+      if (result === 'signedIn') {
+        router.replace('/');
         return;
       }
 
-      try {
-        await signInWithApple();
-        router.replace('/');
-      } catch {
-        // Error text is surfaced from context.
-      }
+      updateState({ accountSelection: 'apple', termsAccepted: true });
+      onNext();
+    } catch {
+      // Error text is surfaced from context.
     }
   };
 

@@ -16,10 +16,44 @@ service cloud.firestore {
       let existingData = resource.data;
 
       // UID cannot be changed
-      return !('uid' in incomingData) || incomingData.uid == request.auth.uid
+      return incomingData.keys().hasOnly([
+          'uid',
+          'displayName',
+          'accountSelection',
+          'emailAddress',
+          'timezone',
+          'categories',
+          'categoriesSkipped',
+          'eras',
+          'notificationEnabled',
+          'notificationTime',
+          'pushPermission',
+          'heroPreviewSeen',
+          'themePreference',
+          'additionalNotes',
+          'onboardingCompleted',
+          'savedEventIds',
+          'likedEventIds',
+          'reactions',
+          'createdAt',
+          'updatedAt'
+        ])
+        && (!('accountSelection' in incomingData)
+          || incomingData.accountSelection == null
+          || incomingData.accountSelection in ['anonymous', 'google', 'apple', 'email'])
+        && (!('pushPermission' in incomingData)
+          || incomingData.pushPermission in ['enabled', 'declined', 'unknown'])
+        && (!('themePreference' in incomingData)
+          || incomingData.themePreference in ['light', 'dark', 'system'])
+        && (!('uid' in incomingData) || incomingData.uid == request.auth.uid)
         // createdAt cannot be changed once set
         && (!('createdAt' in existingData) || !('createdAt' in incomingData) || incomingData.createdAt == existingData.createdAt)
         // Validate data types
+        && (!('displayName' in incomingData) || incomingData.displayName is string)
+        && (!('emailAddress' in incomingData) || incomingData.emailAddress is string)
+        && (!('timezone' in incomingData) || incomingData.timezone is string)
+        && (!('notificationTime' in incomingData) || incomingData.notificationTime is string)
+        && (!('additionalNotes' in incomingData) || incomingData.additionalNotes is string)
         && (!('savedEventIds' in incomingData) || incomingData.savedEventIds is list)
         && (!('likedEventIds' in incomingData) || incomingData.likedEventIds is list)
         && (!('reactions' in incomingData) || incomingData.reactions is map)
@@ -45,6 +79,28 @@ service cloud.firestore {
       // Allow create only for own document with valid initial data
       allow create: if isOwner(userId)
         && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'accountSelection',
+          'emailAddress',
+          'timezone',
+          'categories',
+          'categoriesSkipped',
+          'eras',
+          'notificationEnabled',
+          'notificationTime',
+          'pushPermission',
+          'heroPreviewSeen',
+          'themePreference',
+          'additionalNotes',
+          'onboardingCompleted',
+          'savedEventIds',
+          'likedEventIds',
+          'reactions',
+          'createdAt',
+          'updatedAt'
+        ])
         && request.resource.data.keys().hasAll(['uid', 'onboardingCompleted']);
 
       // Allow update only for own document with validation

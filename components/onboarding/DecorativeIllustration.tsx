@@ -66,7 +66,6 @@ const DecorativeIllustration = ({
   return (
     <Image
       accessible={false}
-      pointerEvents="none"
       resizeMode="contain"
       source={source}
       style={[

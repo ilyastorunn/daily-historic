@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
@@ -24,7 +23,7 @@ const localStyles = StyleSheet.create({
     gap: spacingScale.md,
   },
   illustrationScene: {
-    minHeight: 176,
+    minHeight: 93,
     marginBottom: -spacingScale.sm,
   },
   linkButton: {
@@ -41,7 +40,7 @@ const localStyles = StyleSheet.create({
 const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
-  const { styles, accentColor } = useMemo(() => createOnboardingStyles(theme), [theme]);
+  const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
   const handleEnable = () => {
     updateState({
@@ -67,43 +66,15 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
           <Text style={styles.stepTitle}>Stay in sync with gentle reminders</Text>
           <Text style={styles.sectionCopy}>We send one handpicked moment each day. Quiet, useful, and always on your schedule.</Text>
         </View>
-
-        <View style={styles.permissionCard}>
-          <View style={styles.permissionCardHeader}>
-            <View style={styles.permissionBadge}>
-              <Ionicons color={accentColor} name="notifications-outline" size={22} />
-            </View>
-            <View style={styles.permissionHeaderText}>
-              <Text style={styles.permissionAppName}>Daily Historic</Text>
-              <Text style={styles.permissionMeta}>One calm reminder, once a day</Text>
-            </View>
-          </View>
-
-          <View style={styles.permissionCardContent}>
-            <Text style={styles.permissionTitle}>Get a gentle nudge when today&apos;s moment is ready</Text>
-            <Text style={styles.permissionHint}>Choose a time once, then adjust or pause reminders whenever you like from settings.</Text>
-          </View>
-
-          <View style={styles.permissionBulletList}>
-            <View style={styles.permissionBulletRow}>
-              <View style={styles.permissionBulletDot} />
-              <Text style={styles.permissionBulletText}>Delivered at the time you pick next.</Text>
-            </View>
-            <View style={styles.permissionBulletRow}>
-              <View style={styles.permissionBulletDot} />
-              <Text style={styles.permissionBulletText}>Easy to pause or change later.</Text>
-            </View>
-          </View>
-        </View>
       </View>
 
       <View style={localStyles.actions}>
         <View pointerEvents="box-none" style={[styles.inlineActionScene, localStyles.illustrationScene]}>
           <DecorativeIllustration
             source={newtonIllustration}
-            widthRatio={0.4}
-            minWidth={148}
-            maxWidth={188}
+            widthRatio={0.22}
+            minWidth={80}
+            maxWidth={93}
           />
           <DecorativeIllustration
             source={appleIllustration}

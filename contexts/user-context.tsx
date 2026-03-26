@@ -35,6 +35,7 @@ import {
 import type { OnboardingData, UserDocument, UserProfile } from '@/types/user';
 
 type OnboardingCompletionData = OnboardingData;
+type LinkResult = 'linked' | 'signedIn';
 
 type UserContextValue = {
   authUser: FirebaseAuthTypes.User | null;
@@ -48,8 +49,8 @@ type UserContextValue = {
   error: Error | null;
   clearAuthError: () => void;
   completeOnboarding: (data: OnboardingCompletionData) => Promise<void>;
-  linkWithGoogle: () => Promise<void>;
-  linkWithApple: () => Promise<void>;
+  linkWithGoogle: () => Promise<LinkResult>;
+  linkWithApple: () => Promise<LinkResult>;
   linkWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
@@ -100,11 +101,13 @@ const createAuthFlowError = (code: string, message: string) => {
   return error;
 };
 
+const extractAuthErrorCode = (authError: unknown) =>
+  typeof authError === 'object' && authError && 'code' in authError
+    ? String((authError as { code?: unknown }).code)
+    : '';
+
 const formatAuthErrorMessage = (authError: unknown) => {
-  const code =
-    typeof authError === 'object' && authError && 'code' in authError
-      ? String((authError as { code?: unknown }).code)
-      : '';
+  const code = extractAuthErrorCode(authError);
 
   switch (code) {
     case 'auth/account-exists-with-different-credential':
@@ -248,7 +251,10 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       setError(null);
       return result;
     } catch (actionError) {
-      console.error('Authentication action failed', actionError);
+      const authErrorCode = extractAuthErrorCode(actionError);
+      console.error('Authentication action failed', {
+        code: authErrorCode || 'unknown',
+      });
       setAuthError(formatAuthErrorMessage(actionError));
       throw actionError;
     } finally {
@@ -495,14 +501,14 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   );
 
   const linkWithGoogle = useCallback(async () => {
-    await runAuthAction(async () => {
-      await linkWithGoogleCredential();
+    return runAuthAction(async () => {
+      return linkWithGoogleCredential();
     });
   }, [runAuthAction]);
 
   const linkWithApple = useCallback(async () => {
-    await runAuthAction(async () => {
-      await linkWithAppleCredential();
+    return runAuthAction(async () => {
+      return linkWithAppleCredential();
     });
   }, [runAuthAction]);
 

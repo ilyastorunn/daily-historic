@@ -1,11 +1,12 @@
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { useMemo } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
+import { useUserContext } from '@/contexts/user-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 const ICON_MAP: Record<string, IconSymbolName> = {
@@ -18,7 +19,7 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { spacing, colors, mode } = theme;
+  const { spacing, colors } = theme;
   const bottomInset = Math.max(insets.bottom, spacing.sm);
 
   return (
@@ -28,10 +29,8 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
           const isFocused = state.index === index;
           const descriptor = descriptors[route.key];
           const options = descriptor.options;
-          const label =
-            options.tabBarLabel ??
-            options.title ??
-            route.name.charAt(0).toUpperCase() + route.name.slice(1);
+          const fallbackLabel = options.title ?? route.name.charAt(0).toUpperCase() + route.name.slice(1);
+          const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : fallbackLabel;
           const iconName = ICON_MAP[route.name] ?? 'house.fill';
 
           const onPress = () => {
@@ -65,7 +64,6 @@ function BottomDock({ state, descriptors, navigation }: BottomTabBarProps) {
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : undefined}
               accessibilityLabel={`${label}, tab ${index + 1} of ${state.routes.length}${isFocused ? ', selected' : ''}`}
-              testID={options.tabBarTestID}
               onPress={onPress}
               onPressIn={handlePressIn}
               onLongPress={onLongPress}
@@ -151,6 +149,20 @@ const createStyles = (theme: ThemeDefinition) => {
 };
 
 export default function TabLayout() {
+  const { initializing, onboardingCompleted } = useUserContext();
+
+  if (initializing) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (!onboardingCompleted) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
