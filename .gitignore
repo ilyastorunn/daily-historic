@@ -41,6 +41,13 @@ yarn-error.*
 .env*.local
 functions/.env
 functions/.env.local
+.dev.vars
+.mcp.json
+
+# local agent/tooling state
+.claude/settings.local.json
+.claude/app-store-review-agent/
+.claude/asc-skills/
 
 # typescript
 *.tsbuildinfo
