@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useUserContext } from '@/contexts/user-context';
 import { useAppTheme } from '@/theme';
@@ -76,27 +76,53 @@ const createLocalStyles = () =>
 
 export default function SignInScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    returnToStep?: string | string[];
+    displayName?: string | string[];
+  }>();
   const theme = useAppTheme();
   const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const localStyles = useMemo(() => createLocalStyles(), []);
   const {
     authBusy,
     authError,
-    authUser,
     clearAuthError,
-    initializing,
     signInWithApple,
     signInWithEmail,
     signInWithGoogle,
   } = useUserContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const returnToStep = Array.isArray(params.returnToStep)
+    ? params.returnToStep[0]
+    : params.returnToStep;
+  const displayName = Array.isArray(params.displayName)
+    ? params.displayName[0]
+    : params.displayName;
 
-  useEffect(() => {
-    if (!initializing && authUser && !authUser.isAnonymous) {
-      router.replace('/');
+  const handleSuccessfulSignIn = () => {
+    router.replace('/');
+  };
+
+  const handleBackToOnboarding = () => {
+    if (returnToStep) {
+      router.replace({
+        pathname: '/onboarding',
+        params: {
+          step: returnToStep,
+          ...(displayName ? { displayName } : {}),
+        },
+      });
+      return;
     }
-  }, [authUser, initializing, router]);
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/onboarding');
+  };
 
   const emailSubmitDisabled = authBusy || !isValidEmail(email) || password.length === 0;
 
@@ -110,6 +136,7 @@ export default function SignInScreen() {
 
     try {
       await signInWithGoogle();
+      handleSuccessfulSignIn();
     } catch {
       // Error state is shown from context.
     }
@@ -121,6 +148,7 @@ export default function SignInScreen() {
 
     try {
       await signInWithApple();
+      handleSuccessfulSignIn();
     } catch {
       // Error state is shown from context.
     }
@@ -136,6 +164,7 @@ export default function SignInScreen() {
 
     try {
       await signInWithEmail(email.trim(), password);
+      handleSuccessfulSignIn();
     } catch {
       // Error state is shown from context.
     }
@@ -156,7 +185,7 @@ export default function SignInScreen() {
             <View style={styles.headerTop}>
               <Pressable
                 accessibilityLabel="Back to onboarding"
-                onPress={() => router.replace('/onboarding')}
+                onPress={handleBackToOnboarding}
                 style={({ pressed }) => [
                   styles.headerBackButton,
                   pressed && styles.headerBackButtonPressed,
@@ -274,7 +303,7 @@ export default function SignInScreen() {
 
             <View style={localStyles.footerRow}>
               <Text style={{ color: theme.colors.textSecondary }}>Need a new account?</Text>
-              <Pressable accessibilityRole="button" onPress={() => router.replace('/onboarding')}>
+              <Pressable accessibilityRole="button" onPress={handleBackToOnboarding}>
                 <Text style={styles.accountLegalLink}>Continue onboarding</Text>
               </Pressable>
             </View>
