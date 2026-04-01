@@ -42,7 +42,13 @@ export const loadMediaCache = async (
 ): Promise<MediaCacheState> => {
   try {
     const raw = await readFile(cachePath, 'utf-8');
-    const parsed = JSON.parse(raw) as MediaCacheFile;
+    let parsed: MediaCacheFile;
+    try {
+      parsed = JSON.parse(raw) as MediaCacheFile;
+    } catch (parseError) {
+      logDebug(`Media cache is corrupted, resetting ${cachePath}: ${(parseError as Error).message}`);
+      return { path: cachePath, entries: new Map(), dirty: true };
+    }
 
     if (parsed.version !== CACHE_VERSION || !parsed.entries) {
       logDebug(`Media cache version mismatch, resetting ${cachePath}`);

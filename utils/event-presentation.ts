@@ -2,6 +2,7 @@ import type { ImageSource } from 'expo-image';
 
 import { formatCategoryLabel, formatEraLabel } from '@/constants/personalization';
 import type { FirestoreEventDocument, FirestoreRelatedPage } from '@/types/events';
+import { getPreferredEventTitle, selectPreferredRelatedPage } from '@/utils/event-primary-page';
 import { createImageSource } from '@/utils/wikimedia-image-source';
 
 const decodeHtmlEntities = (text: string): string => {
@@ -60,7 +61,7 @@ export const selectPrimaryPage = (event: FirestoreEventDocument): FirestoreRelat
   if (!Array.isArray(pages) || pages.length === 0) {
     return undefined;
   }
-  return pages.find((page) => page.selectedMedia?.sourceUrl) ?? pages[0];
+  return selectPreferredRelatedPage(pages, event.summary ?? event.text);
 };
 
 export const getEventImageUri = (event: FirestoreEventDocument) => {
@@ -88,10 +89,8 @@ export const getEventImageSource = (event: FirestoreEventDocument): ImageSource 
 };
 
 export const getEventTitle = (event: FirestoreEventDocument) => {
-  const primaryPage = selectPrimaryPage(event);
   return (
-    stripHtmlTags(primaryPage?.displayTitle) ??
-    stripHtmlTags(primaryPage?.canonicalTitle) ??
+    stripHtmlTags(getPreferredEventTitle(event.relatedPages, event.summary ?? event.text)) ??
     stripHtmlTags(event.summary) ??
     stripHtmlTags(event.text) ??
     'Historic spotlight'

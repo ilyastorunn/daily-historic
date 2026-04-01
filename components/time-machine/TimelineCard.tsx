@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 
 import { useAppTheme } from '@/theme';
 import { categoryLabelFromId } from '@/utils/categories';
+import { createImageSource } from '@/utils/wikimedia-image-source';
 
 export type TimelineCardProps = {
   id: string;
@@ -16,10 +17,33 @@ export type TimelineCardProps = {
   footerLabel?: string;
 };
 
+const formatBadge = (dateISO?: string) => {
+  if (!dateISO) {
+    return null;
+  }
+
+  const exactDateMatch = /^-?\d{4,}-(\d{2})-(\d{2})$/.exec(dateISO);
+  if (exactDateMatch) {
+    const month = Number.parseInt(exactDateMatch[1], 10);
+    const day = Number.parseInt(exactDateMatch[2], 10);
+    const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(
+      new Date(Date.UTC(2020, month - 1, day))
+    );
+    return `${monthLabel} ${day}`;
+  }
+
+  if (/^-?\d{4,}$/.test(dateISO)) {
+    return dateISO;
+  }
+
+  return dateISO;
+};
+
 export const TimelineCard = memo(
   ({ id, title, summary, imageUrl, dateISO, categoryId, footerLabel, onPress }: TimelineCardProps) => {
   const theme = useAppTheme();
-  const styles = getStyles(theme);
+  const styles = buildStyles(theme);
+  const badge = formatBadge(dateISO);
 
   const handlePress = () => {
     onPress?.(id);
@@ -27,14 +51,14 @@ export const TimelineCard = memo(
 
   return (
     <Pressable accessibilityRole="button" onPress={handlePress} style={styles.card}>
-      {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" /> : null}
+      {imageUrl ? <Image source={createImageSource(imageUrl)} style={styles.image} contentFit="cover" /> : null}
       <View style={styles.body}>
-        {dateISO ? (
+        {badge ? (
           <View style={styles.yearBadge}>
-            <Text style={styles.yearText}>{dateISO}</Text>
+            <Text style={styles.yearText}>{badge}</Text>
           </View>
         ) : null}
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title} numberOfLines={2}>{title}</Text>
         <Text style={styles.summary} numberOfLines={3}>
           {summary}
         </Text>
@@ -48,75 +72,69 @@ export const TimelineCard = memo(
 
 TimelineCard.displayName = 'TimelineCard';
 
-const getStyles = (() => {
-  let cachedTheme: ReturnType<typeof useAppTheme> | null = null;
-  let cachedStyles: ReturnType<typeof StyleSheet.create> | null = null;
-  return (theme: ReturnType<typeof useAppTheme>) => {
-    if (cachedTheme === theme && cachedStyles) {
-      return cachedStyles;
-    }
-    const styles = StyleSheet.create({
-      card: {
-        borderRadius: 16, // r-md per NorthStar
-        overflow: 'hidden',
-        backgroundColor: theme.colors.surface,
-        shadowColor: theme.colors.shadowColor,
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 1,
-        shadowRadius: 32,
-        elevation: 2,
-      },
-      image: {
-        width: '100%',
-        height: 200,
-        backgroundColor: theme.colors.surfaceSubtle,
-      },
-      body: {
-        padding: theme.spacing.md,
-        gap: theme.spacing.sm,
-      },
-      yearBadge: {
-        alignSelf: 'flex-start',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: theme.radius.pill,
-        borderWidth: 1,
-        borderColor: theme.colors.accentPrimary,
-        backgroundColor: theme.colors.accentSoft,
-      },
-      yearText: {
-        fontFamily: 'System',
-        fontSize: 12,
-        fontWeight: '600',
-        color: theme.colors.accentPrimary,
-        textTransform: 'uppercase',
-      },
-      title: {
-        fontFamily: 'serif', // Serif for editorial feel
-        fontSize: 20,
-        lineHeight: 26,
-        fontWeight: '600',
-        color: theme.colors.textPrimary,
-      },
-      summary: {
-        fontFamily: 'System',
-        fontSize: 14,
-        lineHeight: 20,
-        color: theme.colors.textSecondary,
-      },
-      meta: {
-        fontFamily: 'System',
-        fontSize: 12,
-        color: theme.colors.textTertiary,
-      },
-      footer: {
-        fontFamily: 'System',
-        fontSize: 12,
-        color: theme.colors.textSecondary,
-      },
-    });
-    cachedTheme = theme;
-    cachedStyles = styles;
-    return styles;
-  };
-})();
+const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      borderRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.surface,
+      shadowColor: theme.colors.shadowColor,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
+      elevation: 3,
+      minHeight: 154,
+    },
+    image: {
+      width: 118,
+      height: 154,
+      backgroundColor: theme.colors.surfaceSubtle,
+    },
+    body: {
+      flex: 1,
+      padding: theme.spacing.lg,
+      gap: theme.spacing.sm,
+    },
+    yearBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: theme.radius.pill,
+      borderWidth: 1,
+      borderColor: theme.colors.accentPrimary,
+      backgroundColor: theme.colors.accentSoft,
+    },
+    yearText: {
+      fontFamily: 'System',
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.accentPrimary,
+      textTransform: 'uppercase',
+    },
+    title: {
+      fontFamily: 'serif',
+      fontSize: 21,
+      lineHeight: 27,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+    },
+    summary: {
+      fontFamily: 'System',
+      fontSize: 14,
+      lineHeight: 20,
+      color: theme.colors.textSecondary,
+    },
+    meta: {
+      fontFamily: 'System',
+      fontSize: 12,
+      color: theme.colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    footer: {
+      fontFamily: 'System',
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+    },
+  });

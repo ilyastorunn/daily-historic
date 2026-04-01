@@ -122,6 +122,18 @@ service cloud.firestore {
       allow write: if false; // Only server-side ingestion can write
     }
 
+    // Time Machine year aggregates - readable by all authenticated users
+    match /timeMachineYears/{yearId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server-side ingestion can write
+    }
+
+    // Content metadata - readable by all authenticated users
+    match /contentMeta/{documentId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server-side ingestion can write
+    }
+
     // Daily digests - readable by all authenticated users
     match /dailyDigests/{digestId} {
       allow read: if isAuthenticated();

@@ -46,6 +46,7 @@ const enrichmentSchema = z
 
 const eventSchema = z.object({
   eventId: z.string().min(1),
+  canonicalKey: z.string().min(1),
   year: z.number().int().optional(),
   text: z.string().min(1),
   summary: z.string().min(1),
@@ -56,18 +57,33 @@ const eventSchema = z.object({
     month: z.number().int().min(1).max(12),
     day: z.number().int().min(1).max(31),
   }),
+  dateISO: z.string().regex(/^-?\d{4,}-\d{2}-\d{2}$/),
   relatedPages: z.array(relatedPageSchema).min(1),
   source: z.object({
     provider: z.literal('wikimedia'),
-    feed: z.literal('onthisday'),
+    feed: z.enum(['onthisday', 'year-page']),
     rawType: z.string().min(1),
     capturedAt: z.string().min(1),
     sourceDate: z.string().min(1),
     payloadCacheKey: z.string().min(1),
+    pageTitle: z.string().optional(),
+    revisionId: z.number().int().optional(),
   }),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
   enrichment: enrichmentSchema,
+  timeMachine: z.object({
+    eligible: z.boolean(),
+    sourceType: z.enum(['wikipedia-year-page', 'on-this-day-selected']),
+    sourceTypes: z.array(z.enum(['wikipedia-year-page', 'on-this-day-selected'])).optional(),
+    sourceKey: z.string().min(1),
+    parserVersion: z.string().min(1),
+    importanceScore: z.number().optional(),
+    qualityFlags: z.array(z.string()),
+    lastAggregatedAt: z.string().optional(),
+    featured: z.boolean().optional(),
+    generatedAt: z.string().optional(),
+  }),
 });
 
 const digestSchema = z.object({

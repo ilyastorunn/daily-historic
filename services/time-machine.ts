@@ -1,207 +1,179 @@
-import { getImageUri } from '@/utils/image-source';
-import { heroEvent } from '@/constants/events';
-import { firebaseFirestore, query, collection, getDocs, where, limit, doc, getDoc } from '@/services/firebase';
-import type { FirestoreEventDocument } from '@/types/events';
-import { getEventImageUri, getEventSummary, getEventTitle } from '@/utils/event-presentation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { fetchEventsByIds } from '@/services/content';
+import {
+  TIME_MACHINE_YEARS_COLLECTION,
+  doc,
+  firebaseFirestore,
+  getDoc,
+} from '@/services/firebase';
 import { fetchWithCache, CachePresets } from '@/services/api-helpers';
+import type { FirestoreEventDocument } from '@/types/events';
+import type { TimeMachineTimelineEvent, TimeMachineYearDocument, TimeMachineYearResponse } from '@/types/time-machine';
+import {
+  TIME_MACHINE_HIGHLIGHT_LIMIT,
+  TIME_MACHINE_LAST_YEAR_STORAGE_KEY,
+  clampTimeMachineYear,
+  buildTimeMachineSections,
+  buildTimeMachineYearAggregate,
+  isValidTimeMachineYear,
+} from '@/utils/time-machine';
 import { CacheKeys } from '@/utils/cache-keys';
+import { getEventImageUri, getEventSummary, getEventTitle } from '@/utils/event-presentation';
 
-// Security: Limit max events per year to prevent unbounded queries
-const MAX_EVENTS_PER_YEAR = 100;
-
-// Security: Valid year range to prevent abuse
-const MIN_VALID_YEAR = 1800;
-const MAX_VALID_YEAR = new Date().getFullYear();
-
-// Security: Validate year input
-export const isValidYear = (year: unknown): year is number => {
-  return (
-    typeof year === 'number' &&
-    Number.isFinite(year) &&
-    Number.isInteger(year) &&
-    year >= MIN_VALID_YEAR &&
-    year <= MAX_VALID_YEAR
-  );
-};
-
-export type TimeMachineSeedResponse = {
-  year: number;
-};
-
-export type TimelineEvent = {
-  id: string;
-  title: string;
-  summary: string;
-  imageUrl?: string;
-  dateISO?: string;
-  categoryId?: string;
-  beforeContext?: string;
-  afterContext?: string;
-};
-
-export type TimeMachineTimelineResponse = {
-  year: number;
-  events: TimelineEvent[];
-  before?: TimelineEvent[];
-  after?: TimelineEvent[];
-};
-
-const TIME_MACHINE_BASE_URL = 'https://api.example.com/time-machine';
-
-const buildUrl = (path: string, params?: Record<string, string | number | undefined>) => {
-  const url = new URL(path, TIME_MACHINE_BASE_URL);
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.append(key, String(value));
-      }
-    });
-  }
-  return url.toString();
-};
-
-const fetchJson = async <T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> => {
-  const response = await fetch(input, init);
-  if (!response.ok) {
-    throw new Error(`Time Machine request failed (${response.status})`);
-  }
-  return (await response.json()) as T;
-};
-
-// Featured years with enriched content (Phase 1)
-const FEATURED_YEARS = [2013, 1991, 1987, 1943, 1944];
-
-export const fetchTimeMachineSeed = async (): Promise<TimeMachineSeedResponse> => {
-  // Phase 1: Return random featured year directly (no API call)
-  const randomIndex = Math.floor(Math.random() * FEATURED_YEARS.length);
-  return { year: FEATURED_YEARS[randomIndex] };
-};
-
-const mapFirestoreEventToTimelineEvent = (doc: FirestoreEventDocument): TimelineEvent => {
-  let imageUrl: string | undefined;
-
-  try {
-    imageUrl = getEventImageUri(doc);
-  } catch (error) {
-    // Try direct access to relatedPages as fallback
-    const relatedPages = doc.relatedPages;
-    if (Array.isArray(relatedPages) && relatedPages.length > 0) {
-      imageUrl = relatedPages[0]?.selectedMedia?.sourceUrl;
-    }
-  }
-
+const mapFirestoreEventToAggregateInput = (event: FirestoreEventDocument) => {
   return {
-    id: doc.eventId,
-    title: getEventTitle(doc),
-    summary: getEventSummary(doc),
-    imageUrl,
-    dateISO: doc.dateISO,
-    categoryId: doc.categories?.[0],
-    beforeContext: doc.beforeContext,
-    afterContext: doc.afterContext,
+    eventId: event.eventId,
+    year: event.year,
+    title: getEventTitle(event),
+    summary: getEventSummary(event),
+    categories: Array.isArray(event.categories) ? event.categories : [],
+    date: event.date,
+    dateISO: event.dateISO,
+    imageUrl: getEventImageUri(event),
+    beforeContext: event.beforeContext,
+    afterContext: event.afterContext,
+    pageCount: Array.isArray(event.relatedPages) ? event.relatedPages.length : 0,
+    existingImportanceScore: event.timeMachine?.importanceScore,
   };
 };
 
-/**
- * Fetch the list of years that have events in Firestore.
- * Reads from contentMeta/yearIndex (published by check-year-coverage script).
- * Cached for 24 hours since year coverage changes infrequently.
- */
-export const fetchAvailableYears = async (): Promise<number[]> => {
-  return fetchWithCache(
-    'available-years',
-    async () => {
-      try {
-        const metaDoc = doc(firebaseFirestore, 'contentMeta', 'yearIndex');
-        const snapshot = await getDoc(metaDoc);
-        if (!snapshot.exists()) {
-          return [];
-        }
-        const data = snapshot.data() as { years?: number[] } | undefined;
-        return Array.isArray(data?.years) ? data.years : [];
-      } catch {
-        return [];
-      }
-    },
+const buildResponseFromEvents = (
+  year: number,
+  events: FirestoreEventDocument[],
+  aggregateDoc?: Partial<TimeMachineYearDocument> | null
+): TimeMachineYearResponse => {
+  const aggregate = buildTimeMachineYearAggregate(
+    year,
+    events.map(mapFirestoreEventToAggregateInput),
     {
-      ...CachePresets.daily('time-machine'),
-      version: 1,
+      existingSummary: aggregateDoc?.summary,
+      summarySource: aggregateDoc?.summarySource,
+      generatedAt: aggregateDoc?.generatedAt,
+      contentVersion: aggregateDoc?.contentVersion,
+      highlightLimit:
+        aggregateDoc?.highlightEventIds?.length && aggregateDoc.highlightEventIds.length > 0
+          ? aggregateDoc.highlightEventIds.length
+          : TIME_MACHINE_HIGHLIGHT_LIMIT,
     }
   );
+
+  const allEventIds = new Set(aggregate.events.map((event) => event.id));
+  const preferredHighlightIds = (aggregateDoc?.highlightEventIds ?? []).filter((eventId) => allEventIds.has(eventId));
+  const highlightIds = preferredHighlightIds.length > 0 ? preferredHighlightIds : aggregate.document.highlightEventIds;
+  const preferredHero =
+    aggregateDoc?.heroEventId && allEventIds.has(aggregateDoc.heroEventId)
+      ? aggregate.events.find((event) => event.id === aggregateDoc.heroEventId) ?? null
+      : aggregate.hero;
+
+  const sections = buildTimeMachineSections(aggregate.events, highlightIds);
+  const overflowCount = Math.max(aggregate.events.length - highlightIds.length, 0);
+
+  return {
+    year,
+    summary: aggregateDoc?.summary?.trim() || aggregate.document.summary,
+    publishState: aggregateDoc?.publishState ?? aggregate.document.publishState,
+    qualityFlags: aggregateDoc?.qualityFlags ?? aggregate.document.qualityFlags,
+    stats: {
+      ...aggregate.stats,
+      highlightedEventCount: highlightIds.length,
+    },
+    hero: preferredHero,
+    sections,
+    overflowCount,
+  };
 };
 
-export const fetchTimeMachineTimeline = async (
+const hydrateYearAggregateResponse = async (
   year: number,
-  options: { categories?: string; forceRefresh?: boolean } = {}
-): Promise<TimeMachineTimelineResponse> => {
-  // Security: Validate year input to prevent injection/abuse
-  if (!isValidYear(year)) {
-    throw new Error(`Invalid year: ${year}. Must be between ${MIN_VALID_YEAR} and ${MAX_VALID_YEAR}`);
+  aggregateDoc: TimeMachineYearDocument
+): Promise<TimeMachineYearResponse> => {
+  const referencedIds = Array.from(
+    new Set([
+      ...(aggregateDoc.heroEventId ? [aggregateDoc.heroEventId] : []),
+      ...aggregateDoc.highlightEventIds,
+      ...aggregateDoc.overflowEventIds,
+    ])
+  );
+
+  const referencedEvents = referencedIds.length > 0 ? await fetchEventsByIds(referencedIds) : [];
+
+  if (referencedEvents.length > 0) {
+    return buildResponseFromEvents(year, referencedEvents, aggregateDoc);
   }
 
-  const cacheKey = CacheKeys.timeMachine.timeline(year, options.categories);
+  return {
+    year,
+    summary: aggregateDoc.summary,
+    publishState: aggregateDoc.publishState,
+    qualityFlags: aggregateDoc.qualityFlags,
+    stats: {
+      eventCount: aggregateDoc.eventCount,
+      populatedMonthCount: aggregateDoc.populatedMonths.length,
+      categoryCount: 0,
+      highlightedEventCount: aggregateDoc.highlightEventIds.length,
+    },
+    hero: null,
+    sections: [],
+    overflowCount: aggregateDoc.overflowEventIds.length,
+  };
+};
+
+const fetchAggregateDocument = async (year: number) => {
+  const aggregateRef = doc(firebaseFirestore, TIME_MACHINE_YEARS_COLLECTION, String(year));
+  const snapshot = await getDoc(aggregateRef);
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data() as TimeMachineYearDocument | undefined;
+  return data ?? null;
+};
+
+export const fetchTimeMachineYear = async (
+  year: number,
+  options: { forceRefresh?: boolean } = {}
+): Promise<TimeMachineYearResponse> => {
+  if (!isValidTimeMachineYear(year)) {
+    throw new Error(`Invalid year: ${year}`);
+  }
 
   return fetchWithCache(
-    cacheKey,
+    CacheKeys.timeMachine.year(year),
     async () => {
-      try {
-        // Fetch events from Firestore for the specified year (optimized with where clause + limit)
-        const eventsCollection = collection(firebaseFirestore, 'contentEvents');
-        const eventsQuery = query(
-          eventsCollection,
-          where('year', '==', year),
-          limit(MAX_EVENTS_PER_YEAR)
-        );
-        const eventsSnapshot = await getDocs(eventsQuery);
+      const aggregateDoc = await fetchAggregateDocument(year);
 
-        const yearEvents: FirestoreEventDocument[] = [];
-        eventsSnapshot.forEach((doc: any) => {
-          yearEvents.push(doc.data() as FirestoreEventDocument);
-        });
-
-        // Sort by dateISO chronologically
-        yearEvents.sort((a, b) => {
-          const dateA = a.dateISO || '1900-01-01';
-          const dateB = b.dateISO || '1900-01-01';
-          return dateA.localeCompare(dateB);
-        });
-
-        if (yearEvents.length === 0) {
-          throw new Error(`No events found for year ${year}`);
-        }
-
-        // Map to TimelineEvent format
-        const events = yearEvents.map(mapFirestoreEventToTimelineEvent);
-
-        return {
-          year,
-          events,
-          before: [], // Will be implemented in Phase 2
-          after: [], // Will be implemented in Phase 2
-        };
-      } catch (error) {
-        // Fallback to heroEvent (1969 Moon Landing)
-        return {
-          year,
-          events: [
-            {
-              id: heroEvent.id,
-              title: heroEvent.title,
-              summary: heroEvent.summary,
-              imageUrl: getImageUri(heroEvent.image) ?? undefined,
-              dateISO: heroEvent.date,
-              categoryId: heroEvent.categories?.[0],
-            },
-          ],
-          before: [],
-          after: [],
-        };
+      if (!aggregateDoc) {
+        throw new Error(`Time Machine aggregate is missing for year ${year}`);
       }
+
+      return hydrateYearAggregateResponse(year, aggregateDoc);
     },
     {
-      ...CachePresets.shortLived('time-machine'), // 6 hours TTL
-      version: 1,
-      forceRefresh: options.forceRefresh || false,
+      ...CachePresets.static('time-machine'),
+      version: 2,
+      forceRefresh: options.forceRefresh ?? false,
     }
   );
 };
+
+export const saveLastVisitedTimeMachineYear = async (year: number) => {
+  if (!isValidTimeMachineYear(year)) {
+    return;
+  }
+
+  await AsyncStorage.setItem(TIME_MACHINE_LAST_YEAR_STORAGE_KEY, String(year));
+};
+
+export const getLastVisitedTimeMachineYear = async () => {
+  const raw = await AsyncStorage.getItem(TIME_MACHINE_LAST_YEAR_STORAGE_KEY);
+  const parsed = raw ? Number.parseInt(raw, 10) : Number.NaN;
+
+  if (!isValidTimeMachineYear(parsed)) {
+    return clampTimeMachineYear(new Date().getFullYear());
+  }
+
+  return parsed;
+};
+
+export type { TimeMachineTimelineEvent, TimeMachineYearDocument, TimeMachineYearResponse };

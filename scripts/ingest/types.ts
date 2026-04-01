@@ -81,13 +81,17 @@ export interface RelatedPageSummary {
   selectedMedia?: MediaAssetSummary;
 }
 
+export type TimeMachineSourceType = 'wikipedia-year-page' | 'on-this-day-selected';
+
 export interface EventSourceRef {
   provider: 'wikimedia';
-  feed: 'onthisday';
+  feed: 'onthisday' | 'year-page';
   rawType: string;
   capturedAt: string;
   sourceDate: string;
   payloadCacheKey: string;
+  pageTitle?: string;
+  revisionId?: number;
 }
 
 export interface ParticipantSummary {
@@ -106,6 +110,7 @@ export interface EventEnrichment {
 
 export interface HistoricalEventRecord {
   eventId: string;
+  canonicalKey: string;
   year?: number;
   text: string;
   summary: string;
@@ -116,11 +121,24 @@ export interface HistoricalEventRecord {
     month: number;
     day: number;
   };
+  dateISO: string;
   relatedPages: RelatedPageSummary[];
   source: EventSourceRef;
   createdAt: string;
   updatedAt: string;
   enrichment?: EventEnrichment;
+  timeMachine: {
+    eligible: boolean;
+    sourceType: TimeMachineSourceType;
+    sourceTypes?: TimeMachineSourceType[];
+    sourceKey: string;
+    parserVersion: string;
+    importanceScore?: number;
+    qualityFlags: string[];
+    lastAggregatedAt?: string;
+    featured?: boolean;
+    generatedAt?: string;
+  };
 }
 
 export interface CachedPayload {
@@ -135,6 +153,8 @@ export interface FirestoreCollections {
   events: string;
   payloadCache: string;
   digests: string;
+  timeMachineYears: string;
+  contentMeta: string;
 }
 
 export interface IngestionConfig {

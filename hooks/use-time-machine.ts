@@ -1,97 +1,100 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
-  fetchTimeMachineSeed,
-  fetchTimeMachineTimeline,
-  type TimeMachineSeedResponse,
-  type TimeMachineTimelineResponse,
+  fetchTimeMachineYear,
+  getLastVisitedTimeMachineYear,
+  saveLastVisitedTimeMachineYear,
+  type TimeMachineYearResponse,
 } from '@/services/time-machine';
 
 type UseTimeMachineOptions = {
+  year?: number | null;
   enabled?: boolean;
-  seedOnMount?: boolean;
-  premium?: boolean;
 };
 
 type TimeMachineState = {
   loading: boolean;
-  seedLoading: boolean;
-  timeline: TimeMachineTimelineResponse | null;
-  lastSeed: TimeMachineSeedResponse | null;
+  data: TimeMachineYearResponse | null;
   error: Error | null;
 };
 
 const createInitialState = (): TimeMachineState => ({
   loading: false,
-  seedLoading: false,
-  timeline: null,
-  lastSeed: null,
+  data: null,
   error: null,
 });
 
-export const useTimeMachine = ({ enabled = true, seedOnMount = true, premium = false }: UseTimeMachineOptions) => {
+export const useTimeMachine = ({ year, enabled = true }: UseTimeMachineOptions) => {
   const [state, setState] = useState<TimeMachineState>(() => createInitialState());
-  const [seedKey, setSeedKey] = useState(0);
+  const [lastVisitedYear, setLastVisitedYear] = useState<number | null>(null);
 
-  const seed = useCallback(async (): Promise<number | undefined> => {
-    if (!enabled) {
-      return undefined;
-    }
-    setState((previous) => ({ ...previous, seedLoading: true, error: null }));
-    try {
-      const result = await fetchTimeMachineSeed();
-      setState((previous) => ({ ...previous, seedLoading: false, lastSeed: result }));
-      return result.year;
-    } catch (error) {
-      const resolvedError = error instanceof Error ? error : new Error('Failed to seed Time Machine');
-      setState((previous) => ({ ...previous, seedLoading: false, error: resolvedError }));
-      return undefined;
-    }
-  }, [enabled]);
+  useEffect(() => {
+    let cancelled = false;
 
-  const loadTimeline = useCallback(
-    async (year?: number, categories?: string) => {
-      if (!enabled) {
-        return;
-      }
-      const targetYear = year ?? state.lastSeed?.year;
-      if (!targetYear) {
-        return;
-      }
-      setState((previous) => ({ ...previous, loading: true, error: null }));
+    const loadLastVisitedYear = async () => {
       try {
-        const result = await fetchTimeMachineTimeline(targetYear, { categories });
-        setState((previous) => ({ ...previous, loading: false, timeline: result }));
+        const storedYear = await getLastVisitedTimeMachineYear();
+        if (!cancelled) {
+          setLastVisitedYear(storedYear);
+        }
       } catch (error) {
-        const resolvedError = error instanceof Error ? error : new Error('Failed to load timeline');
-        setState((previous) => ({ ...previous, loading: false, error: resolvedError }));
+        if (!cancelled) {
+          setLastVisitedYear(null);
+        }
+      }
+    };
+
+    void loadLastVisitedYear();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const loadYear = useCallback(
+    async (targetYear: number, options: { forceRefresh?: boolean } = {}) => {
+      if (!enabled) {
+        return null;
+      }
+
+      setState((previous) => ({ ...previous, loading: true, error: null }));
+
+      try {
+        const result = await fetchTimeMachineYear(targetYear, options);
+        await saveLastVisitedTimeMachineYear(targetYear);
+        setLastVisitedYear(targetYear);
+        setState({
+          loading: false,
+          data: result,
+          error: null,
+        });
+        return result;
+      } catch (error) {
+        const resolvedError =
+          error instanceof Error ? error : new Error('Failed to load Time Machine year');
+        setState({
+          loading: false,
+          data: null,
+          error: resolvedError,
+        });
+        return null;
       }
     },
-    [enabled, state.lastSeed?.year]
+    [enabled]
   );
 
   useEffect(() => {
-    if (!enabled || !seedOnMount) {
+    if (!enabled || !year) {
       return;
     }
-    void seed();
-  }, [enabled, seedOnMount, seed, seedKey]);
 
-  const reset = useCallback(() => {
-    setState(createInitialState());
-    setSeedKey((value) => value + 1);
-  }, []);
-
-  const timelineYear = state.timeline?.year ?? state.lastSeed?.year ?? null;
-  const heroImageUrl = useMemo(() => state.timeline?.events?.[0]?.imageUrl ?? null, [state.timeline]);
+    void loadYear(year);
+  }, [enabled, loadYear, year]);
 
   return {
     ...state,
-    timelineYear,
-    heroImageUrl,
-    seed,
-    loadTimeline,
-    reset,
-    premium,
+    lastVisitedYear,
+    loadYear,
+    refresh: year ? () => loadYear(year, { forceRefresh: true }) : undefined,
   };
 };

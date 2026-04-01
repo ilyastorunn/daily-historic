@@ -1,4 +1,5 @@
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import type { TimeMachineMetadata } from '@/types/time-machine';
 
 export type FirestoreTimestamp = FirebaseFirestoreTypes.Timestamp | FirebaseFirestoreTypes.FieldValue | string;
 
@@ -35,6 +36,7 @@ export interface FirestoreEventDate {
 
 export interface FirestoreEventDocument {
   eventId: string;
+  canonicalKey?: string;
   year?: number;
   text?: string;
   summary?: string;
@@ -48,6 +50,7 @@ export interface FirestoreEventDocument {
   enrichment?: Record<string, unknown>;
   beforeContext?: string;
   afterContext?: string;
+  timeMachine?: TimeMachineMetadata;
   createdAt?: FirestoreTimestamp;
   updatedAt?: FirestoreTimestamp;
 }

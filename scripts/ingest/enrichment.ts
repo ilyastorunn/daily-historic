@@ -124,7 +124,7 @@ export const enrichEvents = async (
   const participantMap = await fetchWikidataEntities(Array.from(participantIds), wikidataOptions);
 
   const enrichedEvents = await Promise.all(
-    events.map(async (event) => {
+    events.map(async (event): Promise<HistoricalEventRecord | null> => {
       const primaryEntityId = event.relatedPages.find((page) => page.wikidataId)?.wikidataId;
       const primaryEntity = primaryEntityId ? entityMap[primaryEntityId] : undefined;
 
@@ -177,7 +177,7 @@ export const enrichEvents = async (
         : classification.era ?? event.era;
       const tags = override?.tags ?? classification.tags;
 
-      return {
+      const enrichedEvent: HistoricalEventRecord = {
         ...event,
         categories,
         era,
@@ -185,6 +185,8 @@ export const enrichEvents = async (
         enrichment: enrichment ?? event.enrichment,
         relatedPages,
       };
+
+      return enrichedEvent;
     })
   );
 

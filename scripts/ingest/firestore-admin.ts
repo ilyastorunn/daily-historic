@@ -21,6 +21,8 @@ const DEFAULT_COLLECTIONS: FirestoreCollections = {
   events: 'contentEvents',
   payloadCache: 'contentPayloadCache',
   digests: 'dailyDigests',
+  timeMachineYears: 'timeMachineYears',
+  contentMeta: 'contentMeta',
 };
 
 const defaultAppName = 'daily-historic-ingestion';

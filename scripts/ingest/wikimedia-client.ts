@@ -9,8 +9,10 @@ import type {
   MediaAssetSummary,
   EventSourceRef,
 } from './types';
+import { buildTimeMachineCanonicalKey } from '../../utils/time-machine';
 
 const WIKIMEDIA_ON_THIS_DAY_ENDPOINT = 'https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected';
+const ON_THIS_DAY_PARSER_VERSION = 'wikimedia-on-this-day/v2';
 
 export interface WikimediaClientOptions {
   userAgent: string;
@@ -154,9 +156,23 @@ export const normalizeEvent = (
 ): HistoricalEventRecord => {
   const eventId = buildEventId(event, context);
   const relatedPages = (event.pages ?? []).map(normalizeRelatedPage);
+  const canonicalLead =
+    relatedPages[0]?.canonicalTitle ??
+    relatedPages[0]?.displayTitle ??
+    event.text;
+  const dateISO = `${String(event.year).padStart(4, '0')}-${String(context.month).padStart(2, '0')}-${String(
+    context.day
+  ).padStart(2, '0')}`;
+  const canonicalKey = buildTimeMachineCanonicalKey({
+    year: event.year ?? 0,
+    month: context.month,
+    day: context.day,
+    lead: canonicalLead,
+  });
 
   return {
     eventId,
+    canonicalKey,
     year: event.year,
     text: event.text,
     summary: event.text,
@@ -167,9 +183,18 @@ export const normalizeEvent = (
       month: context.month,
       day: context.day,
     },
+    dateISO,
     relatedPages,
     source: buildSourceRef(context),
     createdAt: context.capturedAt,
     updatedAt: context.capturedAt,
+    timeMachine: {
+      eligible: false,
+      sourceType: 'on-this-day-selected',
+      sourceTypes: ['on-this-day-selected'],
+      sourceKey: `${context.cacheKey}:${eventId}`,
+      parserVersion: ON_THIS_DAY_PARSER_VERSION,
+      qualityFlags: [],
+    },
   };
 };
