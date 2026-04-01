@@ -795,7 +795,7 @@ const HomeScreen = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>Today's Moment</Text>
+            <Text style={styles.sectionLabel}>Today&apos;s Moment</Text>
             <Text style={styles.sectionHelper}>
               {new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date(today.isoDate))}
             </Text>

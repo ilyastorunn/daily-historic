@@ -41,7 +41,13 @@ const StepWelcome = ({ onNext }: StepComponentProps) => {
   };
 
   const handleLogin = () => {
-    router.push("/sign-in");
+    router.push({
+      pathname: "/sign-in",
+      params: {
+        returnToStep: "welcome",
+        ...(displayName ? { displayName } : {}),
+      },
+    });
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import {
@@ -271,9 +271,58 @@ const loadingStyle = {
   justifyContent: 'center' as const,
 };
 
+const getSingleParam = (value?: string | string[]) => (Array.isArray(value) ? value[0] : value);
+
+const OnboardingRouteStateSync = ({
+  stepKey,
+  displayName,
+}: {
+  stepKey?: string;
+  displayName?: string;
+}) => {
+  const { state, goToStep, updateState } = useOnboardingContext();
+
+  useEffect(() => {
+    if (!stepKey) {
+      return;
+    }
+
+    const targetIndex = steps.findIndex((definition) => definition.key === stepKey);
+
+    if (targetIndex >= 0 && state.stepIndex !== targetIndex) {
+      goToStep(targetIndex);
+    }
+  }, [goToStep, state.stepIndex, stepKey]);
+
+  useEffect(() => {
+    if (!displayName || state.displayName === displayName) {
+      return;
+    }
+
+    updateState({ displayName });
+  }, [displayName, state.displayName, updateState]);
+
+  return null;
+};
+
 const OnboardingScreen = () => {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    step?: string | string[];
+    displayName?: string | string[];
+  }>();
   const { initializing, onboardingCompleted } = useUserContext();
+  const stepKey = getSingleParam(params.step);
+  const displayName = getSingleParam(params.displayName)?.trim();
+
+  const initialStateOverride = useMemo(() => {
+    const targetIndex = steps.findIndex((definition) => definition.key === stepKey);
+
+    return {
+      ...(targetIndex >= 0 ? { stepIndex: targetIndex } : {}),
+      ...(displayName ? { displayName } : {}),
+    };
+  }, [displayName, stepKey]);
 
   useEffect(() => {
     if (!initializing && onboardingCompleted) {
@@ -294,7 +343,14 @@ const OnboardingScreen = () => {
   }
 
   return (
-    <OnboardingProvider totalSteps={steps.length}>
+    <OnboardingProvider
+      totalSteps={steps.length}
+      initialStateOverride={initialStateOverride}
+    >
+      <OnboardingRouteStateSync
+        stepKey={stepKey}
+        displayName={displayName}
+      />
       <OnboardingStepper onComplete={handleComplete} />
     </OnboardingProvider>
   );

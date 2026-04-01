@@ -62,7 +62,9 @@ const detectTimezone = () => {
 
 const INITIAL_NOTIFICATION_TIME = '09:00';
 
-const initialState: OnboardingState = {
+const createInitialState = (
+  overrides: Partial<OnboardingState> = {}
+): OnboardingState => ({
   stepIndex: 0,
   displayName: '',
   accountSelection: null,
@@ -78,7 +80,8 @@ const initialState: OnboardingState = {
   categoriesSkipped: false,
   pushPermission: 'unknown',
   heroPreviewSeen: false,
-};
+  ...overrides,
+});
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
@@ -117,10 +120,19 @@ const reducer = (state: OnboardingState, action: OnboardingAction): OnboardingSt
 type OnboardingProviderProps = {
   children: ReactNode;
   totalSteps: number;
+  initialStateOverride?: Partial<OnboardingState>;
 };
 
-export const OnboardingProvider = ({ children, totalSteps }: OnboardingProviderProps) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
+export const OnboardingProvider = ({
+  children,
+  totalSteps,
+  initialStateOverride,
+}: OnboardingProviderProps) => {
+  const resolvedInitialState = useMemo(
+    () => createInitialState(initialStateOverride),
+    [initialStateOverride]
+  );
+  const [state, dispatch] = useReducer(reducer, resolvedInitialState);
 
   const goToStep = useCallback(
     (step: number) => {
@@ -142,8 +154,8 @@ export const OnboardingProvider = ({ children, totalSteps }: OnboardingProviderP
   }, []);
 
   const reset = useCallback(() => {
-    dispatch({ type: 'RESET', initialState });
-  }, []);
+    dispatch({ type: 'RESET', initialState: resolvedInitialState });
+  }, [resolvedInitialState]);
 
   const value = useMemo<OnboardingContextValue>(() => {
     return {

@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
-  Linking,
   Modal,
   Platform,
   Pressable,
@@ -549,19 +548,19 @@ const ProfileScreen = () => {
               <Text style={styles.accountLabel}>{accountLabel}</Text>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => Linking.openURL('https://chrono.example.com/privacy')}
+                onPress={() => router.push('/legal/privacy')}
                 style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.85 }]}
               >
                 <IconSymbol name="chevron.right" size={18} color={theme.colors.textSecondary} />
-                <Text style={styles.linkText}>Privacy & data</Text>
+                <Text style={styles.linkText}>Privacy Policy</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => Linking.openURL('https://chrono.example.com/terms')}
+                onPress={() => router.push('/legal/terms')}
                 style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.85 }]}
               >
                 <IconSymbol name="chevron.right" size={18} color={theme.colors.textSecondary} />
-                <Text style={styles.linkText}>Terms of use</Text>
+                <Text style={styles.linkText}>Terms of Use (EULA)</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"

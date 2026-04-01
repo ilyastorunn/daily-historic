@@ -201,7 +201,7 @@ export const SavedStories: React.FC<SavedStoriesProps> = ({ savedEvents, loading
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Saved Stories</Text>
-        <Text style={styles.sectionHelper}>Quick access to stories you've bookmarked.</Text>
+        <Text style={styles.sectionHelper}>Quick access to stories you&apos;ve bookmarked.</Text>
       </View>
 
       {savedEvents.map((event) => (

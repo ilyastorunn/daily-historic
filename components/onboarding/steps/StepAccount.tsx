@@ -505,6 +505,23 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
                     I agree to the Terms and Privacy Policy.
                   </Text>
                 </Pressable>
+                <View style={localStyles.accountLinkRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/legal/terms')}
+                    style={({ pressed }) => pressed && { opacity: 0.8 }}
+                  >
+                    <Text style={[styles.legalText, styles.legalLink]}>View Terms</Text>
+                  </Pressable>
+                  <Text style={styles.legalText}>and</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/legal/privacy')}
+                    style={({ pressed }) => pressed && { opacity: 0.8 }}
+                  >
+                    <Text style={[styles.legalText, styles.legalLink]}>Privacy Policy</Text>
+                  </Pressable>
+                </View>
 
                 {authError ? <Text style={localStyles.authError}>{authError}</Text> : null}
 
