@@ -38,6 +38,13 @@ export type TimeMachineAggregateInputEvent = {
   existingImportanceScore?: number;
 };
 
+export type TimeMachineEditorialIntro = {
+  eyebrow: string;
+  hook: string;
+  teaser: string;
+  startMonthLabel: string | null;
+};
+
 type BuildYearAggregateResult = {
   document: TimeMachineYearDocument;
   stats: TimeMachineStats;
@@ -67,10 +74,69 @@ const CRITICAL_YEAR_FLAGS = new Set([
   'missing-hero',
 ]);
 
+const EDITORIAL_CATEGORY_PHRASES: Record<string, string> = {
+  politics: 'power',
+  'world-wars': 'conflict',
+  'natural-disasters': 'shock',
+  'art-culture': 'new cultural energy',
+  'science-discovery': 'discovery',
+  'civil-rights': 'public pressure',
+  exploration: 'daring ambition',
+  inventions: 'invention',
+  surprise: 'unexpected turns',
+};
+
 type TimeMachineYearQuality = {
   publishState: TimeMachinePublishState;
   qualityScore: number;
   qualityFlags: string[];
+};
+
+const formatEditorialList = (items: string[]) => {
+  if (items.length === 0) {
+    return '';
+  }
+
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+};
+
+const buildEditorialCategoryWeights = (
+  hero: TimeMachineTimelineEvent | null,
+  sections: TimeMachineSection[]
+) => {
+  const weights = new Map<string, number>();
+
+  for (const category of hero?.categories ?? []) {
+    weights.set(category, (weights.get(category) ?? 0) + 6);
+  }
+
+  for (const section of sections) {
+    for (const event of section.events) {
+      const categories = event.categories.slice(0, 2);
+      for (const category of categories) {
+        weights.set(category, (weights.get(category) ?? 0) + 1);
+      }
+    }
+  }
+
+  const weightedCategories = Array.from(weights.entries())
+    .filter(([category]) => Boolean(EDITORIAL_CATEGORY_PHRASES[category]))
+    .sort((left, right) => right[1] - left[1]);
+
+  const filteredCategories = weightedCategories
+    .filter(([category]) => category !== 'surprise' || weightedCategories.length === 1)
+    .slice(0, 3)
+    .map(([category]) => category);
+
+  return filteredCategories.map((category) => EDITORIAL_CATEGORY_PHRASES[category]);
 };
 
 export const isValidTimeMachineYear = (year: unknown): year is number => {
@@ -232,6 +298,36 @@ export const buildTimeMachineSummary = (
   const categoryCopy = categoryPreview ? ` across ${categoryPreview}` : '';
 
   return `${year} currently includes ${eventCount} curated moments across ${monthCount} active months${categoryCopy}.`;
+};
+
+export const buildTimeMachineEditorialIntro = (input: {
+  year: number;
+  hero: TimeMachineTimelineEvent | null;
+  sections: TimeMachineSection[];
+}): TimeMachineEditorialIntro => {
+  const { year, hero, sections } = input;
+  const startMonthLabel = sections[0]?.label ?? null;
+  const phrases = buildEditorialCategoryWeights(hero, sections);
+
+  if (phrases.length > 0) {
+    return {
+      eyebrow: `Entering ${year}`,
+      hook: `${year} was shaped by ${formatEditorialList(phrases)}.`,
+      teaser: startMonthLabel
+        ? `Start in ${startMonthLabel} and follow the moments that defined the year.`
+        : `The fuller timeline for ${year} is still taking shape.`,
+      startMonthLabel,
+    };
+  }
+
+  return {
+    eyebrow: `Entering ${year}`,
+    hook: `${year} opened with turning points that reshaped the months ahead.`,
+    teaser: startMonthLabel
+      ? `Start in ${startMonthLabel} and move through the year chronologically.`
+      : `The fuller timeline for ${year} is still taking shape.`,
+    startMonthLabel,
+  };
 };
 
 export const toTimeMachineTimelineEvent = (

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildTimeMachineEditorialIntro,
   buildTimeMachineSections,
   buildTimeMachineYearAggregate,
   createEmptyTimeMachineYearDocument,
@@ -115,5 +116,50 @@ describe('Time Machine aggregate helpers', () => {
 
     expect(aggregate.document.publishState).toBe('strong');
     expect(aggregate.document.qualityScore).toBeGreaterThan(0);
+  });
+
+  it('builds editorial intro from dominant category signals', () => {
+    const aggregate = buildTimeMachineYearAggregate(1969, [
+      {
+        eventId: 'moon',
+        year: 1969,
+        title: 'Moon landing',
+        summary: 'Apollo 11 lands on the Moon.',
+        categories: ['exploration'],
+        date: { month: 7, day: 20 },
+        imageUrl: 'https://example.com/moon.jpg',
+      },
+      {
+        eventId: 'woodstock',
+        year: 1969,
+        title: 'Woodstock',
+        summary: 'Woodstock becomes a cultural flashpoint.',
+        categories: ['art-culture'],
+        date: { month: 8, day: 15 },
+      },
+    ]);
+
+    const intro = buildTimeMachineEditorialIntro({
+      year: 1969,
+      hero: aggregate.hero,
+      sections: buildTimeMachineSections(aggregate.events, aggregate.document.highlightEventIds),
+    });
+
+    expect(intro.eyebrow).toBe('Entering 1969');
+    expect(intro.hook).toContain('1969 was shaped by');
+    expect(intro.teaser).toContain('Start in July');
+    expect(intro.startMonthLabel).toBe('July');
+  });
+
+  it('falls back to a safe editorial intro when signals are sparse', () => {
+    const intro = buildTimeMachineEditorialIntro({
+      year: 1801,
+      hero: null,
+      sections: [],
+    });
+
+    expect(intro.eyebrow).toBe('Entering 1801');
+    expect(intro.hook).toContain('1801 opened with turning points');
+    expect(intro.startMonthLabel).toBeNull();
   });
 });

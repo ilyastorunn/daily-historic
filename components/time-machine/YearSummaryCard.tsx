@@ -1,56 +1,37 @@
 import React, { memo, useMemo } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAppTheme } from '@/theme';
-import type { TimeMachineTimelineEvent } from '@/types/time-machine';
+import type { TimeMachineSection, TimeMachineTimelineEvent } from '@/types/time-machine';
+import { buildTimeMachineEditorialIntro } from '@/utils/time-machine';
 import { createImageSource } from '@/utils/wikimedia-image-source';
 
 type YearSummaryCardProps = {
   year: number;
-  summary: string;
-  stats: {
-    eventCount: number;
-    populatedMonthCount: number;
-    categoryCount: number;
-  };
   hero: TimeMachineTimelineEvent | null;
-  onHeroPress?: (eventId: string) => void;
+  sections: TimeMachineSection[];
 };
 
 export const YearSummaryCard = memo<YearSummaryCardProps>(
-  ({ year, summary, stats, hero, onHeroPress }) => {
+  ({ year, hero, sections }) => {
     const theme = useAppTheme();
     const styles = useMemo(() => buildStyles(theme), [theme]);
+    const editorial = useMemo(
+      () => buildTimeMachineEditorialIntro({ year, hero, sections }),
+      [hero, sections, year]
+    );
 
     return (
       <View style={styles.card}>
-        <Text style={styles.eyebrow}>Arriving in</Text>
+        <Text style={styles.eyebrow}>{editorial.eyebrow}</Text>
         <Text style={styles.year}>{year}</Text>
-        <Text style={styles.summary}>{summary}</Text>
-
-        <View style={styles.statRow}>
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>{stats.eventCount}</Text>
-            <Text style={styles.statLabel}>events</Text>
-          </View>
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>{stats.populatedMonthCount}</Text>
-            <Text style={styles.statLabel}>months</Text>
-          </View>
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>{stats.categoryCount}</Text>
-            <Text style={styles.statLabel}>themes</Text>
-          </View>
-        </View>
+        <Text style={styles.hook}>{editorial.hook}</Text>
+        <Text style={styles.teaser}>{editorial.teaser}</Text>
 
         {hero ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Open featured event from ${year}`}
-            onPress={() => onHeroPress?.(hero.id)}
-            style={({ pressed }) => [styles.heroRow, pressed && styles.heroRowPressed]}
-          >
+          <View style={styles.heroRow}>
             {hero.imageUrl ? (
               <Image
                 source={createImageSource(hero.imageUrl)}
@@ -70,7 +51,15 @@ export const YearSummaryCard = memo<YearSummaryCardProps>(
                 {hero.summary}
               </Text>
             </View>
-          </Pressable>
+          </View>
+        ) : null}
+
+        {editorial.startMonthLabel ? (
+          <View style={styles.scrollCue}>
+            <View style={styles.scrollLine} />
+            <Text style={styles.scrollText}>Begin in {editorial.startMonthLabel}</Text>
+            <Ionicons name="chevron-down" size={14} color={theme.colors.textTertiary} />
+          </View>
         ) : null}
       </View>
     );
@@ -113,36 +102,19 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       color: theme.colors.textPrimary,
       letterSpacing: -1.4,
     },
-    summary: {
+    hook: {
+      marginTop: -theme.spacing.sm,
+      fontFamily: serifFamily,
+      fontSize: 28,
+      lineHeight: 34,
+      color: theme.colors.textPrimary,
+      letterSpacing: -0.7,
+    },
+    teaser: {
       fontFamily: sansFamily,
       fontSize: theme.typography.body.fontSize,
       lineHeight: 24,
       color: theme.colors.textSecondary,
-    },
-    statRow: {
-      flexDirection: 'row',
-      gap: theme.spacing.sm,
-    },
-    statPill: {
-      flex: 1,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
-      borderRadius: theme.radius.lg,
-      backgroundColor: theme.colors.surfaceSubtle,
-      gap: 2,
-    },
-    statValue: {
-      fontFamily: sansFamily,
-      fontSize: 18,
-      fontWeight: '700',
-      color: theme.colors.textPrimary,
-    },
-    statLabel: {
-      fontFamily: sansFamily,
-      fontSize: 12,
-      color: theme.colors.textSecondary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.6,
     },
     heroRow: {
       flexDirection: 'row',
@@ -150,9 +122,6 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       borderRadius: theme.radius.lg,
       overflow: 'hidden',
       backgroundColor: theme.colors.appBackground,
-    },
-    heroRowPressed: {
-      opacity: 0.86,
     },
     heroImage: {
       width: 104,
@@ -187,6 +156,25 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       fontSize: 13,
       lineHeight: 18,
       color: theme.colors.textSecondary,
+    },
+    scrollCue: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingTop: theme.spacing.xs,
+    },
+    scrollLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.borderSubtle,
+    },
+    scrollText: {
+      fontFamily: sansFamily,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      color: theme.colors.textTertiary,
     },
   });
 };

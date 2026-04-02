@@ -152,10 +152,8 @@ const TimeMachineYearScreen = () => {
             ListHeaderComponent={
               <YearSummaryCard
                 year={data.year}
-                summary={data.summary}
-                stats={data.stats}
                 hero={data.hero}
-                onHeroPress={handleEventPress}
+                sections={data.sections}
               />
             }
             ListFooterComponent={
@@ -224,7 +222,7 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.sm,
+      paddingTop: 0,
     },
     backButton: {
       width: 44,
