@@ -1,27 +1,43 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
-  PanResponder,
+  FlatList,
+  LayoutChangeEvent,
   Platform,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
+  type ListRenderItemInfo,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppTheme } from '@/theme';
 import {
   TIME_MACHINE_MAX_YEAR,
   TIME_MACHINE_MIN_YEAR,
-  clampTimeMachineYear,
 } from '@/utils/time-machine';
+import { getTimeMachineExplorerPalette, type TimeMachineExplorerPalette } from './explorer-palette';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const ITEM_WIDTH = 96;
+const WHEEL_HEIGHT = 176;
+const BAND_HEIGHT = 88;
+const SELECTION_BAND_WIDTH = 136;
+const EDGE_FADE_WIDTH = 80;
 
-const SLIDER_PADDING = 44;
-const SLIDER_WIDTH = SCREEN_WIDTH - SLIDER_PADDING * 2;
-const AUTO_ENTER_DELAY_MS = 400;
+type UpdateSelectionOptions = {
+  notifyChange?: boolean;
+  triggerHaptic?: boolean;
+};
+
+type ScrollToYearOptions = {
+  animated: boolean;
+  notifyChange?: boolean;
+  triggerHaptic?: boolean;
+};
 
 type YearSelectorProps = {
   initialYear: number;
@@ -31,6 +47,75 @@ type YearSelectorProps = {
   maxYear?: number;
 };
 
+type YearWheelItemProps = {
+  year: number;
+  index: number;
+  itemWidth: number;
+  scrollX: Animated.Value;
+  selected: boolean;
+  palette: TimeMachineExplorerPalette;
+  styles: ReturnType<typeof buildStyles>;
+};
+
+const YearWheelItem = React.memo(
+  ({ year, index, itemWidth, scrollX, selected, palette, styles }: YearWheelItemProps) => {
+    const inputRange = useMemo(
+      () => [(index - 2) * itemWidth, index * itemWidth, (index + 2) * itemWidth],
+      [index, itemWidth]
+    );
+
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.16, 1, 0.16],
+      extrapolate: 'clamp',
+    });
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.78, 1, 0.78],
+      extrapolate: 'clamp',
+    });
+
+    const translateY = scrollX.interpolate({
+      inputRange,
+      outputRange: [10, 0, 10],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.itemContainer,
+          {
+            width: itemWidth,
+            opacity,
+            transform: [{ translateY }, { scale }],
+          },
+        ]}
+      >
+        <Text
+          adjustsFontSizeToFit
+          allowFontScaling={false}
+          ellipsizeMode="clip"
+          minimumFontScale={0.84}
+          numberOfLines={1}
+          style={[
+            styles.itemLabel,
+            selected ? styles.itemLabelSelected : styles.itemLabelUnselected,
+            {
+              color: selected ? palette.selectedText : palette.mutedText,
+            },
+          ]}
+        >
+          {year}
+        </Text>
+      </Animated.View>
+    );
+  }
+);
+
+YearWheelItem.displayName = 'YearWheelItem';
+
 export const YearSelector: React.FC<YearSelectorProps> = ({
   initialYear,
   onYearChange,
@@ -39,48 +124,46 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
   maxYear = TIME_MACHINE_MAX_YEAR,
 }) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const palette = useMemo(() => getTimeMachineExplorerPalette(theme), [theme]);
+  const styles = useMemo(() => buildStyles(), []);
+  const { width: screenWidth } = useWindowDimensions();
+  const initialClampedYear = Math.min(maxYear, Math.max(minYear, initialYear));
 
-  const [selectedYear, setSelectedYear] = useState(clampTimeMachineYear(initialYear));
-  const animatedPosition = useRef(new Animated.Value(0)).current;
-  const lastPosition = useRef(0);
-  const lastHapticYear = useRef(selectedYear);
-  const autoEnterTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [selectedYear, setSelectedYear] = useState(initialClampedYear);
+  const [listReady, setListReady] = useState(false);
+  const [wheelWidth, setWheelWidth] = useState(screenWidth);
+  const scrollX = useRef(new Animated.Value((initialClampedYear - minYear) * ITEM_WIDTH)).current;
+  const listRef = useRef<FlatList<number> | null>(null);
+  const selectedYearRef = useRef(initialClampedYear);
+  const lastHapticYear = useRef(initialClampedYear);
 
-  const yearToPosition = useCallback(
-    (year: number) => {
-      const boundedYear = Math.min(maxYear, Math.max(minYear, year));
-      const percentage = (boundedYear - minYear) / (maxYear - minYear);
-      return percentage * SLIDER_WIDTH;
-    },
+  const years = useMemo(() => {
+    const items: number[] = [];
+    for (let year = minYear; year <= maxYear; year += 1) {
+      items.push(year);
+    }
+    return items;
+  }, [maxYear, minYear]);
+
+  const horizontalPadding = Math.max(0, (wheelWidth - ITEM_WIDTH) / 2);
+
+  const clampYear = useCallback(
+    (year: number) => Math.min(maxYear, Math.max(minYear, year)),
     [maxYear, minYear]
   );
 
-  const positionToYear = useCallback(
-    (position: number) => {
-      const clampedPosition = Math.max(0, Math.min(SLIDER_WIDTH, position));
-      const percentage = clampedPosition / SLIDER_WIDTH;
-      return Math.round(minYear + percentage * (maxYear - minYear));
-    },
-    [maxYear, minYear]
+  const yearToIndex = useCallback(
+    (year: number) => clampYear(year) - minYear,
+    [clampYear, minYear]
   );
 
-  useEffect(() => {
-    const nextYear = clampTimeMachineYear(initialYear);
-    setSelectedYear(nextYear);
-    const nextPosition = yearToPosition(nextYear);
-    animatedPosition.setValue(nextPosition);
-    lastPosition.current = nextPosition;
-    lastHapticYear.current = nextYear;
-  }, [animatedPosition, initialYear, yearToPosition]);
-
-  useEffect(() => {
-    return () => {
-      if (autoEnterTimeout.current) {
-        clearTimeout(autoEnterTimeout.current);
-      }
-    };
-  }, []);
+  const offsetToYear = useCallback(
+    (offset: number) => {
+      const nearestIndex = Math.round(offset / ITEM_WIDTH);
+      return clampYear(minYear + nearestIndex);
+    },
+    [clampYear, minYear]
+  );
 
   const triggerHaptic = useCallback(() => {
     if (Platform.OS === 'ios') {
@@ -88,315 +171,275 @@ export const YearSelector: React.FC<YearSelectorProps> = ({
     }
   }, []);
 
-  const scheduleCommit = useCallback(
-    (year: number) => {
-      if (autoEnterTimeout.current) {
-        clearTimeout(autoEnterTimeout.current);
+  const updateSelectedYear = useCallback(
+    (year: number, options?: UpdateSelectionOptions) => {
+      const nextYear = clampYear(year);
+      const notifyChange = options?.notifyChange ?? true;
+      const shouldTriggerHaptic = options?.triggerHaptic ?? true;
+      const didChange = nextYear !== selectedYearRef.current;
+
+      if (didChange) {
+        selectedYearRef.current = nextYear;
+        setSelectedYear(nextYear);
+
+        if (notifyChange) {
+          onYearChange?.(nextYear);
+        }
       }
 
-      autoEnterTimeout.current = setTimeout(() => {
-        onYearCommit(year);
-      }, AUTO_ENTER_DELAY_MS);
-    },
-    [onYearCommit]
-  );
+      if (!shouldTriggerHaptic) {
+        lastHapticYear.current = nextYear;
+        return;
+      }
 
-  const updateSelectedYear = useCallback(
-    (year: number) => {
-      const nextYear = clampTimeMachineYear(year);
-      setSelectedYear(nextYear);
-      onYearChange?.(nextYear);
-
-      if (nextYear !== lastHapticYear.current) {
+      if (didChange && nextYear !== lastHapticYear.current) {
         lastHapticYear.current = nextYear;
         triggerHaptic();
       }
     },
-    [onYearChange, triggerHaptic]
+    [clampYear, onYearChange, triggerHaptic]
   );
 
-  const animateToYear = useCallback(
-    (year: number, shouldCommit: boolean) => {
-      const nextYear = clampTimeMachineYear(year);
-      const nextPosition = yearToPosition(nextYear);
-
-      Animated.spring(animatedPosition, {
-        toValue: nextPosition,
-        useNativeDriver: false,
-        damping: 22,
-        stiffness: 280,
-      }).start(() => {
-        lastPosition.current = nextPosition;
+  const scrollToYear = useCallback(
+    (year: number, options: ScrollToYearOptions) => {
+      const nextYear = clampYear(year);
+      const nextOffset = yearToIndex(nextYear) * ITEM_WIDTH;
+      updateSelectedYear(nextYear, {
+        notifyChange: options.notifyChange,
+        triggerHaptic: options.triggerHaptic,
       });
 
-      updateSelectedYear(nextYear);
-
-      if (shouldCommit) {
-        scheduleCommit(nextYear);
+      if (!options.animated) {
+        scrollX.setValue(nextOffset);
       }
+
+      listRef.current?.scrollToOffset({
+        offset: nextOffset,
+        animated: options.animated,
+      });
     },
-    [animatedPosition, scheduleCommit, updateSelectedYear, yearToPosition]
+    [clampYear, scrollX, updateSelectedYear, yearToIndex]
   );
 
-  const tickMarks = useMemo(() => {
-    const ticks: { year: number; isMajor: boolean }[] = [];
-    for (let year = minYear; year <= maxYear; year += 10) {
-      ticks.push({ year, isMajor: year % 50 === 0 });
-    }
-    return ticks;
-  }, [maxYear, minYear]);
+  useEffect(() => {
+    const nextYear = clampYear(initialYear);
 
-  const decadeLabels = useMemo(() => {
-    const labels: number[] = [];
-    for (let year = minYear; year <= maxYear; year += 50) {
-      labels.push(year);
+    if (nextYear === selectedYearRef.current) {
+      return;
     }
-    return labels;
-  }, [maxYear, minYear]);
 
-  const panResponder = useMemo(
+    updateSelectedYear(nextYear, { notifyChange: false, triggerHaptic: false });
+    scrollX.setValue(yearToIndex(nextYear) * ITEM_WIDTH);
+
+    if (!listReady) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({
+        offset: yearToIndex(nextYear) * ITEM_WIDTH,
+        animated: false,
+      });
+    });
+  }, [clampYear, initialYear, listReady, scrollX, updateSelectedYear, yearToIndex]);
+
+  useEffect(() => {
+    if (!listReady) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      const offset = yearToIndex(selectedYearRef.current) * ITEM_WIDTH;
+      scrollX.setValue(offset);
+      listRef.current?.scrollToOffset({
+        offset,
+        animated: false,
+      });
+    });
+  }, [listReady, scrollX, wheelWidth, yearToIndex]);
+
+  const handleScroll = useMemo(
     () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          if (autoEnterTimeout.current) {
-            clearTimeout(autoEnterTimeout.current);
-          }
-          animatedPosition.stopAnimation((value) => {
-            lastPosition.current = value;
-          });
-        },
-        onPanResponderMove: (_, gestureState) => {
-          const nextPosition = Math.max(0, Math.min(SLIDER_WIDTH, lastPosition.current + gestureState.dx));
-          animatedPosition.setValue(nextPosition);
-          updateSelectedYear(positionToYear(nextPosition));
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          const nextPosition = Math.max(0, Math.min(SLIDER_WIDTH, lastPosition.current + gestureState.dx));
-          const nextYear = positionToYear(nextPosition);
-          animateToYear(nextYear, true);
+      Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+        useNativeDriver: true,
+        listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+          updateSelectedYear(offsetToYear(event.nativeEvent.contentOffset.x));
         },
       }),
-    [animateToYear, animatedPosition, positionToYear, updateSelectedYear]
+    [offsetToYear, scrollX, updateSelectedYear]
   );
 
   const handleAccessibilityAction = useCallback(
     (actionName: string) => {
       if (actionName === 'activate') {
-        scheduleCommit(selectedYear);
+        onYearCommit(selectedYearRef.current);
         return;
       }
 
       const delta = actionName === 'increment' ? 1 : -1;
-      animateToYear(selectedYear + delta, true);
+      scrollToYear(selectedYearRef.current + delta, {
+        animated: true,
+      });
     },
-    [animateToYear, scheduleCommit, selectedYear]
+    [onYearCommit, scrollToYear]
+  );
+
+  const handleWheelLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const nextWidth = event.nativeEvent.layout.width;
+      if (nextWidth > 0 && nextWidth !== wheelWidth) {
+        setWheelWidth(nextWidth);
+      }
+    },
+    [wheelWidth]
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: ListRenderItemInfo<number>) => (
+      <YearWheelItem
+        year={item}
+        index={index}
+        itemWidth={ITEM_WIDTH}
+        scrollX={scrollX}
+        selected={item === selectedYear}
+        palette={palette}
+        styles={styles}
+      />
+    ),
+    [palette, scrollX, selectedYear, styles]
   );
 
   return (
     <View style={styles.container}>
-      <View style={styles.ambientCircleLarge} />
-      <View style={styles.ambientCircleSmall} />
-
-      <Text style={styles.yearDisplay}>{selectedYear}</Text>
-
       <View
+        accessible
         accessibilityRole="adjustable"
         accessibilityLabel={`Year selector, ${selectedYear}`}
+        accessibilityHint="Swipe left or right to adjust the year, then double tap to open it."
         accessibilityActions={[
           { name: 'increment', label: 'Next year' },
           { name: 'decrement', label: 'Previous year' },
           { name: 'activate', label: 'Travel to this year' },
         ]}
         onAccessibilityAction={({ nativeEvent }) => handleAccessibilityAction(nativeEvent.actionName)}
-        style={styles.sliderShell}
+        onLayout={handleWheelLayout}
+        style={styles.wheelShell}
       >
-        <View style={styles.tickField}>
-          {tickMarks.map(({ year, isMajor }) => (
-            <View
-              key={year}
-              style={[
-                styles.tick,
-                isMajor && styles.tickMajor,
-                { left: yearToPosition(year) },
-              ]}
-            />
-          ))}
-        </View>
-
-        <View style={styles.trackGlow} />
-        <View style={styles.track} />
-
-        <Animated.View
+        <View
+          pointerEvents="none"
           style={[
-            styles.thumbContainer,
+            styles.selectionBand,
             {
-              transform: [{ translateX: animatedPosition }],
+              width: SELECTION_BAND_WIDTH,
+              backgroundColor: palette.selectionBand,
+              borderColor: palette.selectionBorder,
             },
           ]}
-          {...panResponder.panHandlers}
-        >
-          <View style={styles.thumbAura} />
-          <View style={styles.thumbStem} />
-          <View style={styles.thumb} />
-        </Animated.View>
+        />
 
-        <View style={styles.labelRow}>
-          {decadeLabels.map((year) => (
-            <Text
-              key={year}
-              style={[
-                styles.decadeLabel,
-                { left: yearToPosition(year) - 18 },
-              ]}
-            >
-              {year}
-            </Text>
-          ))}
-        </View>
+        <Animated.FlatList
+          accessible={false}
+          bounces={false}
+          contentContainerStyle={[styles.listContent, { paddingHorizontal: horizontalPadding }]}
+          data={years}
+          decelerationRate={Platform.OS === 'ios' ? 0.998 : 0.985}
+          disableIntervalMomentum={false}
+          getItemLayout={(_, index) => ({
+            length: ITEM_WIDTH,
+            offset: ITEM_WIDTH * index,
+            index,
+          })}
+          horizontal
+          initialNumToRender={11}
+          initialScrollIndex={yearToIndex(initialClampedYear)}
+          keyExtractor={(item) => String(item)}
+          onLayout={() => setListReady(true)}
+          onScroll={handleScroll}
+          ref={(value) => {
+            listRef.current = value as FlatList<number> | null;
+          }}
+          renderItem={renderItem}
+          scrollEventThrottle={16}
+          showsHorizontalScrollIndicator={false}
+          snapToAlignment="start"
+          snapToInterval={ITEM_WIDTH}
+          style={styles.list}
+        />
+
+        <LinearGradient
+          colors={[palette.edgeFadeOpaque, palette.edgeFadeTransparent]}
+          locations={[0, 1]}
+          pointerEvents="none"
+          style={[styles.edgeFade, styles.edgeFadeLeft, { width: EDGE_FADE_WIDTH }]}
+        />
+        <LinearGradient
+          colors={[palette.edgeFadeTransparent, palette.edgeFadeOpaque]}
+          locations={[0, 1]}
+          pointerEvents="none"
+          style={[styles.edgeFade, styles.edgeFadeRight, { width: EDGE_FADE_WIDTH }]}
+        />
       </View>
     </View>
   );
 };
 
-const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
-  const serifFamily = Platform.select({
-    ios: 'Times New Roman',
-    android: 'serif',
-    default: 'serif',
-  });
-  const sansFamily = Platform.select({
-    ios: 'System',
-    android: 'sans-serif',
-    default: 'System',
-  });
-
+const buildStyles = () => {
   return StyleSheet.create({
     container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.colors.screen,
-      paddingHorizontal: theme.spacing.xl,
-      overflow: 'hidden',
+      width: '100%',
+      alignItems: 'stretch',
     },
-    ambientCircleLarge: {
-      position: 'absolute',
-      width: 260,
-      height: 260,
-      borderRadius: 130,
-      backgroundColor: theme.colors.accentSoft,
-      top: '22%',
-      opacity: 0.45,
-    },
-    ambientCircleSmall: {
-      position: 'absolute',
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: theme.colors.surfaceSubtle,
-      bottom: '24%',
-      right: 36,
-      opacity: 0.9,
-    },
-    yearDisplay: {
-      fontFamily: serifFamily,
-      fontSize: 86,
-      lineHeight: 92,
-      letterSpacing: -2.8,
-      color: theme.colors.textPrimary,
-      marginBottom: theme.spacing.xxl,
-    },
-    sliderShell: {
-      width: SLIDER_WIDTH,
-      height: 132,
+    wheelShell: {
+      height: WHEEL_HEIGHT,
       justifyContent: 'center',
     },
-    tickField: {
+    selectionBand: {
       position: 'absolute',
-      width: '100%',
-      top: 28,
-      height: 24,
+      alignSelf: 'center',
+      top: (WHEEL_HEIGHT - BAND_HEIGHT) / 2,
+      height: BAND_HEIGHT,
+      borderRadius: 22,
+      borderWidth: 1,
     },
-    tick: {
-      position: 'absolute',
-      width: 1,
-      height: 12,
-      backgroundColor: theme.colors.borderSubtle,
-      opacity: 0.55,
+    list: {
+      flexGrow: 0,
+      height: WHEEL_HEIGHT,
     },
-    tickMajor: {
-      height: 22,
-      backgroundColor: theme.colors.textTertiary,
-      opacity: 0.8,
-    },
-    trackGlow: {
-      position: 'absolute',
-      width: '100%',
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: theme.colors.accentSoft,
-      opacity: 0.5,
-      top: 42,
-    },
-    track: {
-      position: 'absolute',
-      width: '100%',
-      height: 2,
-      borderRadius: 1,
-      backgroundColor: theme.colors.borderStrong,
-      top: 50,
-    },
-    thumbContainer: {
-      position: 'absolute',
-      top: 22,
-      marginLeft: -18,
-      width: 36,
+    listContent: {
       alignItems: 'center',
     },
-    thumbAura: {
-      position: 'absolute',
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: theme.colors.accentSoft,
-      top: 8,
+    itemContainer: {
+      height: WHEEL_HEIGHT,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    thumbStem: {
-      width: 2,
-      height: 46,
-      backgroundColor: theme.colors.textPrimary,
-      borderRadius: 999,
-      opacity: 0.8,
-    },
-    thumb: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      backgroundColor: theme.colors.textPrimary,
-      marginTop: -3,
-      shadowColor: theme.colors.shadowColor,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.2,
-      shadowRadius: 12,
-      elevation: 5,
-    },
-    labelRow: {
-      position: 'absolute',
+    itemLabel: {
       width: '100%',
-      top: 72,
-      height: 20,
-    },
-    decadeLabel: {
-      position: 'absolute',
-      width: 36,
       textAlign: 'center',
-      fontFamily: sansFamily,
-      fontSize: 10,
-      fontWeight: '500',
-      color: theme.colors.textTertiary,
-      letterSpacing: 0.3,
+      includeFontPadding: false,
+      fontVariant: ['tabular-nums'],
+      letterSpacing: -0.8,
+    },
+    itemLabelSelected: {
+      fontSize: 42,
+      lineHeight: 46,
+      fontWeight: '600',
+    },
+    itemLabelUnselected: {
+      fontSize: 34,
+      lineHeight: 38,
+      fontWeight: Platform.OS === 'ios' ? '500' : '400',
+    },
+    edgeFade: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+    },
+    edgeFadeLeft: {
+      left: 0,
+    },
+    edgeFadeRight: {
+      right: 0,
     },
   });
 };
