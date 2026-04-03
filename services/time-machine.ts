@@ -9,12 +9,18 @@ import {
 } from '@/services/firebase';
 import { fetchWithCache, CachePresets } from '@/services/api-helpers';
 import type { FirestoreEventDocument } from '@/types/events';
-import type { TimeMachineTimelineEvent, TimeMachineYearDocument, TimeMachineYearResponse } from '@/types/time-machine';
+import type {
+  TimeMachineEditorialIntro,
+  TimeMachineTimelineEvent,
+  TimeMachineYearDocument,
+  TimeMachineYearResponse,
+} from '@/types/time-machine';
 import {
   TIME_MACHINE_HIGHLIGHT_LIMIT,
   TIME_MACHINE_LAST_YEAR_STORAGE_KEY,
   clampTimeMachineYear,
   buildTimeMachineSections,
+  buildTimeMachineFallbackEditorialIntro,
   buildTimeMachineYearAggregate,
   isValidTimeMachineYear,
 } from '@/utils/time-machine';
@@ -48,6 +54,7 @@ const buildResponseFromEvents = (
     events.map(mapFirestoreEventToAggregateInput),
     {
       existingSummary: aggregateDoc?.summary,
+      existingEditorialIntro: aggregateDoc?.editorialIntro,
       summarySource: aggregateDoc?.summarySource,
       generatedAt: aggregateDoc?.generatedAt,
       contentVersion: aggregateDoc?.contentVersion,
@@ -65,13 +72,28 @@ const buildResponseFromEvents = (
     aggregateDoc?.heroEventId && allEventIds.has(aggregateDoc.heroEventId)
       ? aggregate.events.find((event) => event.id === aggregateDoc.heroEventId) ?? null
       : aggregate.hero;
+  const preferredCover =
+    aggregateDoc?.coverEventId && allEventIds.has(aggregateDoc.coverEventId)
+      ? aggregate.events.find((event) => event.id === aggregateDoc.coverEventId) ?? null
+      : aggregate.cover;
 
   const sections = buildTimeMachineSections(aggregate.events, highlightIds);
   const overflowCount = Math.max(aggregate.events.length - highlightIds.length, 0);
+  const editorialIntro: TimeMachineEditorialIntro =
+    aggregateDoc?.editorialIntro ??
+    buildTimeMachineFallbackEditorialIntro({
+      year,
+      hero: preferredCover ?? preferredHero,
+      sections,
+    });
 
   return {
     year,
     summary: aggregateDoc?.summary?.trim() || aggregate.document.summary,
+    coverEventId: preferredCover?.id ?? aggregateDoc?.coverEventId ?? aggregate.document.coverEventId,
+    coverImageUrl:
+      preferredCover?.imageUrl ?? aggregateDoc?.coverImageUrl ?? aggregate.document.coverImageUrl,
+    editorialIntro,
     publishState: aggregateDoc?.publishState ?? aggregate.document.publishState,
     qualityFlags: aggregateDoc?.qualityFlags ?? aggregate.document.qualityFlags,
     stats: {
@@ -91,6 +113,7 @@ const hydrateYearAggregateResponse = async (
   const referencedIds = Array.from(
     new Set([
       ...(aggregateDoc.heroEventId ? [aggregateDoc.heroEventId] : []),
+      ...(aggregateDoc.coverEventId ? [aggregateDoc.coverEventId] : []),
       ...aggregateDoc.highlightEventIds,
       ...aggregateDoc.overflowEventIds,
     ])
@@ -105,6 +128,15 @@ const hydrateYearAggregateResponse = async (
   return {
     year,
     summary: aggregateDoc.summary,
+    coverEventId: aggregateDoc.coverEventId,
+    coverImageUrl: aggregateDoc.coverImageUrl,
+    editorialIntro:
+      aggregateDoc.editorialIntro ??
+      buildTimeMachineFallbackEditorialIntro({
+        year,
+        hero: null,
+        sections: [],
+      }),
     publishState: aggregateDoc.publishState,
     qualityFlags: aggregateDoc.qualityFlags,
     stats: {
@@ -151,7 +183,7 @@ export const fetchTimeMachineYear = async (
     },
     {
       ...CachePresets.static('time-machine'),
-      version: 2,
+      version: 3,
       forceRefresh: options.forceRefresh ?? false,
     }
   );

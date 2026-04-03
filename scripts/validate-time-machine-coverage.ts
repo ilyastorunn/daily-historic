@@ -177,6 +177,7 @@ export const validateTimeMachineCoverage = async (options: CliOptions = {}) => {
     const referencedIds = Array.from(
       new Set([
         ...(aggregate.heroEventId ? [aggregate.heroEventId] : []),
+        ...(aggregate.coverEventId ? [aggregate.coverEventId] : []),
         ...aggregate.highlightEventIds,
         ...aggregate.overflowEventIds,
       ])
@@ -219,6 +220,18 @@ export const validateTimeMachineCoverage = async (options: CliOptions = {}) => {
     if (aggregate.heroEventId && !seenIds.has(aggregate.heroEventId)) {
       issues.push(`Year ${year}: heroEventId ${aggregate.heroEventId} is not present in references`);
     }
+    if (aggregate.coverEventId && !seenIds.has(aggregate.coverEventId)) {
+      issues.push(`Year ${year}: coverEventId ${aggregate.coverEventId} is not present in references`);
+    }
+    if (!aggregate.editorialIntro?.hook?.trim()) {
+      issues.push(`Year ${year}: editorialIntro.hook is missing`);
+    }
+    if (!aggregate.editorialIntro?.teaser?.trim()) {
+      issues.push(`Year ${year}: editorialIntro.teaser is missing`);
+    }
+    if (!aggregate.editorialIntro?.source) {
+      issues.push(`Year ${year}: editorialIntro.source is missing`);
+    }
 
     const rebuilt = buildTimeMachineYearAggregate(
       year,
@@ -238,6 +251,7 @@ export const validateTimeMachineCoverage = async (options: CliOptions = {}) => {
       })),
       {
         existingSummary: aggregate.summary,
+        existingEditorialIntro: aggregate.editorialIntro,
         summarySource: aggregate.summarySource,
         generatedAt: aggregate.generatedAt,
         contentVersion: aggregate.contentVersion,
@@ -253,6 +267,12 @@ export const validateTimeMachineCoverage = async (options: CliOptions = {}) => {
     }
     if (JSON.stringify(rebuilt.populatedMonths) !== JSON.stringify(aggregate.populatedMonths)) {
       issues.push(`Year ${year}: populatedMonths mismatch`);
+    }
+    if ((rebuilt.coverEventId ?? null) !== (aggregate.coverEventId ?? null)) {
+      issues.push(`Year ${year}: coverEventId mismatch`);
+    }
+    if ((rebuilt.coverImageUrl ?? null) !== (aggregate.coverImageUrl ?? null)) {
+      issues.push(`Year ${year}: coverImageUrl mismatch`);
     }
 
     const indexEntry = indexYearMap.get(year);

@@ -3,6 +3,7 @@ import {
   TIME_MACHINE_HIGHLIGHT_LIMIT,
   TIME_MACHINE_MAX_YEAR,
   TIME_MACHINE_MIN_YEAR,
+  type TimeMachineEditorialIntro,
   type TimeMachineIndexYearEntry,
   type TimeMachinePublishState,
   type TimeMachineSection,
@@ -38,18 +39,12 @@ export type TimeMachineAggregateInputEvent = {
   existingImportanceScore?: number;
 };
 
-export type TimeMachineEditorialIntro = {
-  eyebrow: string;
-  hook: string;
-  teaser: string;
-  startMonthLabel: string | null;
-};
-
 type BuildYearAggregateResult = {
   document: TimeMachineYearDocument;
   stats: TimeMachineStats;
   events: TimeMachineTimelineEvent[];
   hero: TimeMachineTimelineEvent | null;
+  cover: TimeMachineTimelineEvent | null;
 };
 
 const MONTH_LABELS_LONG = [
@@ -137,6 +132,25 @@ const buildEditorialCategoryWeights = (
     .map(([category]) => category);
 
   return filteredCategories.map((category) => EDITORIAL_CATEGORY_PHRASES[category]);
+};
+
+const selectCoverCandidate = (input: {
+  hero: TimeMachineTimelineEvent | null;
+  importanceSorted: TimeMachineTimelineEvent[];
+  highlightEventIds: string[];
+}) => {
+  const { hero, importanceSorted, highlightEventIds } = input;
+  const highlightSet = new Set(highlightEventIds);
+
+  if (hero?.imageUrl) {
+    return hero;
+  }
+
+  return (
+    importanceSorted.find((event) => Boolean(event.imageUrl) && highlightSet.has(event.id)) ??
+    importanceSorted.find((event) => Boolean(event.imageUrl)) ??
+    null
+  );
 };
 
 export const isValidTimeMachineYear = (year: unknown): year is number => {
@@ -300,7 +314,7 @@ export const buildTimeMachineSummary = (
   return `${year} currently includes ${eventCount} curated moments across ${monthCount} active months${categoryCopy}.`;
 };
 
-export const buildTimeMachineEditorialIntro = (input: {
+export const buildTimeMachineFallbackEditorialIntro = (input: {
   year: number;
   hero: TimeMachineTimelineEvent | null;
   sections: TimeMachineSection[];
@@ -311,22 +325,20 @@ export const buildTimeMachineEditorialIntro = (input: {
 
   if (phrases.length > 0) {
     return {
-      eyebrow: `Entering ${year}`,
       hook: `${year} was shaped by ${formatEditorialList(phrases)}.`,
       teaser: startMonthLabel
-        ? `Start in ${startMonthLabel} and follow the moments that defined the year.`
+        ? `Begin in ${startMonthLabel} and follow the moments that defined the year.`
         : `The fuller timeline for ${year} is still taking shape.`,
-      startMonthLabel,
+      source: 'fallback',
     };
   }
 
   return {
-    eyebrow: `Entering ${year}`,
     hook: `${year} opened with turning points that reshaped the months ahead.`,
     teaser: startMonthLabel
-      ? `Start in ${startMonthLabel} and move through the year chronologically.`
+      ? `Begin in ${startMonthLabel} and move through the year chronologically.`
       : `The fuller timeline for ${year} is still taking shape.`,
-    startMonthLabel,
+    source: 'fallback',
   };
 };
 
@@ -444,6 +456,7 @@ export const buildTimeMachineYearAggregate = (
   options?: {
     highlightLimit?: number;
     existingSummary?: string;
+    existingEditorialIntro?: TimeMachineEditorialIntro;
     summarySource?: TimeMachineSummarySource;
     generatedAt?: string;
     contentVersion?: string;
@@ -463,6 +476,12 @@ export const buildTimeMachineYearAggregate = (
   const highlightSet = new Set(
     importanceSorted.slice(0, Math.min(highlightLimit, importanceSorted.length)).map((event) => event.id)
   );
+  const highlightEventIds = events
+    .filter((event) => highlightSet.has(event.id))
+    .map((event) => event.id);
+  const overflowEventIds = events
+    .filter((event) => !highlightSet.has(event.id))
+    .map((event) => event.id);
 
   const categories = Array.from(
     events.reduce((accumulator, event) => {
@@ -471,9 +490,27 @@ export const buildTimeMachineYearAggregate = (
     }, new Set<string>())
   );
   const populatedMonths = Array.from(new Set(events.map((event) => event.month))).sort((a, b) => a - b);
+  const sections = buildTimeMachineSections(events, highlightEventIds);
   const summarySource = options?.summarySource ?? (options?.existingSummary ? 'manual' : 'generated');
   const generatedSummary = buildTimeMachineSummary(year, events.length, populatedMonths, categories, 'generated');
   const summary = options?.existingSummary?.trim() || generatedSummary;
+  const cover = selectCoverCandidate({
+    hero,
+    importanceSorted,
+    highlightEventIds,
+  });
+  const fallbackEditorialIntro = buildTimeMachineFallbackEditorialIntro({
+    year,
+    hero: cover ?? hero,
+    sections,
+  });
+  const editorialIntro =
+    options?.existingEditorialIntro?.source === 'ai'
+      ? options.existingEditorialIntro
+      : {
+          ...fallbackEditorialIntro,
+          generatedAt,
+        };
   const quality = buildTimeMachineYearQuality({
     eventCount: events.length,
     populatedMonthCount: populatedMonths.length,
@@ -484,10 +521,13 @@ export const buildTimeMachineYearAggregate = (
     year,
     summary,
     heroEventId: hero?.id,
+    coverEventId: cover?.id,
+    coverImageUrl: cover?.imageUrl,
+    editorialIntro,
     eventCount: events.length,
     populatedMonths,
-    highlightEventIds: events.filter((event) => highlightSet.has(event.id)).map((event) => event.id),
-    overflowEventIds: events.filter((event) => !highlightSet.has(event.id)).map((event) => event.id),
+    highlightEventIds,
+    overflowEventIds,
     publishState: quality.publishState,
     qualityScore: quality.qualityScore,
     qualityFlags: quality.qualityFlags,
@@ -506,6 +546,7 @@ export const buildTimeMachineYearAggregate = (
     },
     events,
     hero,
+    cover,
   };
 };
 
@@ -560,6 +601,14 @@ export const createEmptyTimeMachineYearDocument = (
   return {
     year,
     summary: buildTimeMachineSummary(year, 0, [], []),
+    editorialIntro: {
+      ...buildTimeMachineFallbackEditorialIntro({
+        year,
+        hero: null,
+        sections: [],
+      }),
+      generatedAt,
+    },
     eventCount: 0,
     populatedMonths: [],
     highlightEventIds: [],

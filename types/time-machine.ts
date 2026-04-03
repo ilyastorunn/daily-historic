@@ -7,6 +7,14 @@ export const TIME_MACHINE_LAST_YEAR_STORAGE_KEY = '@daily_historic/time-machine/
 export type TimeMachineSummarySource = 'generated' | 'manual';
 export type TimeMachinePublishState = 'strong' | 'partial' | 'empty';
 export type TimeMachineSourceType = 'wikipedia-year-page' | 'on-this-day-selected';
+export type TimeMachineEditorialSource = 'ai' | 'fallback';
+
+export interface TimeMachineEditorialIntro {
+  hook: string;
+  teaser: string;
+  source: TimeMachineEditorialSource;
+  generatedAt?: string;
+}
 
 export interface TimeMachineMetadata {
   eligible: boolean;
@@ -25,6 +33,9 @@ export interface TimeMachineYearDocument {
   year: number;
   summary: string;
   heroEventId?: string;
+  coverEventId?: string;
+  coverImageUrl?: string;
+  editorialIntro: TimeMachineEditorialIntro;
   eventCount: number;
   populatedMonths: number[];
   highlightEventIds: string[];
@@ -70,6 +81,9 @@ export interface TimeMachineSection {
 export interface TimeMachineYearResponse {
   year: number;
   summary: string;
+  coverEventId?: string;
+  coverImageUrl?: string;
+  editorialIntro: TimeMachineEditorialIntro;
   publishState: TimeMachinePublishState;
   qualityFlags: string[];
   stats: TimeMachineStats;

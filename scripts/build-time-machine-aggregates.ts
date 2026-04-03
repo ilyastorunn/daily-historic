@@ -211,6 +211,7 @@ export const buildTimeMachineAggregates = async (options: CliOptions = {}) => {
         generatedAt,
         contentVersion: TIME_MACHINE_CONTENT_VERSION,
         existingSummary: existingAggregate?.summarySource === 'manual' ? existingAggregate.summary : undefined,
+        existingEditorialIntro: existingAggregate?.editorialIntro,
         summarySource: existingAggregate?.summarySource === 'manual' ? 'manual' : undefined,
       }
     ).document;

@@ -14,6 +14,7 @@ import { logInfo } from './ingest/logger';
 import { assertValidPayload, validateEvents } from './ingest/validation';
 import { TIME_MACHINE_MAX_YEAR, TIME_MACHINE_MIN_YEAR } from '../types/time-machine';
 import { buildTimeMachineAggregates } from './build-time-machine-aggregates';
+import { generateTimeMachineEditorial } from './generate-time-machine-editorial';
 import { validateTimeMachineCoverage } from './validate-time-machine-coverage';
 import {
   DEFAULT_TIME_MACHINE_COLLECTION_SUFFIX,
@@ -26,6 +27,8 @@ interface CliOptions {
   collectionSuffix: string;
   dryRun?: boolean;
   skipEnrichment?: boolean;
+  skipEditorial?: boolean;
+  editorialModel?: string;
   userAgent?: string;
   token?: string;
   serviceAccountPath?: string;
@@ -107,6 +110,12 @@ const parseArgs = (): CliOptions => {
       case '--skipEnrichment':
         options.skipEnrichment = true;
         break;
+      case '--skipEditorial':
+        options.skipEditorial = true;
+        break;
+      case '--editorialModel':
+        options.editorialModel = readNext();
+        break;
       case '--help':
       case '-h':
         printHelp();
@@ -143,6 +152,8 @@ const printHelp = () => {
       '  --serviceAccountJson <json> Inline JSON credentials.',
       '  --projectId <id>            Override Firebase project id.',
       '  --skipEnrichment            Skip Wikidata/media enrichment for faster smoke tests.',
+      '  --skipEditorial             Skip Time Machine editorial generation after aggregate build.',
+      '  --editorialModel <id>       Override the OpenAI model used for editorial generation.',
       '  --dry-run                   Parse and enrich without writing or building aggregates.',
       '  -h, --help                  Show this help message.',
       '',
@@ -401,6 +412,18 @@ const run = async () => {
     serviceAccountJson: options.serviceAccountJson,
     projectId: options.projectId,
   });
+
+  if (!options.skipEditorial) {
+    await generateTimeMachineEditorial({
+      fromYear: options.fromYear,
+      toYear: options.toYear,
+      collectionSuffix: options.collectionSuffix,
+      model: options.editorialModel ?? process.env.TIME_MACHINE_EDITORIAL_MODEL ?? 'gpt-4o-mini',
+      serviceAccountPath: options.serviceAccountPath,
+      serviceAccountJson: options.serviceAccountJson,
+      projectId: options.projectId,
+    });
+  }
 
   await validateTimeMachineCoverage({
     collectionSuffix: options.collectionSuffix,

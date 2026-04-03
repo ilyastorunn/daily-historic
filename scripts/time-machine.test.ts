@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildTimeMachineEditorialIntro,
+  buildTimeMachineFallbackEditorialIntro,
   buildTimeMachineSections,
   buildTimeMachineYearAggregate,
   createEmptyTimeMachineYearDocument,
@@ -50,9 +50,12 @@ describe('Time Machine aggregate helpers', () => {
     ]);
 
     expect(aggregate.document.heroEventId).toBe('a');
+    expect(aggregate.document.coverEventId).toBe('a');
+    expect(aggregate.document.coverImageUrl).toBe('https://example.com/a.jpg');
     expect(aggregate.document.highlightEventIds).toEqual(['b', 'c', 'd', 'a']);
     expect(aggregate.stats.eventCount).toBe(4);
     expect(aggregate.document.publishState).toBe('partial');
+    expect(aggregate.document.editorialIntro.source).toBe('fallback');
   });
 
   it('groups month sections in chronological order', () => {
@@ -118,7 +121,7 @@ describe('Time Machine aggregate helpers', () => {
     expect(aggregate.document.qualityScore).toBeGreaterThan(0);
   });
 
-  it('builds editorial intro from dominant category signals', () => {
+  it('builds fallback editorial intro from dominant category signals', () => {
     const aggregate = buildTimeMachineYearAggregate(1969, [
       {
         eventId: 'moon',
@@ -139,27 +142,56 @@ describe('Time Machine aggregate helpers', () => {
       },
     ]);
 
-    const intro = buildTimeMachineEditorialIntro({
+    const intro = buildTimeMachineFallbackEditorialIntro({
       year: 1969,
       hero: aggregate.hero,
       sections: buildTimeMachineSections(aggregate.events, aggregate.document.highlightEventIds),
     });
 
-    expect(intro.eyebrow).toBe('Entering 1969');
     expect(intro.hook).toContain('1969 was shaped by');
-    expect(intro.teaser).toContain('Start in July');
-    expect(intro.startMonthLabel).toBe('July');
+    expect(intro.teaser).toContain('Begin in July');
+    expect(intro.source).toBe('fallback');
   });
 
   it('falls back to a safe editorial intro when signals are sparse', () => {
-    const intro = buildTimeMachineEditorialIntro({
+    const intro = buildTimeMachineFallbackEditorialIntro({
       year: 1801,
       hero: null,
       sections: [],
     });
 
-    expect(intro.eyebrow).toBe('Entering 1801');
     expect(intro.hook).toContain('1801 opened with turning points');
-    expect(intro.startMonthLabel).toBeNull();
+    expect(intro.teaser).toContain('fuller timeline');
+    expect(intro.source).toBe('fallback');
+  });
+
+  it('selects a cover image from highlighted events when the hero lacks media', () => {
+    const aggregate = buildTimeMachineYearAggregate(1912, [
+      {
+        eventId: 'hero-without-image',
+        year: 1912,
+        title: 'Hero without image',
+        summary: 'This event ranks highest but has no image.',
+        categories: ['politics'],
+        date: { month: 1, day: 3 },
+        pageCount: 3,
+        existingImportanceScore: 100,
+      },
+      {
+        eventId: 'image-event',
+        year: 1912,
+        title: 'Image event',
+        summary: 'This event has a strong image and should become the cover.',
+        categories: ['art-culture'],
+        date: { month: 2, day: 11 },
+        imageUrl: 'https://example.com/cover.jpg',
+        pageCount: 2,
+        existingImportanceScore: 10,
+      },
+    ]);
+
+    expect(aggregate.document.heroEventId).toBe('hero-without-image');
+    expect(aggregate.document.coverEventId).toBe('image-event');
+    expect(aggregate.document.coverImageUrl).toBe('https://example.com/cover.jpg');
   });
 });

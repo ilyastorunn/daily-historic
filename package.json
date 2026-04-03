@@ -73,6 +73,7 @@
     "lint": "expo lint",
     "migrate:backend": "teeny migrate --local",
     "time-machine:build": "tsx scripts/build-time-machine-aggregates.ts",
+    "time-machine:editorial": "tsx scripts/generate-time-machine-editorial.ts",
     "time-machine:promote": "tsx scripts/promote-time-machine.ts",
     "time-machine:validate": "tsx scripts/validate-time-machine-coverage.ts",
     "reindex:algolia": "tsx scripts/reindex-algolia.ts",
