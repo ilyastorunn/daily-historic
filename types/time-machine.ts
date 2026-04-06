@@ -7,7 +7,7 @@ export const TIME_MACHINE_LAST_YEAR_STORAGE_KEY = '@daily_historic/time-machine/
 export type TimeMachineSummarySource = 'generated' | 'manual';
 export type TimeMachinePublishState = 'strong' | 'partial' | 'empty';
 export type TimeMachineSourceType = 'wikipedia-year-page' | 'on-this-day-selected';
-export type TimeMachineEditorialSource = 'ai' | 'fallback';
+export type TimeMachineEditorialSource = 'ai' | 'fallback' | 'manual';
 
 export interface TimeMachineEditorialIntro {
   hook: string;

@@ -30,6 +30,7 @@ interface CliOptions {
   collectionSuffix: string;
   dryRun?: boolean;
   fallbackOnly?: boolean;
+  overwriteManual?: boolean;
   model: string;
   serviceAccountPath?: string;
   serviceAccountJson?: string;
@@ -94,6 +95,10 @@ const parseArgs = (): CliOptions => {
       case '--fallback-only':
         options.fallbackOnly = true;
         break;
+      case '--overwriteManual':
+      case '--overwrite-manual':
+        options.overwriteManual = true;
+        break;
       case '--dryRun':
       case '--dry-run':
         options.dryRun = true;
@@ -138,6 +143,7 @@ const printHelp = () => {
       '  --production                Use production collections with no suffix.',
       '  --model <id>                OpenAI model id (default: TIME_MACHINE_EDITORIAL_MODEL or gpt-4o-mini).',
       '  --fallbackOnly              Skip AI generation and write fallback editorial copy only.',
+      '  --overwriteManual           Allow existing source=manual copy to be replaced.',
       '  --dry-run                   Print what would be generated without writing.',
       '  --serviceAccount <path>     Path to Firebase service account JSON.',
       '  --serviceAccountJson <json> Inline Firebase credentials.',
@@ -362,10 +368,16 @@ export const generateTimeMachineEditorial = async (
     coverImageUrl?: string;
     editorialIntro: TimeMachineEditorialIntro;
   }[] = [];
+  let skippedManualCount = 0;
 
   for (let year = options.fromYear; year <= options.toYear; year += 1) {
     const aggregate = aggregateMap.get(year);
     if (!aggregate) {
+      continue;
+    }
+
+    if (aggregate.editorialIntro?.source === 'manual' && !options.overwriteManual) {
+      skippedManualCount += 1;
       continue;
     }
 
@@ -444,7 +456,7 @@ export const generateTimeMachineEditorial = async (
 
   if (options.dryRun) {
     console.log(
-      `Dry run: prepared ${updates.length} Time Machine editorial update(s) for ${targets.timeMachineYears}.`
+      `Dry run: prepared ${updates.length} Time Machine editorial update(s) for ${targets.timeMachineYears} and skipped ${skippedManualCount} manual year(s).`
     );
     console.log(
       JSON.stringify(
@@ -494,6 +506,7 @@ export const generateTimeMachineEditorial = async (
 
   logInfo('time-machine-editorial-generated', {
     count: updates.length,
+    skippedManualCount,
     targetCollection: targets.timeMachineYears,
     source: options.fallbackOnly || !openAiApiKey ? 'fallback' : 'mixed',
   });

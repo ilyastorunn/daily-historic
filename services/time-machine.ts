@@ -183,7 +183,7 @@ export const fetchTimeMachineYear = async (
     },
     {
       ...CachePresets.static('time-machine'),
-      version: 3,
+      version: 4,
       forceRefresh: options.forceRefresh ?? false,
     }
   );
