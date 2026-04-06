@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Platform,
   Pressable,
   RefreshControl,
@@ -29,7 +27,6 @@ type TimeMachineListSection = TimeMachineSection & {
 };
 
 const AnimatedSectionList = Animated.SectionList<TimeMachineTimelineEvent, TimeMachineListSection>;
-const STICKY_NAV_THRESHOLD = 30;
 
 const TimeMachineYearScreen = () => {
   const router = useRouter();
@@ -39,9 +36,7 @@ const TimeMachineYearScreen = () => {
   const blurTint = theme.mode === 'dark' ? 'dark' : 'light';
   const { year: yearParam } = useLocalSearchParams<{ year?: string | string[] }>();
   const [showAll, setShowAll] = useState(false);
-  const [isStickyNavActive, setIsStickyNavActive] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const stickyNavActiveRef = useRef(false);
 
   const resolvedYearParam = Array.isArray(yearParam) ? yearParam[0] : yearParam;
   const parsedYear = resolvedYearParam ? Number.parseInt(resolvedYearParam, 10) : Number.NaN;
@@ -81,29 +76,11 @@ const TimeMachineYearScreen = () => {
     [visibleSections]
   );
 
-  const overlayNavOpacity = useMemo(
-    () =>
-      scrollY.interpolate({
-        inputRange: [0, 18, 52],
-        outputRange: [1, 0.86, 0],
-        extrapolate: 'clamp',
-      }),
-    [scrollY]
-  );
-  const overlayNavTranslateY = useMemo(
-    () =>
-      scrollY.interpolate({
-        inputRange: [0, 52],
-        outputRange: [0, -8],
-        extrapolate: 'clamp',
-      }),
-    [scrollY]
-  );
   const stickyNavOpacity = useMemo(
     () =>
       scrollY.interpolate({
-        inputRange: [12, 36, 60],
-        outputRange: [0, 0.42, 1],
+        inputRange: [0, 24, 84, 168],
+        outputRange: [0.68, 0.74, 0.9, 1],
         extrapolate: 'clamp',
       }),
     [scrollY]
@@ -111,18 +88,21 @@ const TimeMachineYearScreen = () => {
   const stickyNavTranslateY = useMemo(
     () =>
       scrollY.interpolate({
-        inputRange: [12, 60],
+        inputRange: [0, 168],
         outputRange: [-6, 0],
         extrapolate: 'clamp',
       }),
     [scrollY]
   );
-
-  useEffect(() => {
-    scrollY.setValue(0);
-    stickyNavActiveRef.current = false;
-    setIsStickyNavActive(false);
-  }, [scrollY, validYear]);
+  const stickyBarFillOpacity = useMemo(
+    () =>
+      scrollY.interpolate({
+        inputRange: [0, 36, 96, 180],
+        outputRange: [0, 0.12, 0.48, 1],
+        extrapolate: 'clamp',
+      }),
+    [scrollY]
+  );
 
   const handleBack = useCallback(() => {
     router.back();
@@ -155,15 +135,6 @@ const TimeMachineYearScreen = () => {
         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
         {
           useNativeDriver: true,
-          listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-            const offsetY = event.nativeEvent.contentOffset.y;
-            const shouldShowStickyNav = offsetY > STICKY_NAV_THRESHOLD;
-
-            if (shouldShowStickyNav !== stickyNavActiveRef.current) {
-              stickyNavActiveRef.current = shouldShowStickyNav;
-              setIsStickyNavActive(shouldShowStickyNav);
-            }
-          },
         }
       ),
     [scrollY]
@@ -251,31 +222,6 @@ const TimeMachineYearScreen = () => {
             />
 
             <Animated.View
-              pointerEvents={isStickyNavActive ? 'none' : 'auto'}
-              style={[
-                styles.overlayNav,
-                {
-                  top: insets.top + theme.spacing.lg,
-                  opacity: overlayNavOpacity,
-                  transform: [{ translateY: overlayNavTranslateY }],
-                },
-              ]}
-            >
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Go back to year explorer"
-                onPress={handleBack}
-                style={({ pressed }) => [styles.overlayNavButton, pressed && styles.overlayNavButtonPressed]}
-              >
-                <Ionicons name="chevron-back" size={18} color={theme.colors.overlayText} />
-                <Text style={styles.overlayNavLabel}>Back</Text>
-              </Pressable>
-              <Text style={styles.overlayYear}>{validYear}</Text>
-              <View style={styles.overlaySpacer} />
-            </Animated.View>
-
-            <Animated.View
-              pointerEvents={isStickyNavActive ? 'auto' : 'none'}
               style={[
                 styles.stickyNav,
                 {
@@ -293,6 +239,10 @@ const TimeMachineYearScreen = () => {
                   style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.stickyBarScrim} />
+                <Animated.View
+                  pointerEvents="none"
+                  style={[styles.stickyBarFill, { opacity: stickyBarFillOpacity }]}
+                />
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Go back to year explorer"
@@ -302,7 +252,9 @@ const TimeMachineYearScreen = () => {
                   <Ionicons name="chevron-back" size={18} color={theme.colors.textPrimary} />
                   <Text style={styles.stickyBackLabel}>Back</Text>
                 </Pressable>
-                <Text style={styles.stickyYear}>{validYear}</Text>
+                <Text pointerEvents="none" style={styles.stickyYear}>
+                  {validYear}
+                </Text>
                 <View style={styles.stickyRightSpacer} />
               </View>
             </Animated.View>
@@ -389,49 +341,8 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       width: 44,
       height: 44,
     },
-    overlayNav: {
-      position: 'absolute',
-      left: theme.spacing.lg,
-      right: theme.spacing.lg,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      zIndex: 100,
-      elevation: 100,
-    },
-    overlayNavButton: {
-      minWidth: 78,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      borderRadius: theme.radius.pill,
-      backgroundColor: 'rgba(12, 10, 6, 0.45)',
-    },
     overlayNavButtonPressed: {
       opacity: 0.86,
-    },
-    overlayNavLabel: {
-      fontFamily: sansFamily,
-      fontSize: 13,
-      color: theme.colors.overlayText,
-      textShadowColor: 'rgba(12, 10, 6, 0.42)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 6,
-    },
-    overlayYear: {
-      fontFamily: serifFamily,
-      fontSize: 24,
-      color: theme.colors.overlayText,
-      letterSpacing: -0.4,
-      textShadowColor: 'rgba(12, 10, 6, 0.48)',
-      textShadowOffset: { width: 0, height: 2 },
-      textShadowRadius: 10,
-    },
-    overlaySpacer: {
-      minWidth: 78,
-      height: 36,
     },
     stickyNav: {
       position: 'absolute',
@@ -467,6 +378,11 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       backgroundColor:
         theme.mode === 'dark' ? 'rgba(31, 28, 23, 0.22)' : 'rgba(247, 244, 238, 0.22)',
     },
+    stickyBarFill: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor:
+        theme.mode === 'dark' ? 'rgba(31, 28, 23, 0.32)' : 'rgba(247, 244, 238, 0.44)',
+    },
     stickyBackButton: {
       minWidth: 84,
       minHeight: 50,
@@ -476,6 +392,8 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       gap: theme.spacing.xs,
       paddingHorizontal: theme.spacing.lg,
       paddingVertical: theme.spacing.sm,
+      zIndex: 2,
+      elevation: 2,
     },
     stickyBackLabel: {
       fontFamily: sansFamily,
@@ -495,6 +413,7 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     stickyRightSpacer: {
       width: 84,
       height: 50,
+      zIndex: 2,
     },
     listContent: {
       paddingBottom: theme.spacing.xxl,
