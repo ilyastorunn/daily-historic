@@ -1,12 +1,15 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
+  ViewToken,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
@@ -27,6 +30,13 @@ type TimeMachineListSection = TimeMachineSection & {
 };
 
 const AnimatedSectionList = Animated.SectionList<TimeMachineTimelineEvent, TimeMachineListSection>;
+const MONTH_NAV_APPEAR_SCROLL = 72;
+const MONTH_LABEL_FADE_OUT_MS = 90;
+const MONTH_LABEL_FADE_IN_MS = 160;
+
+type TimeMachineViewToken = ViewToken<TimeMachineTimelineEvent> & {
+  section?: TimeMachineListSection;
+};
 
 const TimeMachineYearScreen = () => {
   const router = useRouter();
@@ -35,8 +45,14 @@ const TimeMachineYearScreen = () => {
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const blurTint = theme.mode === 'dark' ? 'dark' : 'light';
   const { year: yearParam } = useLocalSearchParams<{ year?: string | string[] }>();
-  const [showAll, setShowAll] = useState(false);
+  const [displayMonthLabel, setDisplayMonthLabel] = useState<string | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const stickyMonthOpacity = useRef(new Animated.Value(0)).current;
+  const scrollOffsetRef = useRef(0);
+  const trackedMonthRef = useRef<string | null>(null);
+  const visibleMonthCandidateRef = useRef<string | null>(null);
+  const displayedMonthLabelRef = useRef<string | null>(null);
+  const sectionsRef = useRef<TimeMachineListSection[]>([]);
 
   const resolvedYearParam = Array.isArray(yearParam) ? yearParam[0] : yearParam;
   const parsedYear = resolvedYearParam ? Number.parseInt(resolvedYearParam, 10) : Number.NaN;
@@ -47,25 +63,7 @@ const TimeMachineYearScreen = () => {
     enabled: validYear !== null,
   });
 
-  const visibleSections = useMemo(() => {
-    if (!data) {
-      return [];
-    }
-
-    if (showAll) {
-      return data.sections;
-    }
-
-    return data.sections
-      .map((section) => ({
-        ...section,
-        events:
-          section.highlightedCount > 0
-            ? section.events.slice(0, section.highlightedCount)
-            : [],
-      }))
-      .filter((section) => section.events.length > 0);
-  }, [data, showAll]);
+  const visibleSections = useMemo(() => data?.sections ?? [], [data]);
 
   const listSections = useMemo(
     () =>
@@ -75,6 +73,7 @@ const TimeMachineYearScreen = () => {
       })) as TimeMachineListSection[],
     [visibleSections]
   );
+  sectionsRef.current = listSections;
 
   const stickyNavOpacity = useMemo(
     () =>
@@ -103,10 +102,81 @@ const TimeMachineYearScreen = () => {
       }),
     [scrollY]
   );
+  const firstRenderedMonth = listSections[0]?.month ?? null;
 
   const handleBack = useCallback(() => {
     router.back();
   }, [router]);
+
+  const updateDisplayedMonthLabel = useCallback(
+    (nextLabel: string | null) => {
+      if (nextLabel === displayedMonthLabelRef.current) {
+        return;
+      }
+
+      const commitLabel = (label: string | null) => {
+        displayedMonthLabelRef.current = label;
+        setDisplayMonthLabel(label);
+      };
+
+      stickyMonthOpacity.stopAnimation();
+
+      if (nextLabel === null) {
+        Animated.timing(stickyMonthOpacity, {
+          toValue: 0,
+          duration: MONTH_LABEL_FADE_OUT_MS,
+          useNativeDriver: true,
+        }).start(({ finished }) => {
+          if (finished) {
+            commitLabel(null);
+          }
+        });
+        return;
+      }
+
+      if (displayedMonthLabelRef.current === null) {
+        commitLabel(nextLabel);
+        stickyMonthOpacity.setValue(0);
+        Animated.timing(stickyMonthOpacity, {
+          toValue: 1,
+          duration: MONTH_LABEL_FADE_IN_MS,
+          useNativeDriver: true,
+        }).start();
+        return;
+      }
+
+      Animated.timing(stickyMonthOpacity, {
+        toValue: 0,
+        duration: MONTH_LABEL_FADE_OUT_MS,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished) {
+          return;
+        }
+
+        commitLabel(nextLabel);
+        stickyMonthOpacity.setValue(0);
+        Animated.timing(stickyMonthOpacity, {
+          toValue: 1,
+          duration: MONTH_LABEL_FADE_IN_MS,
+          useNativeDriver: true,
+        }).start();
+      });
+    },
+    [stickyMonthOpacity]
+  );
+
+  const updateTrackedMonth = useCallback(
+    (nextLabel: string | null) => {
+      if (nextLabel === trackedMonthRef.current) {
+        return;
+      }
+
+      trackedMonthRef.current = nextLabel;
+      updateDisplayedMonthLabel(nextLabel);
+    },
+    [updateDisplayedMonthLabel]
+  );
 
   const handleEventPress = useCallback(
     (eventId: string) => {
@@ -117,17 +187,45 @@ const TimeMachineYearScreen = () => {
     [data?.year, router, validYear]
   );
 
-  const handleShowMore = useCallback(() => {
-    if (!data) {
-      return;
-    }
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 55,
+    waitForInteraction: false,
+  }).current;
 
-    setShowAll(true);
-    trackEvent('time_machine_overflow_expanded', {
-      year: data.year,
-      overflow_count: data.overflowCount,
-    });
-  }, [data]);
+  const handleViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: TimeMachineViewToken[] }) => {
+      const visibleItems = viewableItems
+        .filter(
+          (viewableItem) =>
+            viewableItem.isViewable &&
+            typeof viewableItem.index === 'number' &&
+            Boolean(viewableItem.item) &&
+            Boolean(viewableItem.section)
+        )
+        .sort((left, right) => {
+          const leftMonth = left.section?.month ?? 99;
+          const rightMonth = right.section?.month ?? 99;
+
+          if (leftMonth !== rightMonth) {
+            return leftMonth - rightMonth;
+          }
+
+          return (left.index ?? 0) - (right.index ?? 0);
+        });
+
+      const visibleMonth = visibleItems[0]?.section?.label ?? null;
+      visibleMonthCandidateRef.current = visibleMonth;
+
+      if (scrollOffsetRef.current <= MONTH_NAV_APPEAR_SCROLL) {
+        updateTrackedMonth(null);
+        return;
+      }
+
+      if (visibleMonth) {
+        updateTrackedMonth(visibleMonth);
+      }
+    }
+  );
 
   const handleScroll = useMemo(
     () =>
@@ -135,9 +233,22 @@ const TimeMachineYearScreen = () => {
         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
         {
           useNativeDriver: true,
+          listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const offsetY = event.nativeEvent.contentOffset.y;
+            scrollOffsetRef.current = offsetY;
+
+            if (offsetY <= MONTH_NAV_APPEAR_SCROLL) {
+              updateTrackedMonth(null);
+              return;
+            }
+
+            if (!trackedMonthRef.current && visibleMonthCandidateRef.current) {
+              updateTrackedMonth(visibleMonthCandidateRef.current);
+            }
+          },
         }
       ),
-    [scrollY]
+    [scrollY, updateTrackedMonth]
   );
 
   if (validYear === null) {
@@ -154,7 +265,7 @@ const TimeMachineYearScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
       <StatusBar style={data ? 'light' : 'auto'} animated />
       <View style={styles.container}>
         {data ? (
@@ -167,6 +278,8 @@ const TimeMachineYearScreen = () => {
               stickySectionHeadersEnabled={false}
               scrollEventThrottle={16}
               onScroll={handleScroll}
+              onViewableItemsChanged={handleViewableItemsChanged.current}
+              viewabilityConfig={viewabilityConfig}
               refreshControl={
                 refresh ? (
                   <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={theme.colors.accentPrimary} />
@@ -181,33 +294,20 @@ const TimeMachineYearScreen = () => {
                 />
               }
               ListFooterComponent={
-                data.overflowCount > 0 && !showAll ? (
-                  <Pressable
-                    onPress={handleShowMore}
-                    style={({ pressed }) => [
-                      styles.showMoreButton,
-                      pressed && styles.primaryButtonPressed,
-                    ]}
-                  >
-                    <Text style={styles.showMoreText}>Show more from {data.year}</Text>
-                  </Pressable>
-                ) : !loading && data.publishState === 'empty' ? (
+                !loading && data.publishState === 'empty' ? (
                   <View style={styles.emptyState}>
                     <Text style={styles.stateTitle}>Curation in progress.</Text>
                     <Text style={styles.helperText}>{data.summary}</Text>
                   </View>
-                ) : (
-                  <View style={styles.bottomSpacer} />
-                )
+                ) : null
               }
-              renderSectionHeader={({ section }) => (
-                <View style={styles.sectionHeader}>
-                  <View style={styles.sectionLine} />
-                  <Text style={styles.sectionTitle}>{section.label}</Text>
-                </View>
-              )}
-              renderItem={({ item }) => (
-                <View style={styles.cardWrap}>
+              renderItem={({ item, section, index }) => (
+                <View
+                  style={[
+                    styles.cardWrap,
+                    index === 0 && section.month !== firstRenderedMonth ? styles.monthStartCardWrap : null,
+                  ]}
+                >
                   <TimelineCard
                     id={item.id}
                     title={item.title}
@@ -252,9 +352,16 @@ const TimeMachineYearScreen = () => {
                   <Ionicons name="chevron-back" size={18} color={theme.colors.textPrimary} />
                   <Text style={styles.stickyBackLabel}>Back</Text>
                 </Pressable>
-                <Text pointerEvents="none" style={styles.stickyYear}>
-                  {validYear}
-                </Text>
+                <View pointerEvents="none" style={styles.stickyTitleWrap}>
+                  <View style={styles.stickyTitleRow}>
+                    <Text style={styles.stickyYear}>{validYear}</Text>
+                    {displayMonthLabel ? (
+                      <Animated.Text style={[styles.stickyMonth, { opacity: stickyMonthOpacity }]}>
+                        {`, ${displayMonthLabel}`}
+                      </Animated.Text>
+                    ) : null}
+                  </View>
+                </View>
                 <View style={styles.stickyRightSpacer} />
               </View>
             </Animated.View>
@@ -400,63 +507,48 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       fontSize: 13,
       color: theme.colors.textPrimary,
     },
-    stickyYear: {
-      position: 'absolute',
-      left: theme.spacing.lg,
-      right: theme.spacing.lg,
-      textAlign: 'center',
-      fontFamily: serifFamily,
-      fontSize: 22,
-      color: theme.colors.textPrimary,
-      letterSpacing: -0.35,
-    },
     stickyRightSpacer: {
       width: 84,
       height: 50,
       zIndex: 2,
     },
-    listContent: {
-      paddingBottom: theme.spacing.xxl,
+    stickyTitleWrap: {
+      position: 'absolute',
+      left: theme.spacing.xl,
+      right: theme.spacing.xl,
+      top: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1,
     },
-    sectionHeader: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.xl,
-      paddingBottom: theme.spacing.md,
+    stickyTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.md,
+      justifyContent: 'center',
+      maxWidth: '72%',
     },
-    sectionLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: theme.colors.borderSubtle,
+    stickyYear: {
+      fontFamily: serifFamily,
+      fontSize: 22,
+      color: theme.colors.textPrimary,
+      letterSpacing: -0.35,
     },
-    sectionTitle: {
+    stickyMonth: {
       fontFamily: sansFamily,
-      fontSize: 12,
-      fontWeight: '600',
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      color: theme.colors.textTertiary,
+      fontSize: 15,
+      color: theme.colors.textSecondary,
+      letterSpacing: 0.2,
+    },
+    listContent: {
+      paddingBottom: theme.spacing.sm,
     },
     cardWrap: {
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.md,
     },
-    showMoreButton: {
-      marginTop: theme.spacing.lg,
-      marginHorizontal: theme.spacing.lg,
-      borderRadius: theme.radius.pill,
-      backgroundColor: theme.colors.accentPrimary,
-      paddingVertical: theme.spacing.lg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    showMoreText: {
-      fontFamily: sansFamily,
-      fontSize: 15,
-      fontWeight: '600',
-      color: theme.colors.surface,
+    monthStartCardWrap: {
+      paddingTop: theme.spacing.lg,
     },
     centerState: {
       flex: 1,
@@ -498,9 +590,6 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       fontSize: 15,
       fontWeight: '600',
       color: theme.colors.surface,
-    },
-    bottomSpacer: {
-      height: theme.spacing.xl,
     },
   });
 };
