@@ -26,6 +26,10 @@ type CategoryOption =
   | 'exploration'
   | 'surprise';
 
+type RatingValue = 1 | 2 | 3 | 4 | 5 | null;
+
+type PaywallPlan = 'annual' | 'monthly';
+
 type OnboardingState = {
   stepIndex: number;
   displayName: string;
@@ -42,6 +46,8 @@ type OnboardingState = {
   categoriesSkipped: boolean;
   pushPermission: PushPermission;
   heroPreviewSeen: boolean;
+  ratingValue: RatingValue;
+  selectedPaywallPlan: PaywallPlan;
 };
 
 type OnboardingAction =
@@ -80,6 +86,8 @@ const createInitialState = (
   categoriesSkipped: false,
   pushPermission: 'unknown',
   heroPreviewSeen: false,
+  ratingValue: null,
+  selectedPaywallPlan: 'annual',
   ...overrides,
 });
 
@@ -188,4 +196,6 @@ export type {
   OnboardingState,
   AccountSelection,
   PushPermission,
+  RatingValue,
+  PaywallPlan,
 };

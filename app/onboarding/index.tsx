@@ -18,7 +18,9 @@ import {
   StepName,
   StepNotificationPermission,
   StepNotificationTime,
+  StepPaywall,
   StepPreview,
+  StepRateUs,
   StepWelcome,
 } from '@/components/onboarding/steps';
 
@@ -89,6 +91,16 @@ const steps: StepDefinition[] = [
 
       return false;
     },
+  },
+  {
+    key: 'paywall',
+    title: 'Premium',
+    Component: StepPaywall,
+  },
+  {
+    key: 'rate-us',
+    title: 'Rate Us',
+    Component: StepRateUs,
   },
 ];
 
@@ -194,6 +206,8 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
     currentStepDef.key !== 'welcome' &&
     currentStepDef.key !== 'categories' &&
     currentStepDef.key !== 'notification-permission' &&
+    currentStepDef.key !== 'rate-us' &&
+    currentStepDef.key !== 'paywall' &&
     currentStepDef.key !== 'account';
 
   const showBackButton = !isFirstStep;

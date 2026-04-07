@@ -41,10 +41,10 @@ const StepWelcome = ({ onNext }: StepComponentProps) => {
   };
 
   const handleLogin = () => {
-    router.push({
-      pathname: "/sign-in",
+    router.replace({
+      pathname: "/onboarding",
       params: {
-        returnToStep: "welcome",
+        step: "account",
         ...(displayName ? { displayName } : {}),
       },
     });

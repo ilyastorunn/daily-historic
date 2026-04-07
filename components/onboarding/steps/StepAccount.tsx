@@ -103,6 +103,8 @@ const connectedLabels = {
   email: 'Email account is connected',
 };
 
+type EmailSheetMode = 'create' | 'sign-in';
+
 const StepAccount = ({ onNext }: StepComponentProps) => {
   const theme = useAppTheme();
   const { styles, colors: dynamicColors } = useMemo(() => createOnboardingStyles(theme), [theme]);
@@ -117,6 +119,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     linkWithApple,
     linkWithEmail,
     linkWithGoogle,
+    signInWithEmail,
   } = useUserContext();
   const router = useRouter();
 
@@ -124,6 +127,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
   const [password, setPassword] = useState(state.accountPassword);
   const [confirmPassword, setConfirmPassword] = useState(state.accountPasswordConfirm);
   const [showEmailSheet, setShowEmailSheet] = useState(false);
+  const [emailSheetMode, setEmailSheetMode] = useState<EmailSheetMode>('create');
 
   const gradientUri = useMemo(() => {
     const heroTone = dynamicColors.heroBackground ?? dynamicColors.screen;
@@ -146,7 +150,9 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
   const passwordLongEnough = password.length >= 8;
   const passwordsMatch = password === confirmPassword && password.length > 0;
   const emailSubmitDisabled =
-    authBusy || !emailValid || !passwordLongEnough || !passwordsMatch || !state.termsAccepted;
+    emailSheetMode === 'create'
+      ? authBusy || !emailValid || !passwordLongEnough || !passwordsMatch || !state.termsAccepted
+      : authBusy || !emailValid || password.length === 0;
   const connectedAccountSelection =
     authAccountSelection === 'google' ||
     authAccountSelection === 'apple' ||
@@ -212,11 +218,14 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     }
   };
 
-  const openEmailSheet = () => {
+  const openEmailSheet = (mode: EmailSheetMode = 'create') => {
     clearAuthError();
     runHaptic();
+    setEmailSheetMode(mode);
     setShowEmailSheet(true);
-    updateState({ accountSelection: 'email' });
+    if (mode === 'create') {
+      updateState({ accountSelection: 'email' });
+    }
   };
 
   const closeEmailSheet = () => {
@@ -238,6 +247,14 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     clearAuthError();
 
     try {
+      if (emailSheetMode === 'sign-in') {
+        await signInWithEmail(email.trim(), password);
+        runHaptic();
+        setShowEmailSheet(false);
+        router.replace('/');
+        return;
+      }
+
       await linkWithEmail(email.trim(), password);
       updateState({
         accountSelection: 'email',
@@ -256,6 +273,11 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
   const toggleTerms = () => {
     clearAuthError();
     updateState({ termsAccepted: !state.termsAccepted, accountSelection: 'email' });
+  };
+
+  const toggleEmailSheetMode = () => {
+    clearAuthError();
+    setEmailSheetMode((currentMode) => (currentMode === 'create' ? 'sign-in' : 'create'));
   };
 
   return (
@@ -356,7 +378,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
                     accessibilityState={{ busy: authBusy }}
                     disabled={authBusy}
                     hitSlop={spacingScale.xs}
-                    onPress={openEmailSheet}
+                    onPress={() => openEmailSheet('create')}
                     style={({ pressed }) => [
                       styles.authButton,
                       authBusy && styles.disabledButton,
@@ -406,7 +428,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
                   <Pressable
                     accessibilityRole="button"
                     disabled={authBusy}
-                    onPress={() => router.push('/sign-in' as never)}
+                    onPress={() => openEmailSheet('sign-in')}
                   >
                     <Text style={styles.accountLegalLink}>Sign in</Text>
                   </Pressable>
@@ -439,7 +461,9 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
           >
             <View style={styles.emailSheet}>
               <View style={styles.emailSheetHandle} />
-              <Text style={styles.emailSheetTitle}>Create your account</Text>
+              <Text style={styles.emailSheetTitle}>
+                {emailSheetMode === 'create' ? 'Create your account' : 'Sign in to your account'}
+              </Text>
               <View style={styles.emailSheetForm}>
                 <TextInput
                   autoCapitalize="none"
@@ -462,66 +486,74 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
                     clearAuthError();
                     setPassword(value);
                   }}
-                  placeholder="Create password (min 8 characters)"
+                  placeholder={
+                    emailSheetMode === 'create'
+                      ? 'Create password (min 8 characters)'
+                      : 'Password'
+                  }
                   secureTextEntry
                   style={styles.input}
                   value={password}
                 />
-                {!passwordLongEnough && password.length > 0 ? (
+                {emailSheetMode === 'create' && !passwordLongEnough && password.length > 0 ? (
                   <Text style={styles.errorText}>Password must be at least 8 characters.</Text>
                 ) : null}
 
-                <TextInput
-                  onChangeText={(value) => {
-                    clearAuthError();
-                    setConfirmPassword(value);
-                  }}
-                  placeholder="Confirm password"
-                  secureTextEntry
-                  style={styles.input}
-                  value={confirmPassword}
-                />
-                {!passwordsMatch && confirmPassword.length > 0 ? (
-                  <Text style={styles.errorText}>Passwords need to match.</Text>
-                ) : null}
-
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: state.termsAccepted }}
-                  onPress={toggleTerms}
-                  style={({ pressed }) => [styles.termsToggle, pressed && styles.pressedButton]}
-                >
-                  <View
-                    style={[
-                      styles.termsCheckbox,
-                      state.termsAccepted && styles.termsCheckboxSelected,
-                    ]}
-                  >
-                    {state.termsAccepted ? (
-                      <Ionicons name="checkmark" size={14} style={styles.termsCheckIcon} />
+                {emailSheetMode === 'create' ? (
+                  <>
+                    <TextInput
+                      onChangeText={(value) => {
+                        clearAuthError();
+                        setConfirmPassword(value);
+                      }}
+                      placeholder="Confirm password"
+                      secureTextEntry
+                      style={styles.input}
+                      value={confirmPassword}
+                    />
+                    {!passwordsMatch && confirmPassword.length > 0 ? (
+                      <Text style={styles.errorText}>Passwords need to match.</Text>
                     ) : null}
-                  </View>
-                  <Text style={styles.termsCopy}>
-                    I agree to the Terms and Privacy Policy.
-                  </Text>
-                </Pressable>
-                <View style={localStyles.accountLinkRow}>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => router.push('/legal/terms')}
-                    style={({ pressed }) => pressed && { opacity: 0.8 }}
-                  >
-                    <Text style={[styles.legalText, styles.legalLink]}>View Terms</Text>
-                  </Pressable>
-                  <Text style={styles.legalText}>and</Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => router.push('/legal/privacy')}
-                    style={({ pressed }) => pressed && { opacity: 0.8 }}
-                  >
-                    <Text style={[styles.legalText, styles.legalLink]}>Privacy Policy</Text>
-                  </Pressable>
-                </View>
+
+                    <Pressable
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: state.termsAccepted }}
+                      onPress={toggleTerms}
+                      style={({ pressed }) => [styles.termsToggle, pressed && styles.pressedButton]}
+                    >
+                      <View
+                        style={[
+                          styles.termsCheckbox,
+                          state.termsAccepted && styles.termsCheckboxSelected,
+                        ]}
+                      >
+                        {state.termsAccepted ? (
+                          <Ionicons name="checkmark" size={14} style={styles.termsCheckIcon} />
+                        ) : null}
+                      </View>
+                      <Text style={styles.termsCopy}>
+                        I agree to the Terms and Privacy Policy.
+                      </Text>
+                    </Pressable>
+                    <View style={localStyles.accountLinkRow}>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => router.push('/legal/terms')}
+                        style={({ pressed }) => pressed && { opacity: 0.8 }}
+                      >
+                        <Text style={[styles.legalText, styles.legalLink]}>View Terms</Text>
+                      </Pressable>
+                      <Text style={styles.legalText}>and</Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => router.push('/legal/privacy')}
+                        style={({ pressed }) => pressed && { opacity: 0.8 }}
+                      >
+                        <Text style={[styles.legalText, styles.legalLink]}>Privacy Policy</Text>
+                      </Pressable>
+                    </View>
+                  </>
+                ) : null}
 
                 {authError ? <Text style={localStyles.authError}>{authError}</Text> : null}
 
@@ -541,9 +573,28 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
                       emailSubmitDisabled && styles.primaryButtonTextDisabled,
                     ]}
                   >
-                    {authBusy ? 'Creating account…' : 'Create account'}
+                    {authBusy
+                      ? emailSheetMode === 'create'
+                        ? 'Creating account…'
+                        : 'Signing in…'
+                      : emailSheetMode === 'create'
+                        ? 'Create account'
+                        : 'Sign in'}
                   </Text>
                 </Pressable>
+
+                <View style={localStyles.accountLinkRow}>
+                  <Text style={localStyles.helperText}>
+                    {emailSheetMode === 'create'
+                      ? 'Already have an email account?'
+                      : 'Need a new email account?'}
+                  </Text>
+                  <Pressable accessibilityRole="button" onPress={toggleEmailSheetMode}>
+                    <Text style={styles.accountLegalLink}>
+                      {emailSheetMode === 'create' ? 'Sign in' : 'Create one'}
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
           </KeyboardAvoidingView>

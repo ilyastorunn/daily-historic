@@ -10,6 +10,8 @@ type StepKey =
   | 'eras'
   | 'notification-permission'
   | 'notification-time'
+  | 'rate-us'
+  | 'paywall'
   | 'account';
 
 type StepComponentProps = {
