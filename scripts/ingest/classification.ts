@@ -1,14 +1,14 @@
 import type { HistoricalEventRecord, WikidataEntitySummary } from './types';
 
-const CATEGORY_BY_KEYWORD: Array<{ regex: RegExp; category: string }> = [
-  { regex: /world war|wwi|world war i|world war ii|wwii|battle|war/i, category: 'world-wars' },
-  { regex: /invention|invented|patent/i, category: 'inventions' },
-  { regex: /discovery|scientist|physics|chemistry|astronomy/i, category: 'science-discovery' },
-  { regex: /earthquake|hurricane|flood|tsunami|eruption|volcano/i, category: 'natural-disasters' },
+const CATEGORY_BY_KEYWORD: { regex: RegExp; category: string }[] = [
+  { regex: /world war|wwi|world war i|world war ii|wwii|\bbattle\b|\bwar\b/i, category: 'world-wars' },
+  { regex: /\binvention\b|\binvented\b|\bpatent\b/i, category: 'inventions' },
+  { regex: /\bdiscovery\b|\bscientist\b|\bphysics\b|\bchemistry\b|\bastronomy\b/i, category: 'science-discovery' },
+  { regex: /\bearthquake\b|\bhurricane\b|\bflood\b|\btsunami\b|\beruption\b|\bvolcano\b|\bspill\b|\bpandemic\b|\boutbreak\b/i, category: 'natural-disasters' },
   { regex: /civil rights|equality|suffrage/i, category: 'civil-rights' },
-  { regex: /art|painting|composer|music|opera|sculpture|culture/i, category: 'art-culture' },
-  { regex: /president|prime minister|election|parliament|treaty|government/i, category: 'politics' },
-  { regex: /exploration|expedition|voyage|mission/i, category: 'exploration' },
+  { regex: /\bart\b|\bpainting\b|\bcomposer\b|\bmusic\b|\bopera\b|\bsculpture\b|\bculture\b|\balbum\b|\bfilm\b|\bnovel\b|\btheatre\b|\bfestival\b|\brock\b|\bmusician\b|\bband\b|\bsinger\b/i, category: 'art-culture' },
+  { regex: /\bpresident\b|prime minister|\belection\b|\bparliament\b|\btreaty\b|\bgovernment\b|\bcoup\b|\bembassy\b|\blegislative\b|\bcongress\b|\bsenate\b|\breferendum\b/i, category: 'politics' },
+  { regex: /\bexploration\b|\bexpedition\b|\bvoyage\b|\bmission\b|\bapollo\b|\bmoon\b|\blunar\b|\bspacecraft\b|\borbit\b|\bastronaut\b|\bcosmonaut\b/i, category: 'exploration' },
 ];
 
 const CATEGORY_BY_ENTITY: Record<string, string> = {

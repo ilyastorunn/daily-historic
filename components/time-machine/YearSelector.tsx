@@ -1,471 +1,445 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
-  PanResponder,
+  FlatList,
+  LayoutChangeEvent,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
+  type ListRenderItemInfo,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppTheme } from '@/theme';
+import {
+  TIME_MACHINE_MAX_YEAR,
+  TIME_MACHINE_MIN_YEAR,
+} from '@/utils/time-machine';
+import { getTimeMachineExplorerPalette, type TimeMachineExplorerPalette } from './explorer-palette';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const ITEM_WIDTH = 96;
+const WHEEL_HEIGHT = 176;
+const BAND_HEIGHT = 88;
+const SELECTION_BAND_WIDTH = 136;
+const EDGE_FADE_WIDTH = 80;
 
-// Year range configuration
-const MIN_YEAR = 1800;
-const MAX_YEAR = new Date().getFullYear();
-const DEFAULT_YEAR = 1969;
-
-// Slider configuration
-const SLIDER_PADDING = 40;
-const SLIDER_WIDTH = SCREEN_WIDTH - SLIDER_PADDING * 2;
-const TICK_HEIGHT = 12;
-const TICK_HEIGHT_MAJOR = 20;
-
-type YearSelectorProps = {
-  onYearSelect: (year: number) => void;
-  onRandomYear: () => void;
-  initialYear?: number;
-  availableYears?: number[];
+type UpdateSelectionOptions = {
+  notifyChange?: boolean;
+  triggerHaptic?: boolean;
 };
 
+type ScrollToYearOptions = {
+  animated: boolean;
+  notifyChange?: boolean;
+  triggerHaptic?: boolean;
+};
+
+type YearSelectorProps = {
+  initialYear: number;
+  onYearChange?: (year: number) => void;
+  onYearCommit: (year: number) => void;
+  minYear?: number;
+  maxYear?: number;
+};
+
+type YearWheelItemProps = {
+  year: number;
+  index: number;
+  itemWidth: number;
+  scrollX: Animated.Value;
+  selected: boolean;
+  palette: TimeMachineExplorerPalette;
+  styles: ReturnType<typeof buildStyles>;
+};
+
+const YearWheelItem = React.memo(
+  ({ year, index, itemWidth, scrollX, selected, palette, styles }: YearWheelItemProps) => {
+    const inputRange = useMemo(
+      () => [(index - 2) * itemWidth, index * itemWidth, (index + 2) * itemWidth],
+      [index, itemWidth]
+    );
+
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.16, 1, 0.16],
+      extrapolate: 'clamp',
+    });
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.78, 1, 0.78],
+      extrapolate: 'clamp',
+    });
+
+    const translateY = scrollX.interpolate({
+      inputRange,
+      outputRange: [10, 0, 10],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.itemContainer,
+          {
+            width: itemWidth,
+            opacity,
+            transform: [{ translateY }, { scale }],
+          },
+        ]}
+      >
+        <Text
+          adjustsFontSizeToFit
+          allowFontScaling={false}
+          ellipsizeMode="clip"
+          minimumFontScale={0.84}
+          numberOfLines={1}
+          style={[
+            styles.itemLabel,
+            selected ? styles.itemLabelSelected : styles.itemLabelUnselected,
+            {
+              color: selected ? palette.selectedText : palette.mutedText,
+            },
+          ]}
+        >
+          {year}
+        </Text>
+      </Animated.View>
+    );
+  }
+);
+
+YearWheelItem.displayName = 'YearWheelItem';
+
 export const YearSelector: React.FC<YearSelectorProps> = ({
-  onYearSelect,
-  onRandomYear,
-  initialYear = DEFAULT_YEAR,
-  availableYears,
+  initialYear,
+  onYearChange,
+  onYearCommit,
+  minYear = TIME_MACHINE_MIN_YEAR,
+  maxYear = TIME_MACHINE_MAX_YEAR,
 }) => {
   const theme = useAppTheme();
-  const styles = useMemo(() => buildStyles(theme), [theme]);
+  const palette = useMemo(() => getTimeMachineExplorerPalette(theme), [theme]);
+  const styles = useMemo(() => buildStyles(), []);
+  const { width: screenWidth } = useWindowDimensions();
+  const initialClampedYear = Math.min(maxYear, Math.max(minYear, initialYear));
 
-  const [selectedYear, setSelectedYear] = useState(initialYear);
+  const [selectedYear, setSelectedYear] = useState(initialClampedYear);
+  const [listReady, setListReady] = useState(false);
+  const [wheelWidth, setWheelWidth] = useState(screenWidth);
+  const scrollX = useRef(new Animated.Value((initialClampedYear - minYear) * ITEM_WIDTH)).current;
+  const listRef = useRef<FlatList<number> | null>(null);
+  const selectedYearRef = useRef(initialClampedYear);
+  const lastHapticYear = useRef(initialClampedYear);
 
-  // Calculate initial position from year
-  const yearToPosition = useCallback((year: number) => {
-    const percentage = (year - MIN_YEAR) / (MAX_YEAR - MIN_YEAR);
-    return percentage * SLIDER_WIDTH;
-  }, []);
-
-  // Calculate year from position
-  const positionToYear = useCallback((position: number) => {
-    const clampedPosition = Math.max(0, Math.min(SLIDER_WIDTH, position));
-    const percentage = clampedPosition / SLIDER_WIDTH;
-    return Math.round(MIN_YEAR + percentage * (MAX_YEAR - MIN_YEAR));
-  }, []);
-
-  // Animation value for thumb position
-  const pan = useRef(new Animated.Value(yearToPosition(initialYear))).current;
-  const lastPosition = useRef(yearToPosition(initialYear));
-  const lastHapticYear = useRef(initialYear);
-
-  // Haptic feedback on year change
-  const triggerHaptic = useCallback(() => {
-    if (Platform.OS === 'ios') {
-      Haptics.selectionAsync();
+  const years = useMemo(() => {
+    const items: number[] = [];
+    for (let year = minYear; year <= maxYear; year += 1) {
+      items.push(year);
     }
-  }, []);
+    return items;
+  }, [maxYear, minYear]);
 
-  // PanResponder for drag handling
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          // Store current position when drag starts
-          pan.stopAnimation((value) => {
-            lastPosition.current = value;
-          });
-        },
-        onPanResponderMove: (_, gestureState) => {
-          const newPosition = lastPosition.current + gestureState.dx;
-          const clampedPosition = Math.max(0, Math.min(SLIDER_WIDTH, newPosition));
-          pan.setValue(clampedPosition);
+  const horizontalPadding = Math.max(0, (wheelWidth - ITEM_WIDTH) / 2);
 
-          const newYear = positionToYear(clampedPosition);
-          if (newYear !== lastHapticYear.current) {
-            lastHapticYear.current = newYear;
-            setSelectedYear(newYear);
-            triggerHaptic();
-          }
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          const finalPosition = lastPosition.current + gestureState.dx;
-          const clampedPosition = Math.max(0, Math.min(SLIDER_WIDTH, finalPosition));
-          const finalYear = positionToYear(clampedPosition);
-
-          lastPosition.current = clampedPosition;
-          setSelectedYear(finalYear);
-
-          // Snap animation to final position
-          Animated.spring(pan, {
-            toValue: yearToPosition(finalYear),
-            useNativeDriver: false,
-            damping: 20,
-            stiffness: 300,
-          }).start(() => {
-            lastPosition.current = yearToPosition(finalYear);
-          });
-        },
-      }),
-    [pan, positionToYear, yearToPosition, triggerHaptic]
+  const clampYear = useCallback(
+    (year: number) => Math.min(maxYear, Math.max(minYear, year)),
+    [maxYear, minYear]
   );
 
-  // Handle continue press
-  const handleContinue = useCallback(() => {
+  const yearToIndex = useCallback(
+    (year: number) => clampYear(year) - minYear,
+    [clampYear, minYear]
+  );
+
+  const offsetToYear = useCallback(
+    (offset: number) => {
+      const nearestIndex = Math.round(offset / ITEM_WIDTH);
+      return clampYear(minYear + nearestIndex);
+    },
+    [clampYear, minYear]
+  );
+
+  const triggerHaptic = useCallback(() => {
     if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Haptics.selectionAsync().catch(() => undefined);
     }
-    onYearSelect(selectedYear);
-  }, [selectedYear, onYearSelect]);
+  }, []);
 
-  // Handle random year
-  const handleRandomYear = useCallback(() => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    onRandomYear();
-  }, [onRandomYear]);
+  const updateSelectedYear = useCallback(
+    (year: number, options?: UpdateSelectionOptions) => {
+      const nextYear = clampYear(year);
+      const notifyChange = options?.notifyChange ?? true;
+      const shouldTriggerHaptic = options?.triggerHaptic ?? true;
+      const didChange = nextYear !== selectedYearRef.current;
 
-  // Precompute dot positions for available years
-  const availableYearDots = useMemo(() => {
-    if (!availableYears?.length) return [];
-    return availableYears.map((year) => ({
-      year,
-      position: yearToPosition(year),
-    }));
-  }, [availableYears, yearToPosition]);
+      if (didChange) {
+        selectedYearRef.current = nextYear;
+        setSelectedYear(nextYear);
 
-  // Generate tick marks
-  const tickMarks = useMemo(() => {
-    const ticks: { year: number; isMajor: boolean }[] = [];
-    // Major ticks every 50 years, minor every 10
-    for (let year = MIN_YEAR; year <= MAX_YEAR; year += 10) {
-      ticks.push({
-        year,
-        isMajor: year % 50 === 0,
+        if (notifyChange) {
+          onYearChange?.(nextYear);
+        }
+      }
+
+      if (!shouldTriggerHaptic) {
+        lastHapticYear.current = nextYear;
+        return;
+      }
+
+      if (didChange && nextYear !== lastHapticYear.current) {
+        lastHapticYear.current = nextYear;
+        triggerHaptic();
+      }
+    },
+    [clampYear, onYearChange, triggerHaptic]
+  );
+
+  const scrollToYear = useCallback(
+    (year: number, options: ScrollToYearOptions) => {
+      const nextYear = clampYear(year);
+      const nextOffset = yearToIndex(nextYear) * ITEM_WIDTH;
+      updateSelectedYear(nextYear, {
+        notifyChange: options.notifyChange,
+        triggerHaptic: options.triggerHaptic,
       });
-    }
-    return ticks;
-  }, []);
 
-  // Decade labels (every 50 years)
-  const decadeLabels = useMemo(() => {
-    const labels: number[] = [];
-    for (let year = 1850; year <= MAX_YEAR; year += 50) {
-      labels.push(year);
+      if (!options.animated) {
+        scrollX.setValue(nextOffset);
+      }
+
+      listRef.current?.scrollToOffset({
+        offset: nextOffset,
+        animated: options.animated,
+      });
+    },
+    [clampYear, scrollX, updateSelectedYear, yearToIndex]
+  );
+
+  useEffect(() => {
+    const nextYear = clampYear(initialYear);
+
+    if (nextYear === selectedYearRef.current) {
+      return;
     }
-    return labels;
-  }, []);
+
+    updateSelectedYear(nextYear, { notifyChange: false, triggerHaptic: false });
+    scrollX.setValue(yearToIndex(nextYear) * ITEM_WIDTH);
+
+    if (!listReady) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({
+        offset: yearToIndex(nextYear) * ITEM_WIDTH,
+        animated: false,
+      });
+    });
+  }, [clampYear, initialYear, listReady, scrollX, updateSelectedYear, yearToIndex]);
+
+  useEffect(() => {
+    if (!listReady) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      const offset = yearToIndex(selectedYearRef.current) * ITEM_WIDTH;
+      scrollX.setValue(offset);
+      listRef.current?.scrollToOffset({
+        offset,
+        animated: false,
+      });
+    });
+  }, [listReady, scrollX, wheelWidth, yearToIndex]);
+
+  const handleScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+        useNativeDriver: true,
+        listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+          updateSelectedYear(offsetToYear(event.nativeEvent.contentOffset.x));
+        },
+      }),
+    [offsetToYear, scrollX, updateSelectedYear]
+  );
+
+  const handleAccessibilityAction = useCallback(
+    (actionName: string) => {
+      if (actionName === 'activate') {
+        onYearCommit(selectedYearRef.current);
+        return;
+      }
+
+      const delta = actionName === 'increment' ? 1 : -1;
+      scrollToYear(selectedYearRef.current + delta, {
+        animated: true,
+      });
+    },
+    [onYearCommit, scrollToYear]
+  );
+
+  const handleWheelLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const nextWidth = event.nativeEvent.layout.width;
+      if (nextWidth > 0 && nextWidth !== wheelWidth) {
+        setWheelWidth(nextWidth);
+      }
+    },
+    [wheelWidth]
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: ListRenderItemInfo<number>) => (
+      <YearWheelItem
+        year={item}
+        index={index}
+        itemWidth={ITEM_WIDTH}
+        scrollX={scrollX}
+        selected={item === selectedYear}
+        palette={palette}
+        styles={styles}
+      />
+    ),
+    [palette, scrollX, selectedYear, styles]
+  );
 
   return (
     <View style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <Text style={styles.label}>TIME MACHINE</Text>
-        <Text style={styles.title}>Choose your destination</Text>
-        <Text style={styles.subtitle}>
-          Slide to select a year and explore history
-        </Text>
-      </View>
-
-      {/* Year Display */}
-      <View style={styles.yearDisplayContainer}>
-        <Text style={styles.yearDisplay}>{selectedYear}</Text>
-        <Text style={styles.yearUnit}>year</Text>
-      </View>
-
-      {/* Slider Container */}
-      <View style={styles.sliderContainer}>
-        {/* Tick Marks */}
-        <View style={styles.ticksContainer}>
-          {tickMarks.map(({ year, isMajor }) => {
-            const position = yearToPosition(year);
-            return (
-              <View
-                key={year}
-                style={[
-                  styles.tick,
-                  isMajor && styles.tickMajor,
-                  { left: position - 0.5 },
-                ]}
-              />
-            );
-          })}
-        </View>
-
-        {/* Slider Track */}
-        <View style={styles.sliderTrack} />
-
-        {/* Available year dots */}
-        {availableYearDots.length > 0 && (
-          <View style={styles.dotsContainer} pointerEvents="none">
-            {availableYearDots.map(({ year, position }) => (
-              <View
-                key={year}
-                style={[styles.dot, { left: position - 1 }]}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Draggable Thumb */}
-        <Animated.View
+      <View
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={`Year selector, ${selectedYear}`}
+        accessibilityHint="Swipe left or right to adjust the year, then double tap to open it."
+        accessibilityActions={[
+          { name: 'increment', label: 'Next year' },
+          { name: 'decrement', label: 'Previous year' },
+          { name: 'activate', label: 'Travel to this year' },
+        ]}
+        onAccessibilityAction={({ nativeEvent }) => handleAccessibilityAction(nativeEvent.actionName)}
+        onLayout={handleWheelLayout}
+        style={styles.wheelShell}
+      >
+        <View
+          pointerEvents="none"
           style={[
-            styles.thumbContainer,
+            styles.selectionBand,
             {
-              transform: [{ translateX: pan }],
+              width: SELECTION_BAND_WIDTH,
+              backgroundColor: palette.selectionBand,
+              borderColor: palette.selectionBorder,
             },
           ]}
-          {...panResponder.panHandlers}
-        >
-          <View style={styles.thumbLine} />
-          <View style={styles.thumbKnob} />
-        </Animated.View>
+        />
 
-        {/* Decade Labels */}
-        <View style={styles.labelsContainer}>
-          {decadeLabels.map((year) => {
-            const position = yearToPosition(year);
-            return (
-              <Text
-                key={year}
-                style={[
-                  styles.decadeLabel,
-                  { left: position - 20 },
-                ]}
-              >
-                {year}
-              </Text>
-            );
+        <Animated.FlatList
+          accessible={false}
+          bounces={false}
+          contentContainerStyle={[styles.listContent, { paddingHorizontal: horizontalPadding }]}
+          data={years}
+          decelerationRate={Platform.OS === 'ios' ? 0.998 : 0.985}
+          disableIntervalMomentum={false}
+          getItemLayout={(_, index) => ({
+            length: ITEM_WIDTH,
+            offset: ITEM_WIDTH * index,
+            index,
           })}
-        </View>
-      </View>
+          horizontal
+          initialNumToRender={11}
+          initialScrollIndex={yearToIndex(initialClampedYear)}
+          keyExtractor={(item) => String(item)}
+          onLayout={() => setListReady(true)}
+          onScroll={handleScroll}
+          ref={(value) => {
+            listRef.current = value as FlatList<number> | null;
+          }}
+          renderItem={renderItem}
+          scrollEventThrottle={16}
+          showsHorizontalScrollIndicator={false}
+          snapToAlignment="start"
+          snapToInterval={ITEM_WIDTH}
+          style={styles.list}
+        />
 
-      {/* Action Buttons */}
-      <View style={styles.actions}>
-        <Pressable
-          onPress={handleContinue}
-          style={({ pressed }) => [
-            styles.primaryButton,
-            pressed && styles.primaryButtonPressed,
-          ]}
-        >
-          <Text style={styles.primaryButtonText}>Explore {selectedYear}</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={handleRandomYear}
-          style={({ pressed }) => [
-            styles.ghostButton,
-            pressed && styles.ghostButtonPressed,
-          ]}
-        >
-          <Text style={styles.ghostButtonText}>Surprise me</Text>
-        </Pressable>
+        <LinearGradient
+          colors={[palette.edgeFadeOpaque, palette.edgeFadeTransparent]}
+          locations={[0, 1]}
+          pointerEvents="none"
+          style={[styles.edgeFade, styles.edgeFadeLeft, { width: EDGE_FADE_WIDTH }]}
+        />
+        <LinearGradient
+          colors={[palette.edgeFadeTransparent, palette.edgeFadeOpaque]}
+          locations={[0, 1]}
+          pointerEvents="none"
+          style={[styles.edgeFade, styles.edgeFadeRight, { width: EDGE_FADE_WIDTH }]}
+        />
       </View>
     </View>
   );
 };
 
-const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
-  const serifFamily = Platform.select({
-    ios: 'Times New Roman',
-    android: 'serif',
-    default: 'serif',
-  });
-  const sansFamily = Platform.select({
-    ios: 'System',
-    android: 'sans-serif',
-    default: 'System',
-  });
-
+const buildStyles = () => {
   return StyleSheet.create({
     container: {
-      flex: 1,
+      width: '100%',
+      alignItems: 'stretch',
+    },
+    wheelShell: {
+      height: WHEEL_HEIGHT,
       justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: theme.spacing.xl,
-      paddingVertical: theme.spacing.xxl,
     },
-    header: {
-      alignItems: 'center',
-      marginBottom: theme.spacing.xxl,
+    selectionBand: {
+      position: 'absolute',
+      alignSelf: 'center',
+      top: (WHEEL_HEIGHT - BAND_HEIGHT) / 2,
+      height: BAND_HEIGHT,
+      borderRadius: 22,
+      borderWidth: 1,
     },
-    label: {
-      fontSize: 12,
+    list: {
+      flexGrow: 0,
+      height: WHEEL_HEIGHT,
+    },
+    listContent: {
+      alignItems: 'center',
+    },
+    itemContainer: {
+      height: WHEEL_HEIGHT,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    itemLabel: {
+      width: '100%',
+      textAlign: 'center',
+      includeFontPadding: false,
+      fontVariant: ['tabular-nums'],
+      letterSpacing: -0.8,
+    },
+    itemLabelSelected: {
+      fontSize: 42,
+      lineHeight: 46,
       fontWeight: '600',
-      letterSpacing: 2,
-      color: theme.colors.textTertiary,
-      fontFamily: sansFamily,
-      marginBottom: theme.spacing.sm,
     },
-    title: {
-      fontSize: 28,
-      lineHeight: 34,
-      fontFamily: serifFamily,
-      color: theme.colors.textPrimary,
-      textAlign: 'center',
-      letterSpacing: -0.5,
+    itemLabelUnselected: {
+      fontSize: 34,
+      lineHeight: 38,
+      fontWeight: Platform.OS === 'ios' ? '500' : '400',
     },
-    subtitle: {
-      fontSize: 15,
-      lineHeight: 22,
-      color: theme.colors.textSecondary,
-      fontFamily: sansFamily,
-      textAlign: 'center',
-      marginTop: theme.spacing.sm,
-      maxWidth: 260,
-    },
-    yearDisplayContainer: {
-      alignItems: 'center',
-      marginBottom: theme.spacing.xxl,
-    },
-    yearDisplay: {
-      fontSize: 72,
-      fontWeight: '300',
-      color: theme.colors.textPrimary,
-      fontFamily: sansFamily,
-      letterSpacing: -2,
-    },
-    yearUnit: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: theme.colors.textTertiary,
-      fontFamily: sansFamily,
-      letterSpacing: 1,
-      marginTop: theme.spacing.xs,
-    },
-    sliderContainer: {
-      width: SLIDER_WIDTH,
-      height: 100,
-      justifyContent: 'center',
-      marginBottom: theme.spacing.xxl,
-    },
-    ticksContainer: {
+    edgeFade: {
       position: 'absolute',
-      width: '100%',
-      height: TICK_HEIGHT_MAJOR,
-      top: 20,
+      top: 0,
+      bottom: 0,
     },
-    tick: {
-      position: 'absolute',
-      width: 1,
-      height: TICK_HEIGHT,
-      backgroundColor: theme.colors.borderSubtle,
+    edgeFadeLeft: {
+      left: 0,
     },
-    tickMajor: {
-      height: TICK_HEIGHT_MAJOR,
-      backgroundColor: theme.colors.textTertiary,
-    },
-    sliderTrack: {
-      position: 'absolute',
-      width: '100%',
-      height: 2,
-      backgroundColor: theme.colors.borderSubtle,
-      top: 40,
-    },
-    thumbContainer: {
-      position: 'absolute',
-      alignItems: 'center',
-      top: 10,
-      // Larger hit area for easier dragging
-      paddingHorizontal: 20,
-      marginLeft: -20,
-    },
-    thumbLine: {
-      width: 2,
-      height: 40,
-      backgroundColor: theme.colors.textPrimary,
-    },
-    thumbKnob: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: theme.colors.textPrimary,
-      marginTop: -2,
-      shadowColor: theme.colors.shadowColor,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    dotsContainer: {
-      position: 'absolute',
-      width: '100%',
-      height: 4,
-      top: 47,
-    },
-    dot: {
-      position: 'absolute',
-      width: 2,
-      height: 4,
-      borderRadius: 1,
-      backgroundColor: theme.colors.accentPrimary,
-      opacity: 0.45,
-    },
-    labelsContainer: {
-      position: 'absolute',
-      width: '100%',
-      top: 60,
-    },
-    decadeLabel: {
-      position: 'absolute',
-      width: 40,
-      fontSize: 11,
-      fontWeight: '500',
-      color: theme.colors.textTertiary,
-      fontFamily: sansFamily,
-      textAlign: 'center',
-    },
-    actions: {
-      width: '100%',
-      gap: theme.spacing.md,
-      marginTop: theme.spacing.lg,
-    },
-    primaryButton: {
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.accentPrimary,
-      paddingVertical: theme.spacing.lg,
-      borderRadius: theme.radius.pill,
-      shadowColor: theme.colors.shadowColor,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.15,
-      shadowRadius: 18,
-      elevation: 4,
-    },
-    primaryButtonPressed: {
-      transform: [{ scale: 0.98 }],
-      opacity: 0.95,
-    },
-    primaryButtonText: {
-      color: theme.colors.surface,
-      fontWeight: '600',
-      fontSize: 17,
-      letterSpacing: 0.2,
-      fontFamily: sansFamily,
-    },
-    ghostButton: {
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: theme.spacing.md,
-      borderRadius: theme.radius.pill,
-    },
-    ghostButtonPressed: {
-      opacity: 0.7,
-    },
-    ghostButtonText: {
-      color: theme.colors.textSecondary,
-      fontWeight: '500',
-      fontSize: 15,
-      fontFamily: sansFamily,
+    edgeFadeRight: {
+      right: 0,
     },
   });
 };

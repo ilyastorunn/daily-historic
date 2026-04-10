@@ -157,16 +157,11 @@ export const CacheKeys = {
    */
   timeMachine: {
     /**
-     * Timeline for a specific year
-     * @param year Year (1800-2024)
-     * @param categories Optional category filter
+     * Aggregate year response for a specific year
+     * @param year Year (1800-2026)
      */
-    timeline: (year: number, categories?: string): string => {
-      if (categories) {
-        return `timeline:${year}:${categories}`;
-      }
-
-      return `timeline:${year}`;
+    year: (year: number): string => {
+      return `time-machine:${year}`;
     },
   },
 

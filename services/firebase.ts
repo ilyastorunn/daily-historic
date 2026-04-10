@@ -39,3 +39,5 @@ export {
 export const USERS_COLLECTION = 'Users';
 export const CONTENT_EVENTS_COLLECTION = 'contentEvents';
 export const DAILY_DIGESTS_COLLECTION = 'dailyDigests';
+export const TIME_MACHINE_YEARS_COLLECTION = 'timeMachineYears';
+export const CONTENT_META_COLLECTION = 'contentMeta';

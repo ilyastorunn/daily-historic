@@ -25,7 +25,6 @@ import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useSavedEvents } from '@/hooks/use-saved-events';
-import { useTimeMachine } from '@/hooks/use-time-machine';
 import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
 import { trackEvent } from '@/services/analytics';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -550,15 +549,6 @@ const HomeScreen = () => {
     totalCount: savedStoriesCount,
   } = useSavedEvents({ limit: HOME_SAVED_STORIES_PREVIEW_LIMIT });
 
-  const {
-    loading: timeMachineLoading,
-    seedLoading: timeMachineSeeding,
-    timelineYear: timeMachineYear,
-    heroImageUrl: timeMachineImageUrl,
-    loadTimeline: loadTimeMachineTimeline,
-    seed: seedTimeMachine,
-  } = useTimeMachine({ enabled: true, seedOnMount: true, premium: isPremiumUser });
-
   const weeklyCollections = useMemo(
     () =>
       weeklyCollectionItems.map((collection) => ({
@@ -677,7 +667,9 @@ const HomeScreen = () => {
 
   const handleOpenEvent = useCallback(
     (eventId: string, source?: string, carouselIndex?: number, carouselItemIds?: string[]) => {
-      const params: Record<string, string> = { id: eventId };
+      const params: { id: string; source?: string; carouselIndex?: string; carouselItemIds?: string } = {
+        id: eventId,
+      };
       if (source) params.source = source;
       if (carouselIndex !== undefined) params.carouselIndex = String(carouselIndex);
       if (carouselItemIds) params.carouselItemIds = carouselItemIds.join(',');
@@ -701,28 +693,15 @@ const HomeScreen = () => {
   }, [isoWeekKey, router]);
 
   const timeMachineImage = useMemo(
-    () => timeMachineImageUrl ?? defaultHeroItem.imageUri ?? getImageUri(heroEvent.image) ?? '',
-    [defaultHeroItem.imageUri, timeMachineImageUrl]
+    () => defaultHeroItem.imageUri ?? getImageUri(heroEvent.image) ?? '',
+    [defaultHeroItem.imageUri]
   );
 
-  const handleTimeMachineTeaser = useCallback(() => {
-    trackEvent('time_machine_paywall_shown', { source: 'teaser' });
-    router.push({ pathname: '/time-machine', params: { mode: 'teaser' } });
-  }, [router]);
-
-  const handleTimeMachinePress = useCallback(async () => {
+  const handleTimeMachinePress = useCallback(() => {
     const userTier = isPremiumUser ? 'premium' : 'free';
     trackEvent('time_machine_open_clicked', { user_tier: userTier });
-
-    // Phase 1: No paywall, everyone gets access
-    // Pick a new random year each time
-    const randomYear = await seedTimeMachine();
-    if (randomYear) {
-      await loadTimeMachineTimeline(randomYear);
-      trackEvent('time_machine_started', { year: randomYear, user_tier: userTier });
-      router.push({ pathname: '/time-machine', params: { year: String(randomYear) } });
-    }
-  }, [isPremiumUser, loadTimeMachineTimeline, router, seedTimeMachine]);
+    router.push('/time-machine');
+  }, [isPremiumUser, router]);
 
   const handleSavedStoryPress = useCallback(
     (eventId: string) => {
@@ -805,9 +784,8 @@ const HomeScreen = () => {
             <TimeMachineBlock
               premium={true}
               imageUrl={timeMachineImage}
-              subtitle="Guided timeline journeys."
+              subtitle="Travel through any year."
               onPress={handleTimeMachinePress}
-              loading={timeMachineLoading || timeMachineSeeding}
               testID="home-time-machine"
             />
           </View>
