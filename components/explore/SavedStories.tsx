@@ -31,6 +31,13 @@ const createStyles = (theme: ThemeDefinition) => {
       gap: spacing.lg,
     },
     sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    sectionHeaderCopy: {
+      flex: 1,
       gap: spacing.xs,
     },
     sectionTitle: {
@@ -44,6 +51,12 @@ const createStyles = (theme: ThemeDefinition) => {
       fontFamily: sansFamily,
       fontSize: typography.helper.fontSize,
       color: colors.textSecondary,
+    },
+    seeAll: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      color: colors.textSecondary,
+      paddingTop: 4,
     },
     savedCard: {
       flexDirection: 'row',
@@ -180,12 +193,22 @@ const SavedEventCard: React.FC<SavedEventCardProps> = ({ event, styles, onOpen }
 };
 
 type SavedStoriesProps = {
-  savedEvents: any[]; // Can be EventRecord or FirestoreEventDocument
+  savedEvents: FirestoreEventDocument[];
   loading?: boolean;
   onEventPress: (eventId: string) => void;
+  title?: string;
+  helperText?: string;
+  onSeeAll?: () => void;
 };
 
-export const SavedStories: React.FC<SavedStoriesProps> = ({ savedEvents, loading, onEventPress }) => {
+export const SavedStories: React.FC<SavedStoriesProps> = ({
+  savedEvents,
+  loading,
+  onEventPress,
+  title = 'Saved Stories',
+  helperText = "Quick access to stories you've bookmarked.",
+  onSeeAll,
+}) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -200,8 +223,15 @@ export const SavedStories: React.FC<SavedStoriesProps> = ({ savedEvents, loading
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Saved Stories</Text>
-        <Text style={styles.sectionHelper}>Quick access to stories you&apos;ve bookmarked.</Text>
+        <View style={styles.sectionHeaderCopy}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={styles.sectionHelper}>{helperText}</Text>
+        </View>
+        {onSeeAll ? (
+          <Pressable accessibilityRole="button" onPress={onSeeAll}>
+            <Text style={styles.seeAll}>See all</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       {savedEvents.map((event) => (

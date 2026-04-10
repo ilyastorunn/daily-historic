@@ -24,10 +24,10 @@ import { heroEvent } from '@/constants/events';
 import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
+import { useSavedEvents } from '@/hooks/use-saved-events';
 import { useTimeMachine } from '@/hooks/use-time-machine';
 import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
 import { trackEvent } from '@/services/analytics';
-import { fetchEventsByIds } from '@/services/content';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
 import { getDateParts, getIsoWeekKey } from '@/utils/dates';
@@ -45,7 +45,7 @@ import { getImageUri } from '@/utils/image-source';
 
 // Reactions removed - using Like + Deep Dive + Save + Share instead
 
-const HOME_SAVED_STORIES_LIMIT = 20;
+const HOME_SAVED_STORIES_PREVIEW_LIMIT = 3;
 
 type HeroCarouselItem = {
   id: string;
@@ -544,9 +544,11 @@ const HomeScreen = () => {
     return Boolean(inferredProfile?.isPremium);
   }, [profile]);
 
-  // Saved events state
-  const [savedEventsData, setSavedEventsData] = useState<FirestoreEventDocument[]>([]);
-  const [savedEventsLoading, setSavedEventsLoading] = useState(false);
+  const {
+    savedEvents: savedEventsPreview,
+    loading: savedEventsLoading,
+    totalCount: savedStoriesCount,
+  } = useSavedEvents({ limit: HOME_SAVED_STORIES_PREVIEW_LIMIT });
 
   const {
     loading: timeMachineLoading,
@@ -673,48 +675,6 @@ const HomeScreen = () => {
     }
   }, [digestError]);
 
-  const savedEventIdsKey = useMemo(
-    () => JSON.stringify(profile?.savedEventIds ?? []),
-    [profile?.savedEventIds]
-  );
-  const stableSavedEventIds = useMemo(
-    () => JSON.parse(savedEventIdsKey) as string[],
-    [savedEventIdsKey]
-  );
-
-  // Fetch saved events from Firestore when savedEventIds change
-  useEffect(() => {
-    const savedIds = stableSavedEventIds.slice(0, HOME_SAVED_STORIES_LIMIT);
-    if (savedIds.length === 0) {
-      setSavedEventsData([]);
-      setSavedEventsLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    const loadSavedEvents = async () => {
-      setSavedEventsLoading(true);
-      try {
-        const fetched = await fetchEventsByIds(savedIds);
-        if (cancelled) return;
-
-        setSavedEventsData(fetched);
-      } catch (error) {
-        console.error('Failed to load saved events', error);
-      } finally {
-        if (!cancelled) {
-          setSavedEventsLoading(false);
-        }
-      }
-    };
-
-    void loadSavedEvents();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [stableSavedEventIds]);
-
   const handleOpenEvent = useCallback(
     (eventId: string, source?: string, carouselIndex?: number, carouselItemIds?: string[]) => {
       const params: Record<string, string> = { id: eventId };
@@ -771,6 +731,11 @@ const HomeScreen = () => {
     },
     [handleOpenEvent]
   );
+
+  const handleSeeAllSavedStories = useCallback(() => {
+    trackEvent('home_saved_stories_see_all_clicked', { saved_count: savedStoriesCount });
+    router.push('/saved-stories');
+  }, [router, savedStoriesCount]);
 
   const handleHeroCardOpened = useCallback((eventId: string, index: number) => {
     trackEvent('hero_card_opened', { card_id: eventId, index });
@@ -849,11 +814,13 @@ const HomeScreen = () => {
 
           <CategoryExploreGrid testID="home-category-explore" />
 
-          {savedEventsData.length > 0 && (
+          {savedEventsPreview.length > 0 && (
             <SavedStories
-              savedEvents={savedEventsData}
+              savedEvents={savedEventsPreview}
               loading={savedEventsLoading}
               onEventPress={handleSavedStoryPress}
+              helperText="A short shelf of stories you wanted to keep close."
+              onSeeAll={handleSeeAllSavedStories}
             />
           )}
 

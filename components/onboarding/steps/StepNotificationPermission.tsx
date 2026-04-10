@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
+import { requestNotificationPermission } from '@/services/notifications';
 import { useAppTheme } from '@/theme';
 
 import DecorativeIllustration from '../DecorativeIllustration';
@@ -43,12 +44,31 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
   const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
 
   const handleEnable = () => {
-    updateState({
-      pushPermission: 'enabled',
-      notificationEnabled: true,
-      notificationTime: state.notificationTime || '09:00',
-    });
-    onNext();
+    void requestNotificationPermission()
+      .then((permissionState) => {
+        if (permissionState === 'enabled') {
+          updateState({
+            pushPermission: 'enabled',
+            notificationEnabled: true,
+            notificationTime: state.notificationTime || '09:00',
+          });
+        } else {
+          updateState({
+            pushPermission: 'declined',
+            notificationEnabled: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to request notification permission', error);
+        updateState({
+          pushPermission: 'declined',
+          notificationEnabled: false,
+        });
+      })
+      .finally(() => {
+        onNext();
+      });
   };
 
   const handleSkip = () => {

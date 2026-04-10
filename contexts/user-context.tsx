@@ -32,6 +32,7 @@ import {
   signInWithEmailCredential,
   signInWithGoogleCredential,
 } from '@/services/auth';
+import { syncDailyNotificationFromProfile } from '@/services/notifications';
 import type { OnboardingData, UserDocument, UserProfile } from '@/types/user';
 
 type OnboardingCompletionData = OnboardingData;
@@ -149,6 +150,12 @@ const formatAuthErrorMessage = (authError: unknown) => {
       return authError instanceof Error ? authError.message : 'Authentication failed. Try again.';
   }
 };
+
+const hasNotificationPreferenceUpdate = (data: Partial<UserDocument>) =>
+  'notificationEnabled' in data ||
+  'notificationTime' in data ||
+  'timezone' in data ||
+  'pushPermission' in data;
 
 const chunkArray = <T,>(items: T[], chunkSize: number) => {
   const chunks: T[][] = [];
@@ -472,6 +479,14 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       } as UserDocument;
 
       await setDoc(docRef, payload, { merge: true });
+
+      await syncDailyNotificationFromProfile({
+        notificationEnabled:
+          payload.notificationEnabled ?? profile?.notificationEnabled ?? false,
+        notificationTime: payload.notificationTime ?? profile?.notificationTime,
+        timezone: payload.timezone ?? profile?.timezone,
+        pushPermission: payload.pushPermission ?? profile?.pushPermission ?? 'unknown',
+      });
     },
     [authUser, profile]
   );
@@ -486,7 +501,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       const timestamp = serverTimestamp();
       const sanitized = Object.fromEntries(
         Object.entries(data).filter(([, value]) => value !== undefined)
-      );
+      ) as Partial<UserDocument>;
 
       await setDoc(
         docRef,
@@ -496,8 +511,22 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         },
         { merge: true }
       );
+
+      if (hasNotificationPreferenceUpdate(sanitized)) {
+        await syncDailyNotificationFromProfile({
+          notificationEnabled:
+            sanitized.notificationEnabled ??
+            profile?.notificationEnabled ??
+            false,
+          notificationTime:
+            sanitized.notificationTime ?? profile?.notificationTime,
+          timezone: sanitized.timezone ?? profile?.timezone,
+          pushPermission:
+            sanitized.pushPermission ?? profile?.pushPermission ?? 'unknown',
+        });
+      }
     },
-    [authUser]
+    [authUser, profile]
   );
 
   const linkWithGoogle = useCallback(async () => {

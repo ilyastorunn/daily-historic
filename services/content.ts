@@ -1,10 +1,13 @@
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
+import { getDevDigestEventById, isDevDigestEventId } from '@/constants/dev-digest';
+import { getExploreSeedEventById, isExploreSeedEventId } from '@/constants/explore-seed';
 import {
   CONTENT_EVENTS_COLLECTION,
   DAILY_DIGESTS_COLLECTION,
   firebaseFirestore,
 } from '@/services/firebase';
+import { isWikimediaEventId, resolveWikimediaEventById } from '@/services/wikimedia-digest';
 import type { DailyDigestDocument, FirestoreEventDocument } from '@/types/events';
 import { fetchWithCache, CachePresets } from '@/services/api-helpers';
 import { CacheKeys } from '@/utils/cache-keys';
@@ -91,6 +94,69 @@ export const fetchEventsByIds = async (ids: string[]): Promise<FirestoreEventDoc
 
   return uniqueIds
     .map((id) => indexById.get(id))
+    .filter((event): event is FirestoreEventDocument => Boolean(event));
+};
+
+export const resolveEventById = async (eventId: string): Promise<FirestoreEventDocument | null> => {
+  if (!eventId) {
+    return null;
+  }
+
+  const firestoreMatch = await fetchEventsByIds([eventId]);
+  if (firestoreMatch[0]) {
+    return firestoreMatch[0];
+  }
+
+  if (isDevDigestEventId(eventId)) {
+    return getDevDigestEventById(eventId);
+  }
+
+  if (isExploreSeedEventId(eventId)) {
+    return getExploreSeedEventById(eventId);
+  }
+
+  if (isWikimediaEventId(eventId)) {
+    try {
+      return await resolveWikimediaEventById(eventId);
+    } catch (error) {
+      console.error('Failed to resolve Wikimedia event', error);
+    }
+  }
+
+  return null;
+};
+
+export const resolveEventsByIds = async (ids: string[]): Promise<FirestoreEventDocument[]> => {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const uniqueIds = Array.from(new Set(ids));
+  const firestoreEvents = await fetchEventsByIds(uniqueIds);
+  const resolvedById = new Map(firestoreEvents.map((event) => [event.eventId, event]));
+  const missingIds = uniqueIds.filter((id) => !resolvedById.has(id));
+
+  if (missingIds.length > 0) {
+    const fallbackEvents = await Promise.all(
+      missingIds.map(async (id) => {
+        try {
+          return await resolveEventById(id);
+        } catch (error) {
+          console.error('Failed to resolve saved event', { id, error });
+          return null;
+        }
+      })
+    );
+
+    fallbackEvents.forEach((event) => {
+      if (event?.eventId) {
+        resolvedById.set(event.eventId, event);
+      }
+    });
+  }
+
+  return uniqueIds
+    .map((id) => resolvedById.get(id))
     .filter((event): event is FirestoreEventDocument => Boolean(event));
 };
 
