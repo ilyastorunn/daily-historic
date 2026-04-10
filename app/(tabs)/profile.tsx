@@ -1,9 +1,14 @@
 import { useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
+  Image,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -16,44 +21,105 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
-import { SelectableChip } from '@/components/ui/selectable-chip';
 import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
 import { useUserContext } from '@/contexts/user-context';
 import { trackEvent } from '@/services/analytics';
+import {
+  openSystemNotificationSettings,
+  requestNotificationPermission,
+} from '@/services/notifications';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 type ThemePreference = 'light' | 'dark' | 'system';
 type PreferenceModalType = 'themes' | 'eras' | null;
+type PreferenceChoice<T extends string> = {
+  value: T;
+  label: string;
+  icon?: any;
+  fallbackIconName?: IconSymbolName;
+};
 
-const CATEGORY_CHOICES: { value: CategoryOption; label: string }[] = [
-  { value: 'world-wars', label: 'World Wars' },
-  { value: 'ancient-civilizations', label: 'Ancient Worlds' },
-  { value: 'science-discovery', label: 'Science & Discovery' },
-  { value: 'art-culture', label: 'Art & Culture' },
-  { value: 'politics', label: 'Leaders & Power' },
-  { value: 'inventions', label: 'Breakthroughs' },
-  { value: 'natural-disasters', label: 'Forces of Nature' },
-  { value: 'civil-rights', label: 'Rights & Movements' },
-  { value: 'exploration', label: 'Exploration' },
-  { value: 'surprise', label: 'Surprise me' },
+const CATEGORY_CHOICES: PreferenceChoice<CategoryOption>[] = [
+  {
+    value: 'world-wars',
+    label: 'World Wars',
+    icon: require('@/assets/icons/World-Wars.png'),
+  },
+  {
+    value: 'ancient-civilizations',
+    label: 'Ancient Worlds',
+    icon: require('@/assets/icons/Ancient-Civilizations.png'),
+  },
+  {
+    value: 'science-discovery',
+    label: 'Science & Discovery',
+    icon: require('@/assets/icons/Science-Discovery.png'),
+  },
+  {
+    value: 'art-culture',
+    label: 'Art & Culture',
+    icon: require('@/assets/icons/Art-Culture.png'),
+  },
+  {
+    value: 'politics',
+    label: 'Leaders & Power',
+    icon: require('@/assets/icons/Politics.png'),
+  },
+  {
+    value: 'inventions',
+    label: 'Breakthroughs',
+    icon: require('@/assets/icons/Inventions.png'),
+  },
+  {
+    value: 'natural-disasters',
+    label: 'Forces of Nature',
+    icon: require('@/assets/icons/Natural-Disasters.png'),
+  },
+  {
+    value: 'civil-rights',
+    label: 'Rights & Movements',
+    icon: require('@/assets/icons/Civil-Rights.png'),
+  },
+  {
+    value: 'exploration',
+    label: 'Exploration',
+    icon: require('@/assets/icons/Explorations.png'),
+  },
+  { value: 'surprise', label: 'Surprise me', fallbackIconName: 'sparkles' },
 ];
 
-const ERA_CHOICES: { value: EraOption; label: string }[] = [
-  { value: 'prehistory', label: 'Prehistory' },
-  { value: 'ancient', label: 'Ancient Worlds' },
-  { value: 'medieval', label: 'Medieval' },
-  { value: 'early-modern', label: 'Early Modern' },
-  { value: 'nineteenth', label: '19th Century' },
-  { value: 'twentieth', label: '20th Century' },
-  { value: 'contemporary', label: 'Contemporary' },
+const ERA_CHOICES: PreferenceChoice<EraOption>[] = [
+  { value: 'prehistory', label: 'Prehistory', icon: require('@/assets/icons/Prehistory.png') },
+  { value: 'ancient', label: 'Ancient Worlds', icon: require('@/assets/icons/Ancient-Worlds.png') },
+  { value: 'medieval', label: 'Medieval', icon: require('@/assets/icons/Medieval.png') },
+  {
+    value: 'early-modern',
+    label: 'Early Modern',
+    icon: require('@/assets/icons/Early-Modern.png'),
+  },
+  {
+    value: 'nineteenth',
+    label: '19th Century',
+    icon: require('@/assets/icons/19th-Century.png'),
+  },
+  {
+    value: 'twentieth',
+    label: '20th Century',
+    icon: require('@/assets/icons/20th-Century.png'),
+  },
+  {
+    value: 'contemporary',
+    label: 'Contemporary',
+    icon: require('@/assets/icons/Contemporary.png'),
+  },
 ];
 
 const accountLabels: Record<string, string> = {
-  apple: 'Apple account',
-  google: 'Google account',
-  email: 'Email account',
+  apple: 'Signed in with Apple',
+  google: 'Signed in with Google',
+  email: 'Signed in with email',
   anonymous: 'Guest session',
-  meta: 'Meta account',
+  meta: 'Signed in with Meta',
 };
 
 const THEME_OPTIONS: {
@@ -73,22 +139,6 @@ const CATEGORY_LABELS = Object.fromEntries(
 const ERA_LABELS = Object.fromEntries(
   ERA_CHOICES.map((option) => [option.value, option.label])
 ) as Record<EraOption, string>;
-
-const buildReminderTimeOptions = () => {
-  const times: string[] = [];
-
-  for (let minutes = 7 * 60; minutes <= 22 * 60; minutes += 30) {
-    const hours = Math.floor(minutes / 60)
-      .toString()
-      .padStart(2, '0');
-    const mins = (minutes % 60).toString().padStart(2, '0');
-    times.push(`${hours}:${mins}`);
-  }
-
-  return times;
-};
-
-const REMINDER_TIME_OPTIONS = buildReminderTimeOptions();
 
 const createStyles = (theme: ThemeDefinition) => {
   const { colors, spacing, radius, typography } = theme;
@@ -118,37 +168,8 @@ const createStyles = (theme: ThemeDefinition) => {
       gap: spacing.xl,
     },
     heroCard: {
-      position: 'relative',
-      overflow: 'hidden',
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: colors.heroBorder,
-      backgroundColor: colors.surface,
-      padding: spacing.xl,
       gap: spacing.lg,
-      shadowColor: colors.shadowColor,
-      shadowOpacity: 0.12,
-      shadowRadius: 24,
-      shadowOffset: { width: 0, height: 14 },
-      elevation: 5,
-    },
-    heroOrbPrimary: {
-      position: 'absolute',
-      width: 220,
-      height: 220,
-      borderRadius: 110,
-      top: -120,
-      right: -72,
-      backgroundColor: colors.accentSoft,
-    },
-    heroOrbSecondary: {
-      position: 'absolute',
-      width: 170,
-      height: 170,
-      borderRadius: 85,
-      bottom: -84,
-      left: -68,
-      backgroundColor: colors.surfaceSubtle,
+      paddingTop: spacing.sm,
     },
     heroBadge: {
       alignSelf: 'flex-start',
@@ -156,8 +177,6 @@ const createStyles = (theme: ThemeDefinition) => {
       paddingVertical: spacing.xs,
       borderRadius: radius.pill,
       backgroundColor: colors.accentSoft,
-      borderWidth: 1,
-      borderColor: colors.heroBorder,
     },
     heroBadgeText: {
       fontFamily: sansFamily,
@@ -362,7 +381,7 @@ const createStyles = (theme: ThemeDefinition) => {
       borderRadius: radius.pill,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.appBackground,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
     },
@@ -393,83 +412,153 @@ const createStyles = (theme: ThemeDefinition) => {
       gap: spacing.md,
       paddingTop: spacing.xs,
     },
-    reminderDisplayRow: {
+    reminderPermissionWarning: {
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: 'rgba(220, 38, 38, 0.32)',
+      backgroundColor: 'rgba(220, 38, 38, 0.08)',
+    },
+    reminderPermissionWarningText: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      lineHeight: 18,
+      color: '#8A1C1C',
+    },
+    reminderPermissionWarningAction: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.surface,
+    },
+    reminderPermissionWarningActionPressed: {
+      opacity: 0.85,
+    },
+    reminderPermissionWarningActionLabel: {
+      fontFamily: sansFamily,
+      fontSize: 12,
+      color: colors.accentPrimary,
+      fontWeight: '700',
+      letterSpacing: 0.2,
+      textTransform: 'uppercase',
+    },
+    reminderTimeButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       gap: spacing.sm,
-    },
-    reminderTimeBox: {
-      minWidth: 78,
-      alignItems: 'center',
-      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderRadius: radius.lg,
+      backgroundColor: colors.appBackground,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    reminderTimeButtonPressed: {
+      opacity: 0.88,
+    },
+    reminderTimeLead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    reminderTimeLabel: {
+      fontFamily: sansFamily,
+      fontSize: 13,
+      lineHeight: 16,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.35,
+    },
+    reminderTimeValue: {
+      fontFamily: serifFamily,
+      fontSize: 30,
+      lineHeight: 32,
+      color: colors.textPrimary,
+      letterSpacing: -0.7,
+    },
+    reminderTimeHint: {
+      fontFamily: sansFamily,
+      fontSize: typography.helper.fontSize,
+      lineHeight: typography.helper.lineHeight,
+      color: colors.textTertiary,
+    },
+    reminderTimeBody: {
+      gap: spacing.xs,
+    },
+    reminderInlineCard: {
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      borderRadius: radius.lg,
+      backgroundColor: colors.appBackground,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    reminderInlineHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    reminderPickerOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.38)',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    reminderPickerCard: {
+      borderRadius: radius.xl,
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
-    },
-    reminderTimeBoxText: {
-      fontFamily: serifFamily,
-      fontSize: 28,
-      lineHeight: 30,
-      color: colors.textPrimary,
-      letterSpacing: -0.6,
-    },
-    reminderColon: {
-      fontFamily: serifFamily,
-      fontSize: 26,
-      lineHeight: 30,
-      color: colors.textSecondary,
-    },
-    reminderSliderPanel: {
-      gap: spacing.md,
-      padding: spacing.lg,
-      borderRadius: radius.lg,
-      backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.58)',
-      borderWidth: 1,
-      borderColor: colors.borderSubtle,
-    },
-    reminderSliderTrackWrap: {
-      height: 34,
-      justifyContent: 'center',
-    },
-    reminderSliderTrack: {
-      height: 6,
-      borderRadius: 999,
-      backgroundColor: colors.progressTrack,
-    },
-    reminderSliderActiveTrack: {
-      position: 'absolute',
-      left: 0,
-      height: 6,
-      borderRadius: 999,
-      backgroundColor: colors.accentPrimary,
-    },
-    reminderSliderThumb: {
-      position: 'absolute',
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      borderWidth: 2,
-      borderColor: colors.surface,
-      backgroundColor: colors.accentPrimary,
+      overflow: 'hidden',
       shadowColor: colors.shadowColor,
       shadowOpacity: 0.18,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
+      shadowRadius: 26,
+      shadowOffset: { width: 0, height: 16 },
+      elevation: 8,
     },
-    reminderMarkersRow: {
+    reminderPickerHeader: {
       flexDirection: 'row',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
     },
-    reminderMarker: {
+    reminderPickerTitle: {
       fontFamily: sansFamily,
-      fontSize: 11,
-      lineHeight: 14,
-      color: colors.textTertiary,
+      fontSize: 18,
+      lineHeight: 22,
+      color: colors.textPrimary,
+      fontWeight: '700',
+    },
+    reminderPickerAction: {
+      fontFamily: sansFamily,
+      fontSize: 17,
+      lineHeight: 20,
+      color: colors.accentPrimary,
+      fontWeight: '600',
+    },
+    reminderPickerBody: {
+      minHeight: 236,
+      alignItems: 'stretch',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.lg,
+    },
+    reminderPickerControl: {
+      width: '100%',
+      height: 216,
+      alignSelf: 'center',
     },
     summaryRow: {
       flexDirection: 'row',
@@ -694,17 +783,21 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     pickerOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.35)',
       justifyContent: 'flex-end',
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.lg,
+    },
+    pickerBackdrop: {
+      backgroundColor: 'rgba(0, 0, 0, 0.34)',
     },
     pickerSheet: {
       width: '100%',
       maxHeight: '76%',
       borderRadius: radius.xl,
-      padding: spacing.xl,
-      backgroundColor: colors.surface,
+      paddingTop: spacing.lg,
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.xl,
+      backgroundColor: colors.surfaceSubtle,
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       gap: spacing.md,
@@ -741,6 +834,61 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     pickerScroll: {
       maxHeight: 340,
+    },
+    pickerScrollContent: {
+      paddingBottom: spacing.sm,
+    },
+    pickerOptionGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      alignContent: 'flex-start',
+    },
+    pickerOptionCard: {
+      width: '48.5%',
+      minHeight: 112,
+      gap: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+      backgroundColor: colors.appBackground,
+    },
+    pickerOptionCardSelected: {
+      borderColor: colors.accentPrimary,
+      backgroundColor: colors.accentSoft,
+    },
+    pickerOptionCardPressed: {
+      opacity: 0.9,
+    },
+    pickerOptionIconWrap: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceElevated,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    pickerOptionIconWrapSelected: {
+      borderColor: colors.accentMuted,
+      backgroundColor: colors.appBackground,
+    },
+    pickerOptionIcon: {
+      width: 24,
+      height: 24,
+    },
+    pickerOptionLabel: {
+      fontFamily: sansFamily,
+      fontSize: 14,
+      lineHeight: 18,
+      color: colors.textPrimary,
+      fontWeight: '600',
+    },
+    pickerOptionLabelSelected: {
+      color: colors.accentPrimary,
     },
     pickerDoneRow: {
       flexDirection: 'row',
@@ -933,95 +1081,56 @@ const PreferenceSummaryCard = ({
   );
 };
 
-const ReminderTimeSlider = ({
-  value,
-  onChange,
+const PreferenceOptionCard = <T extends string>({
+  option,
+  selected,
+  onPress,
   styles,
+  theme,
 }: {
-  value: string;
-  onChange: (time: string) => void;
+  option: PreferenceChoice<T>;
+  selected: boolean;
+  onPress: () => void;
   styles: ReturnType<typeof createStyles>;
+  theme: ThemeDefinition;
 }) => {
-  const [trackWidth, setTrackWidth] = useState(0);
-  const initialTouchXRef = useRef(0);
-  const selectedIndex = Math.max(REMINDER_TIME_OPTIONS.indexOf(value), 0);
-  const [hours, minutes] = value.split(':');
-
-  const selectTimeFromPosition = useCallback(
-    (position: number) => {
-      if (trackWidth <= 0) {
-        return;
-      }
-
-      const clampedPosition = Math.max(0, Math.min(trackWidth, position));
-      const percentage = clampedPosition / trackWidth;
-      const nextIndex = Math.round(percentage * (REMINDER_TIME_OPTIONS.length - 1));
-      const nextValue = REMINDER_TIME_OPTIONS[nextIndex] ?? REMINDER_TIME_OPTIONS[0];
-
-      if (nextValue !== value) {
-        onChange(nextValue);
-      }
-    },
-    [onChange, trackWidth, value]
-  );
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: (event) => {
-          initialTouchXRef.current = event.nativeEvent.locationX;
-          selectTimeFromPosition(event.nativeEvent.locationX);
-        },
-        onPanResponderMove: (_, gestureState) => {
-          selectTimeFromPosition(initialTouchXRef.current + gestureState.dx);
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          selectTimeFromPosition(initialTouchXRef.current + gestureState.dx);
-        },
-      }),
-    [selectTimeFromPosition]
-  );
-
-  const thumbOffset =
-    trackWidth > 0
-      ? (selectedIndex / (REMINDER_TIME_OPTIONS.length - 1)) * trackWidth
-      : 0;
-  const activeTrackWidth = Math.max(0, thumbOffset);
-
   return (
-    <View style={styles.reminderExpanded}>
-      <View style={styles.reminderDisplayRow}>
-        <View style={styles.reminderTimeBox}>
-          <Text style={styles.reminderTimeBoxText}>{hours}</Text>
-        </View>
-        <Text style={styles.reminderColon}>:</Text>
-        <View style={styles.reminderTimeBox}>
-          <Text style={styles.reminderTimeBoxText}>{minutes}</Text>
-        </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.pickerOptionCard,
+        selected && styles.pickerOptionCardSelected,
+        pressed && styles.pickerOptionCardPressed,
+      ]}
+    >
+      <View
+        style={[
+          styles.pickerOptionIconWrap,
+          selected && styles.pickerOptionIconWrapSelected,
+        ]}
+      >
+        {option.icon ? (
+          <Image source={option.icon} style={styles.pickerOptionIcon} />
+        ) : (
+          <IconSymbol
+            name={option.fallbackIconName ?? 'sparkles'}
+            size={18}
+            color={selected ? theme.colors.accentPrimary : theme.colors.textSecondary}
+          />
+        )}
       </View>
-
-      <View style={styles.reminderSliderPanel}>
-        <View
-          style={styles.reminderSliderTrackWrap}
-          onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
-          {...panResponder.panHandlers}
-        >
-          <View style={styles.reminderSliderTrack} />
-          <View style={[styles.reminderSliderActiveTrack, { width: activeTrackWidth }]} />
-          <View style={[styles.reminderSliderThumb, { left: Math.max(0, thumbOffset - 13) }]} />
-        </View>
-
-        <View style={styles.reminderMarkersRow}>
-          {['08:00', '12:00', '16:00', '20:00'].map((marker) => (
-            <Text key={marker} style={styles.reminderMarker}>
-              {marker}
-            </Text>
-          ))}
-        </View>
-      </View>
-    </View>
+      <Text
+        numberOfLines={2}
+        style={[
+          styles.pickerOptionLabel,
+          selected && styles.pickerOptionLabelSelected,
+        ]}
+      >
+        {option.label}
+      </Text>
+    </Pressable>
   );
 };
 
@@ -1040,18 +1149,85 @@ const PreferencePickerModal = ({
   styles: ReturnType<typeof createStyles>;
   children: ReactNode;
 }) => {
+  const [isMounted, setIsMounted] = useState(visible);
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      setIsMounted(true);
+      progress.setValue(0);
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 280,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+
+    if (!isMounted) {
+      return;
+    }
+
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: 220,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setIsMounted(false);
+      }
+    });
+  }, [isMounted, progress, visible]);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  const backdropOpacity = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  const sheetTranslateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [48, 0],
+  });
+  const sheetOpacity = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.96, 1],
+  });
+
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <Modal animationType="none" transparent visible={isMounted} onRequestClose={onClose}>
       <View style={styles.pickerOverlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={styles.pickerSheet}>
+        <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={onClose}>
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, styles.pickerBackdrop, { opacity: backdropOpacity }]}
+          />
+        </Pressable>
+
+        <Animated.View
+          style={[
+            styles.pickerSheet,
+            {
+              opacity: sheetOpacity,
+              transform: [{ translateY: sheetTranslateY }],
+            },
+          ]}
+        >
           <View style={styles.pickerHandle} />
           <View style={styles.pickerHeader}>
             <Text style={styles.pickerTitle}>{title}</Text>
             <Text style={styles.pickerCopy}>{copy}</Text>
           </View>
 
-          <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.pickerScroll}
+            contentContainerStyle={styles.pickerScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             {children}
           </ScrollView>
 
@@ -1060,18 +1236,30 @@ const PreferencePickerModal = ({
               <Text style={styles.signOutLabel}>Done</Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
 };
 
-const detectTimezone = () => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return 'UTC';
-  }
+const timeStringToDate = (value: string) => {
+  const [hoursString, minutesString] = value.split(':');
+  const date = new Date();
+  const hours = Number.parseInt(hoursString ?? '9', 10);
+  const minutes = Number.parseInt(minutesString ?? '0', 10);
+
+  date.setHours(Number.isFinite(hours) ? hours : 9);
+  date.setMinutes(Number.isFinite(minutes) ? minutes : 0);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+
+  return date;
+};
+
+const dateToTimeString = (value: Date) => {
+  const hours = value.getHours().toString().padStart(2, '0');
+  const minutes = value.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
 };
 
 const formatThemePreferenceLabel = (value?: ThemePreference) => {
@@ -1132,6 +1320,8 @@ const ProfileScreen = () => {
   const [showDeletePasswordModal, setShowDeletePasswordModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [activePreferenceModal, setActivePreferenceModal] = useState<PreferenceModalType>(null);
+  const [showReminderPickerModal, setShowReminderPickerModal] = useState(false);
+  const [draftReminderDate, setDraftReminderDate] = useState(() => timeStringToDate('09:00'));
 
   const handleToggleCategory = (value: CategoryOption) => {
     if (!profile) {
@@ -1170,6 +1360,50 @@ const ProfileScreen = () => {
 
   const handleReminderChange = (time: string) => {
     void updateProfile({ notificationTime: time });
+  };
+
+  const handleReminderToggle = (next: boolean) => {
+    if (!profile) {
+      return;
+    }
+
+    if (!next) {
+      void updateProfile({ notificationEnabled: false });
+      return;
+    }
+
+    void requestNotificationPermission()
+      .then((permissionState) => {
+        if (permissionState === 'enabled') {
+          return updateProfile({
+            notificationEnabled: true,
+            pushPermission: 'enabled',
+            notificationTime: profile.notificationTime || '09:00',
+          });
+        }
+
+        return updateProfile({
+          notificationEnabled: false,
+          pushPermission: 'declined',
+        }).then(() => {
+          Alert.alert(
+            'Notifications are off',
+            'Enable notification permission in system settings to receive daily reminders.',
+            [
+              { text: 'Not now', style: 'cancel' },
+              {
+                text: 'Open Settings',
+                onPress: () => {
+                  void openSystemNotificationSettings();
+                },
+              },
+            ]
+          );
+        });
+      })
+      .catch((error) => {
+        console.error('Failed to toggle reminder notifications', error);
+      });
   };
 
   const handleThemeChange = (preference: ThemePreference) => {
@@ -1263,9 +1497,9 @@ const ProfileScreen = () => {
     await runDeleteAccount(deletePassword);
   };
 
-  const timezoneLabel = profile?.timezone ?? detectTimezone();
   const reminderTime = profile?.notificationTime ?? '09:00';
   const reminderEnabled = profile?.notificationEnabled ?? true;
+  const reminderPermissionDeclined = profile?.pushPermission === 'declined';
   const displayName = profile?.displayName?.trim() || 'Historian';
   const savedStoriesCount = profile?.savedEventIds?.length ?? 0;
   const hasSurpriseMode = profile?.categories?.includes('surprise') ?? false;
@@ -1277,9 +1511,50 @@ const ProfileScreen = () => {
   const eraSummary = summarizeEraSelection(profile?.eras);
   const contentInsetBottom = insets.bottom + 148;
 
+  useEffect(() => {
+    setDraftReminderDate(timeStringToDate(reminderTime));
+  }, [reminderTime]);
+
   const handleOpenSavedStories = () => {
     trackEvent('profile_saved_stories_opened', { saved_count: savedStoriesCount });
     router.push('/saved-stories');
+  };
+
+  const openReminderPicker = () => {
+    setDraftReminderDate(timeStringToDate(reminderTime));
+    setShowReminderPickerModal(true);
+  };
+
+  const closeReminderPicker = () => {
+    setShowReminderPickerModal(false);
+  };
+
+  const handleReminderPickerChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (!selectedDate) {
+      return;
+    }
+
+    setDraftReminderDate(selectedDate);
+  };
+
+  const handleInlineReminderPickerChange = (
+    _event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) => {
+    if (!selectedDate) {
+      return;
+    }
+
+    setDraftReminderDate(selectedDate);
+    const nextTime = dateToTimeString(selectedDate);
+    if (nextTime !== reminderTime) {
+      handleReminderChange(nextTime);
+    }
+  };
+
+  const handleSaveReminderPicker = () => {
+    handleReminderChange(dateToTimeString(draftReminderDate));
+    setShowReminderPickerModal(false);
   };
 
   return (
@@ -1290,9 +1565,6 @@ const ProfileScreen = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.heroCard}>
-            <View pointerEvents="none" style={styles.heroOrbPrimary} />
-            <View pointerEvents="none" style={styles.heroOrbSecondary} />
-
             <View style={styles.heroBadge}>
               <Text style={styles.heroBadgeText}>
                 {isAnonymousSession ? 'Personal Archive' : 'Archive Synced'}
@@ -1329,18 +1601,6 @@ const ProfileScreen = () => {
               <HeroMetric label="Eras" value={selectedErasCount} styles={styles} theme={theme} />
             </View>
 
-            <View style={styles.heroFootnoteRow}>
-              <View style={styles.heroFootnoteCard}>
-                <Text style={styles.heroFootnoteLabel}>Reminder</Text>
-                <Text style={styles.heroFootnoteValue}>
-                  {reminderEnabled ? `At ${reminderTime}` : 'Off'}
-                </Text>
-              </View>
-              <View style={styles.heroFootnoteCard}>
-                <Text style={styles.heroFootnoteLabel}>Time zone</Text>
-                <Text style={styles.heroFootnoteValue}>{timezoneLabel}</Text>
-              </View>
-            </View>
           </View>
 
           <SectionBlock
@@ -1390,18 +1650,95 @@ const ProfileScreen = () => {
                 <Switch
                   accessibilityLabel="Toggle daily reminder"
                   value={reminderEnabled}
-                  onValueChange={(next) => void updateProfile({ notificationEnabled: next })}
+                  onValueChange={handleReminderToggle}
                   trackColor={{ false: theme.colors.borderSubtle, true: theme.colors.accentSoft }}
                   thumbColor={reminderEnabled ? theme.colors.accentPrimary : theme.colors.surface}
                 />
               </View>
 
+              {reminderPermissionDeclined ? (
+                <View style={styles.reminderPermissionWarning}>
+                  <Text style={styles.reminderPermissionWarningText}>
+                    Notifications are blocked at system level. Open settings to allow daily reminders.
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      void openSystemNotificationSettings();
+                    }}
+                    style={({ pressed }) => [
+                      styles.reminderPermissionWarningAction,
+                      pressed && styles.reminderPermissionWarningActionPressed,
+                    ]}
+                  >
+                    <Text style={styles.reminderPermissionWarningActionLabel}>Open Settings</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
               {reminderEnabled ? (
-                <ReminderTimeSlider
-                  value={reminderTime}
-                  onChange={handleReminderChange}
-                  styles={styles}
-                />
+                <View style={styles.reminderExpanded}>
+                  {Platform.OS === 'ios' ? (
+                    <View style={styles.reminderInlineCard}>
+                      <View style={styles.reminderInlineHeader}>
+                        <View style={styles.reminderTimeLead}>
+                          <IconSymbol
+                            name="clock.fill"
+                            size={17}
+                            color={theme.colors.accentPrimary}
+                          />
+                          <View style={styles.reminderTimeBody}>
+                            <Text style={styles.reminderTimeLabel}>Delivery time</Text>
+                            <Text style={styles.reminderTimeValue}>{reminderTime}</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <DateTimePicker
+                        value={draftReminderDate}
+                        mode="time"
+                        display="spinner"
+                        minuteInterval={5}
+                        style={styles.reminderPickerControl}
+                        textColor={theme.colors.textPrimary}
+                        themeVariant={theme.mode}
+                        onChange={handleInlineReminderPickerChange}
+                      />
+                    </View>
+                  ) : (
+                    <>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Reminder time, ${reminderTime}`}
+                        onPress={openReminderPicker}
+                        style={({ pressed }) => [
+                          styles.reminderTimeButton,
+                          pressed && styles.reminderTimeButtonPressed,
+                        ]}
+                      >
+                        <View style={styles.reminderTimeLead}>
+                          <IconSymbol
+                            name="clock.fill"
+                            size={17}
+                            color={theme.colors.accentPrimary}
+                          />
+                          <View style={styles.reminderTimeBody}>
+                            <Text style={styles.reminderTimeLabel}>Delivery time</Text>
+                            <Text style={styles.reminderTimeValue}>{reminderTime}</Text>
+                          </View>
+                        </View>
+                        <IconSymbol
+                          name="chevron.right"
+                          size={17}
+                          color={theme.colors.textSecondary}
+                        />
+                      </Pressable>
+                      <Text style={styles.reminderTimeHint}>
+                        Tap to pick the time with the native time picker.
+                      </Text>
+                    </>
+                  )}
+                </View>
               ) : null}
             </View>
           </SectionBlock>
@@ -1581,6 +1918,40 @@ const ProfileScreen = () => {
         </View>
       </Modal>
 
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showReminderPickerModal}
+        onRequestClose={closeReminderPicker}
+      >
+        <View style={styles.reminderPickerOverlay}>
+          <View style={styles.reminderPickerCard}>
+            <View style={styles.reminderPickerHeader}>
+              <Pressable accessibilityRole="button" onPress={closeReminderPicker}>
+                <Text style={styles.reminderPickerAction}>Cancel</Text>
+              </Pressable>
+              <Text style={styles.reminderPickerTitle}>Edit Reminder</Text>
+              <Pressable accessibilityRole="button" onPress={handleSaveReminderPicker}>
+                <Text style={styles.reminderPickerAction}>Save</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.reminderPickerBody}>
+              <DateTimePicker
+                value={draftReminderDate}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                minuteInterval={5}
+                style={styles.reminderPickerControl}
+                textColor={Platform.OS === 'ios' ? theme.colors.textPrimary : undefined}
+                themeVariant={Platform.OS === 'ios' ? theme.mode : undefined}
+                onChange={handleReminderPickerChange}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <PreferencePickerModal
         visible={activePreferenceModal !== null}
         title={activePreferenceModal === 'themes' ? 'Themes' : 'Eras'}
@@ -1592,17 +1963,19 @@ const ProfileScreen = () => {
         onClose={() => setActivePreferenceModal(null)}
         styles={styles}
       >
-        <View>
+        <View style={styles.pickerOptionGrid}>
           {activePreferenceModal === 'themes'
             ? CATEGORY_CHOICES.map((option) => {
                 const selected = profile?.categories?.includes(option.value) ?? false;
 
                 return (
-                  <SelectableChip
+                  <PreferenceOptionCard
                     key={option.value}
-                    label={option.label}
+                    option={option}
                     selected={selected}
                     onPress={() => handleToggleCategory(option.value)}
+                    styles={styles}
+                    theme={theme}
                   />
                 );
               })
@@ -1610,11 +1983,13 @@ const ProfileScreen = () => {
                 const selected = profile?.eras?.includes(option.value) ?? false;
 
                 return (
-                  <SelectableChip
+                  <PreferenceOptionCard
                     key={option.value}
-                    label={option.label}
+                    option={option}
                     selected={selected}
                     onPress={() => handleToggleEra(option.value)}
+                    styles={styles}
+                    theme={theme}
                   />
                 );
               })}

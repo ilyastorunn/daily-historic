@@ -1,5 +1,3 @@
-const { withInfoPlist } = require('@expo/config-plugins');
-
 /** @type {import('expo/config').ExpoConfig} */
 const config = {
   name: "Historiq",
@@ -17,6 +15,8 @@ const config = {
     usesAppleSignIn: true,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSUserNotificationUsageDescription:
+        "Historiq sends one daily history reminder at your selected time.",
     },
   },
   android: {
@@ -41,6 +41,7 @@ const config = {
     "@react-native-google-signin/google-signin",
     "expo-router",
     "expo-apple-authentication",
+    "expo-notifications",
     [
       "expo-build-properties",
       {

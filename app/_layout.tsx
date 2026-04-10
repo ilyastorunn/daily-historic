@@ -1,13 +1,18 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { LogBox } from 'react-native';
 import 'react-native-reanimated';
+import * as Notifications from 'expo-notifications';
 
-import { UserProvider } from '@/contexts/user-context';
+import { UserProvider, useUserContext } from '@/contexts/user-context';
 import { ThemeProvider, useThemeContext } from '@/contexts/theme-context';
+import {
+  configureNotificationHandler,
+  syncDailyNotificationFromProfile,
+} from '@/services/notifications';
 import { darkTheme, lightTheme } from '@/theme/tokens';
 
 export const unstable_settings = {
@@ -16,6 +21,8 @@ export const unstable_settings = {
 
 function AppNavigator() {
   const { mode } = useThemeContext();
+  const { profile } = useUserContext();
+  const router = useRouter();
 
   useEffect(() => {
     // Ignore known non-blocking warnings that are noisy during auth/testing flows.
@@ -24,6 +31,31 @@ function AppNavigator() {
       'SafeAreaView has been deprecated and will be removed in a future release.',
     ]);
   }, []);
+
+  useEffect(() => {
+    configureNotificationHandler();
+  }, []);
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const deepLink = response.notification.request.content.data?.deepLink;
+
+      if (deepLink === '/(tabs)') {
+        router.push('/(tabs)');
+        return;
+      }
+
+      router.push('/(tabs)');
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
+
+  useEffect(() => {
+    void syncDailyNotificationFromProfile(profile);
+  }, [profile]);
 
   const navigationTheme = useMemo(() => {
     const appTheme = mode === 'dark' ? darkTheme : lightTheme;

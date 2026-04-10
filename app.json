@@ -14,7 +14,8 @@
       "bundleIdentifier": "com.ilyastorun.histora",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSUserNotificationUsageDescription": "Historiq sends one daily history reminder at your selected time."
       }
     },
     "android": {
@@ -39,6 +40,7 @@
       "@react-native-google-signin/google-signin",
       "expo-router",
       "expo-apple-authentication",
+      "expo-notifications",
       [
         "expo-build-properties",
         {
