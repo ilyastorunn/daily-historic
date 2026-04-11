@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import { Linking, Platform } from 'react-native';
 
 import { trackEvent } from '@/services/analytics';
@@ -33,6 +32,106 @@ const DEFAULT_NOTIFICATION_TIME = '09:00';
 const DEFAULT_DEEP_LINK = '/(tabs)';
 
 let notificationHandlerConfigured = false;
+type NotificationsModuleShape = {
+  AndroidImportance: { DEFAULT: number };
+  IosAuthorizationStatus: { PROVISIONAL: number };
+  SchedulableTriggerInputTypes: { CALENDAR: string };
+  setNotificationChannelAsync: (
+    channelId: string,
+    channel: {
+      name: string;
+      importance: number;
+      vibrationPattern?: number[];
+      lightColor?: string;
+    }
+  ) => Promise<void>;
+  setNotificationHandler: (handler: {
+    handleNotification: () => Promise<{
+      shouldShowBanner: boolean;
+      shouldShowList: boolean;
+      shouldPlaySound: boolean;
+      shouldSetBadge: boolean;
+    }>;
+  }) => void;
+  getPermissionsAsync: () => Promise<{
+    granted: boolean;
+    status: string;
+    ios?: { status?: number };
+  }>;
+  requestPermissionsAsync: (input: {
+    ios: { allowAlert: boolean; allowBadge: boolean; allowSound: boolean };
+  }) => Promise<{ granted: boolean; ios?: { status?: number } }>;
+  cancelScheduledNotificationAsync: (identifier: string) => Promise<void>;
+  scheduleNotificationAsync: (input: {
+    content: {
+      title: string;
+      body: string;
+      sound: boolean;
+      data: { deepLink: string; source: string };
+    };
+    trigger: {
+      type: string;
+      hour: number;
+      minute: number;
+      repeats: boolean;
+      channelId?: string;
+      timezone?: string;
+    };
+  }) => Promise<string>;
+  addNotificationResponseReceivedListener: (
+    listener: (response: {
+      notification: { request: { content: { data?: { deepLink?: unknown } } } };
+    }) => void
+  ) => { remove: () => void };
+};
+
+let notificationsModulePromise: Promise<NotificationsModuleShape | null> | null = null;
+let notificationsUnavailableLogged = false;
+
+const logNotificationsUnavailable = (error: unknown) => {
+  if (notificationsUnavailableLogged) {
+    return;
+  }
+
+  notificationsUnavailableLogged = true;
+  console.warn(
+    '[Notifications] expo-notifications native module is unavailable. Notification features will be disabled.',
+    error
+  );
+};
+
+const loadNotificationsModule = async () => {
+  if (!notificationsModulePromise) {
+    notificationsModulePromise = Promise.resolve().then(() => {
+      try {
+        const requiredModule = require('expo-notifications');
+        const normalizedModule = (requiredModule?.default ?? requiredModule) as
+          | NotificationsModuleShape
+          | undefined;
+
+        if (!normalizedModule) {
+          throw new Error('expo-notifications module is empty');
+        }
+
+        if (
+          typeof normalizedModule.setNotificationHandler !== 'function' ||
+          typeof normalizedModule.addNotificationResponseReceivedListener !== 'function' ||
+          typeof normalizedModule.getPermissionsAsync !== 'function' ||
+          typeof normalizedModule.requestPermissionsAsync !== 'function'
+        ) {
+          throw new Error('expo-notifications API surface is incomplete on this build');
+        }
+
+        return normalizedModule;
+      } catch (error) {
+        logNotificationsUnavailable(error);
+        return null;
+      }
+    });
+  }
+
+  return notificationsModulePromise;
+};
 
 const parseTime = (value: string | undefined) => {
   const rawValue = value?.trim() || DEFAULT_NOTIFICATION_TIME;
@@ -102,7 +201,8 @@ const clearStoredState = async () => {
 };
 
 const ensureAndroidChannel = async () => {
-  if (Platform.OS !== 'android') {
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications || Platform.OS !== 'android') {
     return;
   }
 
@@ -114,8 +214,13 @@ const ensureAndroidChannel = async () => {
   });
 };
 
-export const configureNotificationHandler = () => {
+export const configureNotificationHandler = async () => {
   if (notificationHandlerConfigured) {
+    return;
+  }
+
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications) {
     return;
   }
 
@@ -132,6 +237,11 @@ export const configureNotificationHandler = () => {
 };
 
 export const getNotificationPermissionState = async (): Promise<PushPermissionState> => {
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications) {
+    return 'unknown';
+  }
+
   const permissions = await Notifications.getPermissionsAsync();
 
   if (permissions.granted || permissions.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
@@ -146,6 +256,12 @@ export const getNotificationPermissionState = async (): Promise<PushPermissionSt
 };
 
 export const requestNotificationPermission = async (): Promise<PushPermissionState> => {
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications) {
+    trackEvent('notification_permission_result', { result: 'unavailable' });
+    return 'declined';
+  }
+
   const existingState = await getNotificationPermissionState();
 
   if (existingState === 'enabled') {
@@ -172,6 +288,7 @@ export const requestNotificationPermission = async (): Promise<PushPermissionSta
 };
 
 export const cancelDailyNotification = async () => {
+  const Notifications = await loadNotificationsModule();
   const storedState = await readStoredState();
 
   if (!storedState?.identifier) {
@@ -179,7 +296,9 @@ export const cancelDailyNotification = async () => {
   }
 
   try {
-    await Notifications.cancelScheduledNotificationAsync(storedState.identifier);
+    if (Notifications) {
+      await Notifications.cancelScheduledNotificationAsync(storedState.identifier);
+    }
   } finally {
     await clearStoredState();
     trackEvent('notification_schedule_cancel', { reason: 'disabled_or_invalid' });
@@ -192,10 +311,16 @@ export const scheduleDailyNotification = async ({
   timezone,
   deepLink = DEFAULT_DEEP_LINK,
 }: ScheduleDailyNotificationArgs) => {
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications) {
+    await clearStoredState();
+    return;
+  }
+
   await ensureAndroidChannel();
   await cancelDailyNotification();
 
-  const trigger: Notifications.CalendarTriggerInput = {
+  const trigger = {
     type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
     hour,
     minute,
@@ -266,6 +391,24 @@ export const syncDailyNotificationFromProfile = async (
     timezone: effectiveTimezone,
     deepLink: DEFAULT_DEEP_LINK,
   });
+};
+
+export const addNotificationResponseReceivedListener = async (
+  listener: (deepLink: string | null) => void
+) => {
+  const Notifications = await loadNotificationsModule();
+  if (!Notifications) {
+    return null;
+  }
+
+  const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+    const rawDeepLink = response.notification.request.content.data?.deepLink;
+    listener(typeof rawDeepLink === 'string' ? rawDeepLink : null);
+  });
+
+  return () => {
+    subscription.remove();
+  };
 };
 
 export const openSystemNotificationSettings = async () => {
