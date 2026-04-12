@@ -24,6 +24,7 @@ import { heroEvent } from '@/constants/events';
 import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
+import { useHomeWidgetSync } from '@/hooks/use-home-widget-sync';
 import { useSavedEvents } from '@/hooks/use-saved-events';
 import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
 import { trackEvent } from '@/services/analytics';
@@ -616,6 +617,26 @@ const HomeScreen = () => {
   }, []);
 
   const displayHeroItems = digestLoading ? skeletonHeroItems : heroCarouselItems;
+
+  const heroWidgetCards = useMemo(
+    () =>
+      heroCarouselItems.map((item) => ({
+        id: item.id,
+        title: item.title,
+        summary: item.summary,
+        meta: item.meta,
+        yearLabel: item.yearLabel,
+        imageUri: item.imageUri,
+      })),
+    [heroCarouselItems]
+  );
+
+  useHomeWidgetSync({
+    cards: heroWidgetCards,
+    baseIndex: activeHeroIndex,
+    timezone: profile?.timezone,
+    enabled: !digestLoading,
+  });
 
   const fallbackHeroWidth = useMemo(() => {
     const screenWidth = Dimensions.get('window').width;

@@ -55,7 +55,21 @@ functions/.env.local
 app-example
 
 # generated native folders
-/ios
+/ios/*
+!/ios/HistoriqHomeHeroWidget/
+/ios/HistoriqHomeHeroWidget/*
+!/ios/HistoriqHomeHeroWidget/Info.plist
+!/ios/HistoriqHomeHeroWidget/HistoriqHomeHeroWidget.swift
+!/ios/HistoriqHomeHeroWidget/HistoriqHomeHeroWidgetBundle.swift
+!/ios/HistoriqHomeHeroWidget/HistoriqHomeHeroWidget.entitlements
+!/ios/codexdeneme/
+/ios/codexdeneme/*
+!/ios/codexdeneme/HistoriqWidgetBridge.m
+!/ios/codexdeneme/HistoriqWidgetReloader.swift
+!/ios/codexdeneme/codexdeneme.entitlements
+!/ios/codexdeneme.xcodeproj/
+/ios/codexdeneme.xcodeproj/*
+!/ios/codexdeneme.xcodeproj/project.pbxproj
 /android
 overrides/events.json
 cache/

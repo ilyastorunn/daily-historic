@@ -6,12 +6,8 @@ import * as Haptics from 'expo-haptics';
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
-import { createOnboardingStyles, spacingScale } from '../styles';
+import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
-
-const paintingIllustration = require('@/assets/illustrations/painting.png');
-const columnIllustration = require('@/assets/illustrations/column.png');
 
 const RATING_OPTIONS = [1, 2, 3, 4, 5] as const;
 
@@ -43,10 +39,8 @@ const createStyles = (theme: ThemeDefinition) => {
       textTransform: 'uppercase',
     },
     scene: {
-      minHeight: 180,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: spacing.md,
     },
     ratingPanel: {
       width: '100%',
@@ -169,15 +163,6 @@ const StepRateUs = ({ onNext }: StepComponentProps) => {
         </View>
 
         <View pointerEvents="box-none" style={styles.scene}>
-          <DecorativeIllustration
-            source={columnIllustration}
-            widthRatio={0.22}
-            minWidth={86}
-            maxWidth={108}
-            left={0}
-            bottom={8}
-            opacity={0.8}
-          />
           <View style={styles.ratingPanel}>
             <View style={styles.ratingPanelHeader}>
               <Text style={styles.ratingLabel}>Rate the mood so far</Text>
@@ -225,15 +210,6 @@ const StepRateUs = ({ onNext }: StepComponentProps) => {
               </View>
             </View>
           </View>
-          <DecorativeIllustration
-            source={paintingIllustration}
-            widthRatio={0.24}
-            minWidth={94}
-            maxWidth={122}
-            right={-spacingScale.xs}
-            top={0}
-            opacity={0.95}
-          />
         </View>
       </View>
 

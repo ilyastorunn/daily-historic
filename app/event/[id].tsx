@@ -18,6 +18,7 @@ import { formatCategoryLabel, formatEraLabel } from '@/constants/personalization
 import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useEventContent } from '@/hooks/use-event-content';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { trackEvent } from '@/services/analytics';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import { createLinearGradientSource } from '@/utils/gradient';
 import { getImageUri } from '@/utils/image-source';
@@ -220,12 +221,14 @@ const EventDetailScreen = () => {
   const params = useLocalSearchParams<{
     id?: string;
     source?: string;
+    index?: string;
     carouselIndex?: string;
     carouselItemIds?: string;
   }>();
   const rawId = params.id;
   const eventIdParam = Array.isArray(rawId) ? rawId[0] : rawId ?? null;
   const source = Array.isArray(params.source) ? params.source[0] : params.source;
+  const widgetIndex = params.index ? parseInt(Array.isArray(params.index) ? params.index[0] : params.index, 10) : undefined;
   const carouselIndex = params.carouselIndex ? parseInt(Array.isArray(params.carouselIndex) ? params.carouselIndex[0] : params.carouselIndex) : undefined;
   const carouselItemIds = params.carouselItemIds
     ? (Array.isArray(params.carouselItemIds) ? params.carouselItemIds[0] : params.carouselItemIds).split(',')
@@ -270,6 +273,18 @@ const EventDetailScreen = () => {
     heroMetaParts.push(categoryLabels.join(', '));
   }
   const heroMeta = heroMetaParts.join(' • ');
+
+  useEffect(() => {
+    if (source !== 'home-widget') {
+      return;
+    }
+
+    trackEvent('widget_event_opened', {
+      event_id: displayEventId,
+      index: Number.isFinite(widgetIndex) ? widgetIndex : undefined,
+    });
+  }, [displayEventId, source, widgetIndex]);
+
   const detailParagraphs = fetchedEvent
     ? (() => {
         const paragraphs: string[] = [];

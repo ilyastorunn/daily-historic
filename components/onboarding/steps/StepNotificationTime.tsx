@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
 import { createOnboardingStyles } from '../styles';
-
-const muhammadIllustration = require('@/assets/illustrations/muhammad.png');
 
 type TimeOption = {
   value: string;
@@ -21,15 +19,27 @@ const quickOptions: TimeOption[] = [
   { value: '17:00', hint: 'Evening wind-down' },
 ];
 
-const isCompleteTime = (value: string) => /^\d{2}:\d{2}$/.test(value);
+const timeStringToDate = (value: string) => {
+  const [hoursString, minutesString] = value.split(':');
+  const date = new Date();
+  const hours = Number.parseInt(hoursString ?? '9', 10);
+  const minutes = Number.parseInt(minutesString ?? '0', 10);
 
-const localStyles = StyleSheet.create({
-  illustrationScene: {
-    bottom: -72,
-  },
-});
+  date.setHours(Number.isFinite(hours) ? hours : 9);
+  date.setMinutes(Number.isFinite(minutes) ? minutes : 0);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
 
-const StepNotificationTime = ({ onNext }: StepComponentProps) => {
+  return date;
+};
+
+const dateToTimeString = (value: Date) => {
+  const hours = value.getHours().toString().padStart(2, '0');
+  const minutes = value.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+const StepNotificationTime = (_props: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
   const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
@@ -40,69 +50,55 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
   );
 
   const [selected, setSelected] = useState(isQuickMatch ? state.notificationTime : 'custom');
-  const [timeInput, setTimeInput] = useState(isQuickMatch ? '' : state.notificationTime || '');
-  const [showError, setShowError] = useState(false);
+  const [showPickerModal, setShowPickerModal] = useState(false);
+  const [draftReminderDate, setDraftReminderDate] = useState(() =>
+    timeStringToDate(state.notificationTime || '09:00')
+  );
 
   const handleSelect = (value: string) => {
     setSelected(value);
-    setTimeInput('');
-    setShowError(false);
     updateState({ notificationTime: value, notificationEnabled: true });
   };
 
   const handleCustomSelect = () => {
+    const baseTime = state.notificationTime || '09:00';
     setSelected('custom');
-    updateState({ notificationTime: '' });
+    setDraftReminderDate(timeStringToDate(baseTime));
+    updateState({ notificationTime: baseTime, notificationEnabled: true });
   };
 
-  const validateAndStoreTime = (rawValue: string) => {
-    setSelected('custom');
-    const sanitized = rawValue.replace(/[^\d:]/g, '');
-    const withColon = sanitized.includes(':')
-      ? sanitized
-      : sanitized.length > 2
-        ? `${sanitized.slice(0, 2)}:${sanitized.slice(2, 4)}`
-        : sanitized;
-
-    setTimeInput(withColon);
-
-    if (!isCompleteTime(withColon)) {
-      updateState({ notificationTime: '' });
-      setShowError(false);
+  const handleReminderPickerChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (!selectedDate) {
       return;
     }
+    setDraftReminderDate(selectedDate);
+  };
 
-    const [hoursRaw, minutesRaw] = withColon.split(':');
-    const hours = Number(hoursRaw);
-    const minutes = Number(minutesRaw);
-
-    if (Number.isNaN(hours) || Number.isNaN(minutes) || hours > 23 || minutes > 59) {
-      updateState({ notificationTime: '' });
-      setShowError(true);
+  const handleInlineReminderPickerChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (!selectedDate) {
       return;
     }
+    setDraftReminderDate(selectedDate);
+    updateState({
+      notificationTime: dateToTimeString(selectedDate),
+      notificationEnabled: true,
+    });
+  };
 
-    const normalized = `${hoursRaw.padStart(2, '0')}:${minutesRaw.padStart(2, '0')}`;
-    updateState({ notificationTime: normalized, notificationEnabled: true });
-    setShowError(false);
+  const handleSaveReminderPicker = () => {
+    updateState({
+      notificationTime: dateToTimeString(draftReminderDate),
+      notificationEnabled: true,
+    });
+    setShowPickerModal(false);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.stepScroll} showsVerticalScrollIndicator={false}>
-      <View
-        pointerEvents="box-none"
-        style={[styles.footerAnchoredScene, localStyles.illustrationScene]}
-      >
-        <DecorativeIllustration
-          source={muhammadIllustration}
-          widthRatio={0.34}
-          minWidth={122}
-          maxWidth={154}
-        />
-      </View>
-
       <Text style={styles.stepTitle}>When should we ping you?</Text>
-      <Text style={styles.sectionCopy}>Pick a moment in the day for Chrono to deliver your highlight. You can change this anytime.</Text>
+      <Text style={styles.sectionCopy}>
+        Pick a moment in the day for Chrono to deliver your highlight. You can change this anytime.
+      </Text>
 
       <View style={styles.timeOptionGroup}>
         {quickOptions.map((option) => {
@@ -134,36 +130,117 @@ const StepNotificationTime = ({ onNext }: StepComponentProps) => {
           <Text style={styles.timeOptionLabel}>Other time</Text>
           <Text style={styles.timeOptionHint}>Choose a specific schedule</Text>
         </Pressable>
-
-        <Pressable
-          onPress={() => {
-            updateState({ notificationEnabled: false });
-            onNext();
-          }}
-          style={({ pressed }) => [styles.timeOption, pressed && styles.cardPressed]}
-        >
-          <Text style={styles.timeOptionLabel}>Skip for now</Text>
-          <Text style={styles.timeOptionHint}>You can enable reminders later</Text>
-        </Pressable>
       </View>
 
       {selected === 'custom' && (
-        <View style={[styles.card, styles.timeCustomCard]}>
-          <Text style={styles.cardTitle}>Custom reminder</Text>
-          <TextInput
-            value={timeInput}
-            onChangeText={validateAndStoreTime}
-            keyboardType="numbers-and-punctuation"
-            placeholder="09:45"
-            maxLength={5}
-            style={styles.input}
-            autoCorrect={false}
-          />
-          {showError && <Text style={styles.errorText}>Enter time as HH:MM (24-hour).</Text>}
+        <View style={[styles.card, styles.timeCustomCard, localStyles.customPickerCard]}>
+          {Platform.OS === 'ios' ? (
+            <>
+              <Text style={styles.cardTitle}>Delivery time</Text>
+              <Text style={localStyles.timeValue}>{dateToTimeString(draftReminderDate)}</Text>
+              <DateTimePicker
+                value={draftReminderDate}
+                mode="time"
+                display="spinner"
+                minuteInterval={5}
+                textColor={theme.colors.textPrimary}
+                themeVariant={theme.mode}
+                onChange={handleInlineReminderPickerChange}
+              />
+            </>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Reminder time, ${dateToTimeString(draftReminderDate)}`}
+              onPress={() => setShowPickerModal(true)}
+              style={({ pressed }) => [localStyles.androidPickerButton, pressed && styles.cardPressed]}
+            >
+              <Text style={styles.timeOptionLabel}>Delivery time</Text>
+              <Text style={localStyles.timeValueCompact}>{dateToTimeString(draftReminderDate)}</Text>
+              <Text style={styles.timeOptionHint}>Tap to open native time picker</Text>
+            </Pressable>
+          )}
         </View>
       )}
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showPickerModal}
+        onRequestClose={() => setShowPickerModal(false)}
+      >
+        <View style={localStyles.pickerOverlay}>
+          <View style={[localStyles.pickerCard, { backgroundColor: theme.colors.surface }]}>
+            <View style={localStyles.pickerHeader}>
+              <Pressable accessibilityRole="button" onPress={() => setShowPickerModal(false)}>
+                <Text style={[localStyles.pickerAction, { color: theme.colors.accentPrimary }]}>Cancel</Text>
+              </Pressable>
+              <Text style={[localStyles.pickerTitle, { color: theme.colors.textPrimary }]}>Edit Reminder</Text>
+              <Pressable accessibilityRole="button" onPress={handleSaveReminderPicker}>
+                <Text style={[localStyles.pickerAction, { color: theme.colors.accentPrimary }]}>Save</Text>
+              </Pressable>
+            </View>
+
+            <DateTimePicker
+              value={draftReminderDate}
+              mode="time"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              minuteInterval={5}
+              textColor={Platform.OS === 'ios' ? theme.colors.textPrimary : undefined}
+              themeVariant={Platform.OS === 'ios' ? theme.mode : undefined}
+              onChange={handleReminderPickerChange}
+            />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
+
+const localStyles = StyleSheet.create({
+  customPickerCard: {
+    gap: 12,
+  },
+  androidPickerButton: {
+    borderRadius: 14,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  timeValue: {
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: '400',
+  },
+  timeValueCompact: {
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: '400',
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  pickerCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  pickerHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pickerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  pickerAction: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});
 
 export default StepNotificationTime;

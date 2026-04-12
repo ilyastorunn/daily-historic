@@ -105,7 +105,7 @@ const steps: StepDefinition[] = [
 ];
 
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
-  const { state, goNext, goBack, goToStep, totalSteps } = useOnboardingContext();
+  const { state, goNext, goBack, goToStep, totalSteps, updateState } = useOnboardingContext();
   const { authAccountSelection, authUser, completeOnboarding } = useUserContext();
   const theme = useAppTheme();
   const { styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
@@ -136,6 +136,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   const displayedStepTotal = visibleSteps.length;
 
   const isLastVisibleStep = currentVisibleIndex === visibleSteps.length - 1;
+  const isReminderTimeStep = currentStepDef.key === 'notification-time';
 
   const nextLabel = useMemo(() => {
     const label = currentStepDef.nextLabel;
@@ -202,9 +203,13 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
     goBack();
   };
 
+  const handleReminderSkip = () => {
+    updateState({ notificationEnabled: false });
+    goNext();
+  };
+
   const shouldShowFooter =
     currentStepDef.key !== 'welcome' &&
-    currentStepDef.key !== 'categories' &&
     currentStepDef.key !== 'notification-permission' &&
     currentStepDef.key !== 'rate-us' &&
     currentStepDef.key !== 'paywall' &&
@@ -244,24 +249,58 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 
       {shouldShowFooter && (
         <View style={styles.footer}>
-          <Pressable
-            onPress={handleNext}
-            disabled={isNextDisabled}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              isNextDisabled && styles.primaryButtonDisabled,
-              pressed && !isNextDisabled && styles.primaryButtonPressed,
-            ]}
-          >
-            <Text
-              style={[
-                styles.primaryButtonText,
-                isNextDisabled && styles.primaryButtonTextDisabled,
+          {isReminderTimeStep ? (
+            <View style={{ width: '100%', alignItems: 'center', gap: 8 }}>
+              <Pressable
+                onPress={handleNext}
+                disabled={isNextDisabled}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  { flex: 0, width: '100%' },
+                  isNextDisabled && styles.primaryButtonDisabled,
+                  pressed && !isNextDisabled && styles.primaryButtonPressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.primaryButtonText,
+                    isNextDisabled && styles.primaryButtonTextDisabled,
+                  ]}
+                >
+                  {nextLabel}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleReminderSkip}
+                style={({ pressed }) => [
+                  { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Text style={styles.ghostLink}>Skip</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              onPress={handleNext}
+              disabled={isNextDisabled}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                isNextDisabled && styles.primaryButtonDisabled,
+                pressed && !isNextDisabled && styles.primaryButtonPressed,
               ]}
             >
-              {nextLabel}
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  styles.primaryButtonText,
+                  isNextDisabled && styles.primaryButtonTextDisabled,
+                ]}
+              >
+                {nextLabel}
+              </Text>
+            </Pressable>
+          )}
         </View>
       )}
     </SafeAreaView>
