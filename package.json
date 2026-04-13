@@ -88,7 +88,9 @@
     "test:ingest": "vitest run",
     "time-machine:ingest": "tsx scripts/ingest-time-machine-years.ts",
     "validate:overrides": "tsx scripts/ingest/validate-overrides.ts",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "validate:monthly": "tsx scripts/validate-monthly-content.ts",
+    "validate:monthly:fast": "tsx scripts/validate-monthly-content.ts --skip-links"
   },
   "version": "1.0.0"
 }

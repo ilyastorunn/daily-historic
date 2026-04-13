@@ -1,0 +1,1776 @@
+{
+  "generatedAt": "2026-04-13T14:52:16.356Z",
+  "year": "2026",
+  "monthCount": 12,
+  "totalEventRefs": 108,
+  "uniqueEventRefs": 44,
+  "repeatedRefCount": 64,
+  "repeatRatio": 0.5925925925925926,
+  "topRepeatedEvents": [
+    {
+      "eventId": "ada-lovelace-analytical",
+      "count": 5
+    },
+    {
+      "eventId": "apollo-11-first-footsteps",
+      "count": 4
+    },
+    {
+      "eventId": "women-suffrage-usa",
+      "count": 4
+    },
+    {
+      "eventId": "emancipation-proclamation",
+      "count": 4
+    },
+    {
+      "eventId": "civil-war-begins",
+      "count": 4
+    },
+    {
+      "eventId": "florence-nightingale-nursing",
+      "count": 4
+    },
+    {
+      "eventId": "women-in-stem-week",
+      "count": 4
+    },
+    {
+      "eventId": "germ-theory-pasteur",
+      "count": 4
+    },
+    {
+      "eventId": "rosa-parks-bus-boycott",
+      "count": 3
+    },
+    {
+      "eventId": "harriet-tubman-underground",
+      "count": 3
+    },
+    {
+      "eventId": "malala-nobel-peace",
+      "count": 3
+    },
+    {
+      "eventId": "emmeline-pankhurst-suffragette",
+      "count": 3
+    }
+  ],
+  "overallCategoryDistribution": {
+    "science": 41,
+    "culture": 9,
+    "politics": 39,
+    "innovation": 31,
+    "art": 7,
+    "human-rights": 34
+  },
+  "overallEraDistribution": {
+    "ancient": 0,
+    "renaissance": 4,
+    "industrial": 38,
+    "modern": 55,
+    "contemporary": 11
+  },
+  "monthCoverageOk": true,
+  "sourceHealthSummary": {
+    "totalUrls": 216,
+    "ok": 216,
+    "error": 0,
+    "skipped": 0
+  },
+  "violations": [],
+  "perMonth": [
+    {
+      "id": "monthly-2026-01-turning-points-in-technology",
+      "monthKey": "2026-01",
+      "title": "Turning Points in Technology",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 3,
+        "culture": 0,
+        "politics": 1,
+        "innovation": 9,
+        "art": 0,
+        "human-rights": 0
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 3,
+        "modern": 3,
+        "contemporary": 3
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "first-computer-eniac": [
+          {
+            "url": "https://www.computerhistory.org/revolution/birth-of-the-computer/4/78",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/technology/ENIAC",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "internet-arpanet": [
+          {
+            "url": "https://www.internethalloffame.org/inductees/lawrence-roberts",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.lk.cs.ucla.edu/internet_first_words.html",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "www-invention": [
+          {
+            "url": "https://home.cern/science/computing/birth-web",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.w3.org/History.html",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "first-iphone": [
+          {
+            "url": "https://www.apple.com/newsroom/2007/01/09Apple-Reinvents-the-Phone-with-iPhone/",
+            "status": "ok",
+            "httpStatus": 403
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=MnrJzXM7a6o",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "google-founding": [
+          {
+            "url": "https://about.google/our-story/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://about.google/our-story/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ada-lovelace-analytical": [
+          {
+            "url": "https://www.britannica.com/biography/Ada-Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "steam-engine-watt": [
+          {
+            "url": "https://www.britannica.com/biography/James-Watt",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/James-Watt",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "transcontinental-railroad": [
+          {
+            "url": "https://www.nps.gov/gosp/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/topic/transcontinental-railroad",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "apollo-11-first-footsteps": [
+          {
+            "url": "https://www.nasa.gov/mission_pages/apollo/apollo11.html",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nasa.gov/mission/apollo-11/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-02-revolutions-and-rights",
+      "monthKey": "2026-02",
+      "title": "Revolutions & Rights",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 1,
+        "culture": 0,
+        "politics": 5,
+        "innovation": 1,
+        "art": 0,
+        "human-rights": 8
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 4,
+        "modern": 4,
+        "contemporary": 1
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "women-suffrage-usa": [
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "rosa-parks-bus-boycott": [
+          {
+            "url": "https://www.archives.gov/education/lessons/rosa-parks",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.troy.edu/rosaparks/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "harriet-tubman-underground": [
+          {
+            "url": "https://www.nps.gov/people/harriet-tubman.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nps.gov/hatu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emancipation-proclamation": [
+          {
+            "url": "https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Emancipation_Proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "malala-nobel-peace": [
+          {
+            "url": "https://www.nobelprize.org/prizes/peace/2014/yousafzai/facts/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://malala.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emmeline-pankhurst-suffragette": [
+          {
+            "url": "https://www.britannica.com/biography/Emmeline-Pankhurst",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nationalarchives.gov.uk/education/resources/suffragettes-on-file/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "civil-war-begins": [
+          {
+            "url": "https://www.nps.gov/fosu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.battlefields.org/learn/civil-war/battles/fort-sumter",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "florence-nightingale-nursing": [
+          {
+            "url": "https://www.florence-nightingale.co.uk/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nam.ac.uk/explore/florence-nightingale",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "amelia-earhart-atlantic": [
+          {
+            "url": "https://airandspace.si.edu/explore-and-learn/topics/women-in-aviation/earhart.cfm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.ameliaearhartmuseum.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-03-women-who-changed-history",
+      "monthKey": "2026-03",
+      "title": "Women Who Changed History",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 4,
+        "culture": 0,
+        "politics": 2,
+        "innovation": 2,
+        "art": 0,
+        "human-rights": 8
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 3,
+        "modern": 4,
+        "contemporary": 2
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "marie-curie-nobel": [
+          {
+            "url": "https://www.nobelprize.org/prizes/physics/1903/marie-curie/biographical/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/Marie-Curie",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ada-lovelace-analytical": [
+          {
+            "url": "https://www.britannica.com/biography/Ada-Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "amelia-earhart-atlantic": [
+          {
+            "url": "https://airandspace.si.edu/explore-and-learn/topics/women-in-aviation/earhart.cfm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.ameliaearhartmuseum.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "malala-nobel-peace": [
+          {
+            "url": "https://www.nobelprize.org/prizes/peace/2014/yousafzai/facts/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://malala.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-in-stem-week": [
+          {
+            "url": "https://sallyridescience.ucsd.edu/about/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Sally_Ride",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "florence-nightingale-nursing": [
+          {
+            "url": "https://www.florence-nightingale.co.uk/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nam.ac.uk/explore/florence-nightingale",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "harriet-tubman-underground": [
+          {
+            "url": "https://www.nps.gov/people/harriet-tubman.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nps.gov/hatu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emmeline-pankhurst-suffragette": [
+          {
+            "url": "https://www.britannica.com/biography/Emmeline-Pankhurst",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nationalarchives.gov.uk/education/resources/suffragettes-on-file/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-suffrage-usa": [
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-04-age-of-discovery",
+      "monthKey": "2026-04",
+      "title": "Age of Discovery",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 2,
+        "culture": 0,
+        "politics": 1,
+        "innovation": 8,
+        "art": 0,
+        "human-rights": 2
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 1,
+        "industrial": 2,
+        "modern": 5,
+        "contemporary": 1
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "apollo-11-first-footsteps": [
+          {
+            "url": "https://www.nasa.gov/mission_pages/apollo/apollo11.html",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nasa.gov/mission/apollo-11/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "magellan-circumnavigation": [
+          {
+            "url": "https://www.britannica.com/biography/Ferdinand-Magellan",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/Ferdinand-Magellan",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "lewis-clark-expedition": [
+          {
+            "url": "https://www.nps.gov/lecl/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://lewisandclark.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "hillary-everest": [
+          {
+            "url": "https://www.britannica.com/place/Mount-Everest",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/1953_British_Mount_Everest_expedition",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "amundsen-south-pole": [
+          {
+            "url": "https://www.nsf.gov/geo/opp/support/southp.jsp",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.uit.no/tmu",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "cook-pacific-voyage": [
+          {
+            "url": "https://www.britannica.com/biography/James-Cook",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/James_Cook",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "shackleton-endurance": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Ernest_Shackleton",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Ernest_Shackleton",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "amelia-earhart-atlantic": [
+          {
+            "url": "https://airandspace.si.edu/explore-and-learn/topics/women-in-aviation/earhart.cfm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.ameliaearhartmuseum.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-in-stem-week": [
+          {
+            "url": "https://sallyridescience.ucsd.edu/about/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Sally_Ride",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-05-art-and-culture-shifts",
+      "monthKey": "2026-05",
+      "title": "Art & Culture Shifts",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 1,
+        "culture": 5,
+        "politics": 3,
+        "innovation": 0,
+        "art": 4,
+        "human-rights": 4
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 1,
+        "industrial": 2,
+        "modern": 5,
+        "contemporary": 1
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "sistine-chapel-ceiling": [
+          {
+            "url": "https://www.museivaticani.va/content/museivaticani/en/collezioni/musei/cappella-sistina.html",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.khanacademy.org/humanities/renaissance-reformation/high-ren-florence-rome/michelangelo/a/michelangelo-ceiling-of-the-sistine-chapel",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "impressionism-monet": [
+          {
+            "url": "https://www.marmottan.fr/en/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.tate.org.uk/art/art-terms/i/impressionism",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "harlem-renaissance-jazz": [
+          {
+            "url": "https://www.nypl.org/locations/schomburg",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.history.com/topics/roaring-twenties/harlem-renaissance",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "beethoven-ninth-symphony": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "rosetta-stone-decode": [
+          {
+            "url": "https://www.britannica.com/topic/Rosetta-Stone",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/topic/Rosetta-Stone",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-suffrage-usa": [
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emmeline-pankhurst-suffragette": [
+          {
+            "url": "https://www.britannica.com/biography/Emmeline-Pankhurst",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nationalarchives.gov.uk/education/resources/suffragettes-on-file/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "malala-nobel-peace": [
+          {
+            "url": "https://www.nobelprize.org/prizes/peace/2014/yousafzai/facts/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://malala.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "rosa-parks-bus-boycott": [
+          {
+            "url": "https://www.archives.gov/education/lessons/rosa-parks",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.troy.edu/rosaparks/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-06-war-peace-and-diplomacy",
+      "monthKey": "2026-06",
+      "title": "War, Peace, and Diplomacy",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 1,
+        "culture": 0,
+        "politics": 9,
+        "innovation": 0,
+        "art": 0,
+        "human-rights": 1
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 2,
+        "modern": 7,
+        "contemporary": 0
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "d-day-normandy-landing": [
+          {
+            "url": "https://www.nationalww2museum.org/war/topics/d-day",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.history.com/topics/world-war-ii/d-day",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ww1-armistice": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Armistice_of_11_November_1918",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Armistice_of_11_November_1918",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "hiroshima-atomic-bomb": [
+          {
+            "url": "https://www.britannica.com/event/atomic-bombings-of-Hiroshima-and-Nagasaki",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://hpmmuseum.jp/?lang=eng",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "cuban-missile-crisis": [
+          {
+            "url": "https://www.britannica.com/event/Cuban-missile-crisis",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://history.state.gov/milestones/1961-1968/cuban-missile-crisis",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "pearl-harbor-attack": [
+          {
+            "url": "https://www.nps.gov/perl/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.archives.gov/publications/prologue/2001/winter/crafting-day-of-infamy-speech",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "battle-of-stalingrad": [
+          {
+            "url": "https://www.history.com/topics/world-war-ii/battle-of-stalingrad",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/event/Battle-of-Stalingrad",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "treaty-of-versailles": [
+          {
+            "url": "https://www.britannica.com/event/Treaty-of-Versailles-1919",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/event/Treaty-of-Versailles-1919",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emancipation-proclamation": [
+          {
+            "url": "https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Emancipation_Proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "civil-war-begins": [
+          {
+            "url": "https://www.nps.gov/fosu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.battlefields.org/learn/civil-war/battles/fort-sumter",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-07-space-and-scientific-ambition",
+      "monthKey": "2026-07",
+      "title": "Space & Scientific Ambition",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 9,
+        "culture": 0,
+        "politics": 0,
+        "innovation": 2,
+        "art": 0,
+        "human-rights": 2
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 3,
+        "modern": 5,
+        "contemporary": 1
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "apollo-11-first-footsteps": [
+          {
+            "url": "https://www.nasa.gov/mission_pages/apollo/apollo11.html",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nasa.gov/mission/apollo-11/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "marie-curie-nobel": [
+          {
+            "url": "https://www.nobelprize.org/prizes/physics/1903/marie-curie/biographical/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/Marie-Curie",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "dna-structure-discovery": [
+          {
+            "url": "https://www.nature.com/articles/171737a0",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nobelprize.org/prizes/medicine/1962/summary/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "salk-polio-vaccine": [
+          {
+            "url": "https://www.salk.edu/about/history-of-salk/jonas-salk/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.cdc.gov/polio/about/index.html",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "first-heart-transplant": [
+          {
+            "url": "https://www.heart.org/en/health-topics/heart-transplant",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/science/heart-transplant",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "xray-discovery": [
+          {
+            "url": "https://www.nobelprize.org/prizes/physics/1901/rontgen/facts/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/science/X-ray",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "germ-theory-pasteur": [
+          {
+            "url": "https://www.pasteur.fr/en/institut-pasteur/history",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.sciencehistory.org/historical-profile/louis-pasteur",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-in-stem-week": [
+          {
+            "url": "https://sallyridescience.ucsd.edu/about/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Sally_Ride",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ada-lovelace-analytical": [
+          {
+            "url": "https://www.britannica.com/biography/Ada-Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-08-medical-breakthroughs",
+      "monthKey": "2026-08",
+      "title": "Medical Breakthroughs",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 9,
+        "culture": 0,
+        "politics": 0,
+        "innovation": 0,
+        "art": 0,
+        "human-rights": 3
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 4,
+        "modern": 4,
+        "contemporary": 1
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "salk-polio-vaccine": [
+          {
+            "url": "https://www.salk.edu/about/history-of-salk/jonas-salk/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.cdc.gov/polio/about/index.html",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "dna-structure-discovery": [
+          {
+            "url": "https://www.nature.com/articles/171737a0",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nobelprize.org/prizes/medicine/1962/summary/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "first-heart-transplant": [
+          {
+            "url": "https://www.heart.org/en/health-topics/heart-transplant",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/science/heart-transplant",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "xray-discovery": [
+          {
+            "url": "https://www.nobelprize.org/prizes/physics/1901/rontgen/facts/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/science/X-ray",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "germ-theory-pasteur": [
+          {
+            "url": "https://www.pasteur.fr/en/institut-pasteur/history",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.sciencehistory.org/historical-profile/louis-pasteur",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "anesthesia-first-use": [
+          {
+            "url": "https://www.britannica.com/science/anesthesia",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.woodlibrarymuseum.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "florence-nightingale-nursing": [
+          {
+            "url": "https://www.florence-nightingale.co.uk/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nam.ac.uk/explore/florence-nightingale",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "marie-curie-nobel": [
+          {
+            "url": "https://www.nobelprize.org/prizes/physics/1903/marie-curie/biographical/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/Marie-Curie",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-in-stem-week": [
+          {
+            "url": "https://sallyridescience.ucsd.edu/about/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Sally_Ride",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-09-industrial-transformations",
+      "monthKey": "2026-09",
+      "title": "Industrial Transformations",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 5,
+        "culture": 0,
+        "politics": 3,
+        "innovation": 4,
+        "art": 0,
+        "human-rights": 2
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 8,
+        "modern": 1,
+        "contemporary": 0
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "steam-engine-watt": [
+          {
+            "url": "https://www.britannica.com/biography/James-Watt",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/James-Watt",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "transcontinental-railroad": [
+          {
+            "url": "https://www.nps.gov/gosp/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/topic/transcontinental-railroad",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ada-lovelace-analytical": [
+          {
+            "url": "https://www.britannica.com/biography/Ada-Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "germ-theory-pasteur": [
+          {
+            "url": "https://www.pasteur.fr/en/institut-pasteur/history",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.sciencehistory.org/historical-profile/louis-pasteur",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "anesthesia-first-use": [
+          {
+            "url": "https://www.britannica.com/science/anesthesia",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.woodlibrarymuseum.org/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "civil-war-begins": [
+          {
+            "url": "https://www.nps.gov/fosu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.battlefields.org/learn/civil-war/battles/fort-sumter",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emancipation-proclamation": [
+          {
+            "url": "https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Emancipation_Proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "first-computer-eniac": [
+          {
+            "url": "https://www.computerhistory.org/revolution/birth-of-the-computer/4/78",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/technology/ENIAC",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "florence-nightingale-nursing": [
+          {
+            "url": "https://www.florence-nightingale.co.uk/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nam.ac.uk/explore/florence-nightingale",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-10-ideas-that-changed-civilization",
+      "monthKey": "2026-10",
+      "title": "Ideas That Changed Civilization",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 4,
+        "culture": 4,
+        "politics": 0,
+        "innovation": 3,
+        "art": 3,
+        "human-rights": 0
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 2,
+        "industrial": 4,
+        "modern": 2,
+        "contemporary": 1
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "rosetta-stone-decode": [
+          {
+            "url": "https://www.britannica.com/topic/Rosetta-Stone",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/topic/Rosetta-Stone",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "magellan-circumnavigation": [
+          {
+            "url": "https://www.britannica.com/biography/Ferdinand-Magellan",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/biography/Ferdinand-Magellan",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "sistine-chapel-ceiling": [
+          {
+            "url": "https://www.museivaticani.va/content/museivaticani/en/collezioni/musei/cappella-sistina.html",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.khanacademy.org/humanities/renaissance-reformation/high-ren-florence-rome/michelangelo/a/michelangelo-ceiling-of-the-sistine-chapel",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "beethoven-ninth-symphony": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "impressionism-monet": [
+          {
+            "url": "https://www.marmottan.fr/en/",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.tate.org.uk/art/art-terms/i/impressionism",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ada-lovelace-analytical": [
+          {
+            "url": "https://www.britannica.com/biography/Ada-Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "germ-theory-pasteur": [
+          {
+            "url": "https://www.pasteur.fr/en/institut-pasteur/history",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.sciencehistory.org/historical-profile/louis-pasteur",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "www-invention": [
+          {
+            "url": "https://home.cern/science/computing/birth-web",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.w3.org/History.html",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "dna-structure-discovery": [
+          {
+            "url": "https://www.nature.com/articles/171737a0",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nobelprize.org/prizes/medicine/1962/summary/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-11-nations-reforms-and-identity",
+      "monthKey": "2026-11",
+      "title": "Nations, Reforms, and Identity",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 0,
+        "culture": 0,
+        "politics": 8,
+        "innovation": 0,
+        "art": 0,
+        "human-rights": 4
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 3,
+        "modern": 6,
+        "contemporary": 0
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "treaty-of-versailles": [
+          {
+            "url": "https://www.britannica.com/event/Treaty-of-Versailles-1919",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/event/Treaty-of-Versailles-1919",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "cuban-missile-crisis": [
+          {
+            "url": "https://www.britannica.com/event/Cuban-missile-crisis",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://history.state.gov/milestones/1961-1968/cuban-missile-crisis",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "women-suffrage-usa": [
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.archives.gov/milestone-documents/19th-amendment",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "rosa-parks-bus-boycott": [
+          {
+            "url": "https://www.archives.gov/education/lessons/rosa-parks",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.troy.edu/rosaparks/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "emancipation-proclamation": [
+          {
+            "url": "https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Emancipation_Proclamation",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "civil-war-begins": [
+          {
+            "url": "https://www.nps.gov/fosu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.battlefields.org/learn/civil-war/battles/fort-sumter",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "harriet-tubman-underground": [
+          {
+            "url": "https://www.nps.gov/people/harriet-tubman.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nps.gov/hatu/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "ww1-armistice": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Armistice_of_11_November_1918",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Armistice_of_11_November_1918",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "d-day-normandy-landing": [
+          {
+            "url": "https://www.nationalww2museum.org/war/topics/d-day",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.history.com/topics/world-war-ii/d-day",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "id": "monthly-2026-12-year-end-defining-moments",
+      "monthKey": "2026-12",
+      "title": "Year-End Defining Moments",
+      "eventCount": 9,
+      "featuredCount": 4,
+      "uniqueEventCount": 9,
+      "repeatInMonthCount": 0,
+      "categoryDistribution": {
+        "science": 2,
+        "culture": 0,
+        "politics": 7,
+        "innovation": 2,
+        "art": 0,
+        "human-rights": 0
+      },
+      "eraDistribution": {
+        "ancient": 0,
+        "renaissance": 0,
+        "industrial": 0,
+        "modern": 9,
+        "contemporary": 0
+      },
+      "sourceHealthSummary": {
+        "totalUrls": 18,
+        "ok": 18,
+        "error": 0,
+        "skipped": 0
+      },
+      "sourceHealthByEvent": {
+        "ww1-armistice": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Armistice_of_11_November_1918",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Armistice_of_11_November_1918",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "pearl-harbor-attack": [
+          {
+            "url": "https://www.nps.gov/perl/index.htm",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.archives.gov/publications/prologue/2001/winter/crafting-day-of-infamy-speech",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "d-day-normandy-landing": [
+          {
+            "url": "https://www.nationalww2museum.org/war/topics/d-day",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.history.com/topics/world-war-ii/d-day",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "hiroshima-atomic-bomb": [
+          {
+            "url": "https://www.britannica.com/event/atomic-bombings-of-Hiroshima-and-Nagasaki",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://hpmmuseum.jp/?lang=eng",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "battle-of-stalingrad": [
+          {
+            "url": "https://www.history.com/topics/world-war-ii/battle-of-stalingrad",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/event/Battle-of-Stalingrad",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "treaty-of-versailles": [
+          {
+            "url": "https://www.britannica.com/event/Treaty-of-Versailles-1919",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.britannica.com/event/Treaty-of-Versailles-1919",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "cuban-missile-crisis": [
+          {
+            "url": "https://www.britannica.com/event/Cuban-missile-crisis",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://history.state.gov/milestones/1961-1968/cuban-missile-crisis",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "apollo-11-first-footsteps": [
+          {
+            "url": "https://www.nasa.gov/mission_pages/apollo/apollo11.html",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.nasa.gov/mission/apollo-11/",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ],
+        "internet-arpanet": [
+          {
+            "url": "https://www.internethalloffame.org/inductees/lawrence-roberts",
+            "status": "ok",
+            "httpStatus": 200
+          },
+          {
+            "url": "https://www.lk.cs.ucla.edu/internet_first_words.html",
+            "status": "ok",
+            "httpStatus": 200
+          }
+        ]
+      },
+      "issues": []
+    }
+  ]
+}

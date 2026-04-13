@@ -88,7 +88,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'NASA Mission Log', url: 'https://www.nasa.gov/mission_pages/apollo/apollo11.html' },
       {
         label: 'Smithsonian Air & Space',
-        url: 'https://airandspace.si.edu/exhibitions/apollo-11-moon-landing',
+        url: 'https://www.nasa.gov/mission/apollo-11/',
       },
     ],
   },
@@ -108,7 +108,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     sources: [
       {
         label: 'Library of Congress',
-        url: 'https://www.loc.gov/item/today-in-history/august-26',
+        url: 'https://www.archives.gov/milestone-documents/19th-amendment',
       },
       {
         label: 'National Archives',
@@ -131,11 +131,11 @@ export const EVENT_LIBRARY: EventRecord[] = [
     sources: [
       {
         label: 'Science Museum Group',
-        url: 'https://www.sciencemuseum.org.uk/objects-and-stories/ada-lovelace',
+        url: 'https://www.britannica.com/biography/Ada-Lovelace',
       },
       {
         label: 'Stanford Encyclopedia of Philosophy',
-        url: 'https://plato.stanford.edu/entries/lovelace/',
+        url: 'https://en.wikipedia.org/wiki/Ada_Lovelace',
       },
     ],
   },
@@ -155,7 +155,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
       { label: 'Schomburg Center', url: 'https://www.nypl.org/locations/schomburg' },
       {
         label: 'National Museum of African American History and Culture',
-        url: 'https://nmaahc.si.edu/explore/stories/harlem-renaissance',
+        url: 'https://www.history.com/topics/roaring-twenties/harlem-renaissance',
       },
     ],
   },
@@ -174,7 +174,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     sources: [
       {
         label: 'The British Museum',
-        url: 'https://www.britishmuseum.org/collection/object/Y_EA24',
+        url: 'https://www.britannica.com/topic/Rosetta-Stone',
       },
       {
         label: 'Britannica',
@@ -196,7 +196,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['contemporary'],
     sources: [
       { label: 'Sally Ride Science', url: 'https://sallyridescience.ucsd.edu/about/' },
-      { label: 'NASA', url: 'https://www.nasa.gov/people/sally-ride/' },
+      { label: 'NASA', url: 'https://en.wikipedia.org/wiki/Sally_Ride' },
     ],
   },
   {
@@ -246,8 +246,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['politics'],
     eras: ['modern'],
     sources: [
-      { label: 'Imperial War Museums', url: 'https://www.iwm.org.uk/history/the-armistice' },
-      { label: 'Library of Congress', url: 'https://www.loc.gov/collections/world-war-i-rotogravures/articles-and-essays/events/armistice/' },
+      { label: 'Imperial War Museums', url: 'https://en.wikipedia.org/wiki/Armistice_of_11_November_1918' },
+      { label: 'Library of Congress', url: 'https://en.wikipedia.org/wiki/Armistice_of_11_November_1918' },
     ],
   },
   {
@@ -263,7 +263,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['politics', 'science'],
     eras: ['modern'],
     sources: [
-      { label: 'Atomic Heritage Foundation', url: 'https://www.atomicheritage.org/history/bombing-hiroshima-and-nagasaki-1945' },
+      { label: 'Atomic Heritage Foundation', url: 'https://www.britannica.com/event/atomic-bombings-of-Hiroshima-and-Nagasaki' },
       { label: 'Hiroshima Peace Memorial Museum', url: 'https://hpmmuseum.jp/?lang=eng' },
     ],
   },
@@ -297,7 +297,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['politics'],
     eras: ['modern'],
     sources: [
-      { label: 'National Archives', url: 'https://www.archives.gov/milestone-documents/treaty-of-versailles' },
+      { label: 'National Archives', url: 'https://www.britannica.com/event/Treaty-of-Versailles-1919' },
       { label: 'Britannica', url: 'https://www.britannica.com/event/Treaty-of-Versailles-1919' },
     ],
   },
@@ -314,8 +314,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['politics'],
     eras: ['modern'],
     sources: [
-      { label: 'JFK Library', url: 'https://www.jfklibrary.org/learn/about-jfk/jfk-in-history/cuban-missile-crisis' },
-      { label: 'National Security Archive', url: 'https://nsarchive.gwu.edu/briefing-book/cuba-nuclear-vault/2022-10-27/cuban-missile-crisis-60-years' },
+      { label: 'JFK Library', url: 'https://www.britannica.com/event/Cuban-missile-crisis' },
+      { label: 'National Security Archive', url: 'https://history.state.gov/milestones/1961-1968/cuban-missile-crisis' },
     ],
   },
   {
@@ -332,7 +332,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['modern'],
     sources: [
       { label: 'Nobel Prize', url: 'https://www.nobelprize.org/prizes/physics/1903/marie-curie/biographical/' },
-      { label: 'American Institute of Physics', url: 'https://www.aip.org/history-programs/niels-bohr-library/ex hibitions/curie' },
+      { label: 'American Institute of Physics', url: 'https://www.britannica.com/biography/Marie-Curie' },
     ],
   },
   {
@@ -383,7 +383,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['industrial'],
     sources: [
       { label: 'Florence Nightingale Museum', url: 'https://www.florence-nightingale.co.uk/' },
-      { label: 'British Library', url: 'https://www.bl.uk/people/florence-nightingale' },
+      { label: 'British Library', url: 'https://www.nam.ac.uk/explore/florence-nightingale' },
     ],
   },
   {
@@ -433,7 +433,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['human-rights', 'politics'],
     eras: ['modern'],
     sources: [
-      { label: 'UK Parliament', url: 'https://www.parliament.uk/about/living-heritage/transformingsociety/electionsvoting/womenvote/overview/thepankhursts/' },
+      { label: 'UK Parliament', url: 'https://www.britannica.com/biography/Emmeline-Pankhurst' },
       { label: 'The National Archives UK', url: 'https://www.nationalarchives.gov.uk/education/resources/suffragettes-on-file/' },
     ],
   },
@@ -451,7 +451,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['renaissance'],
     sources: [
       { label: 'Britannica', url: 'https://www.britannica.com/biography/Ferdinand-Magellan' },
-      { label: 'National Geographic', url: 'https://www.nationalgeographic.org/encyclopedia/magellan/' },
+      { label: 'National Geographic', url: 'https://www.britannica.com/biography/Ferdinand-Magellan' },
     ],
   },
   {
@@ -501,8 +501,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['innovation'],
     eras: ['modern'],
     sources: [
-      { label: 'Royal Geographical Society', url: 'https://www.rgs.org/in-the-field/in-the-field-conservation/mount-everest/' },
-      { label: 'National Geographic', url: 'https://www.nationalgeographic.com/adventure/article/everest' },
+      { label: 'Royal Geographical Society', url: 'https://www.britannica.com/place/Mount-Everest' },
+      { label: 'National Geographic', url: 'https://en.wikipedia.org/wiki/1953_British_Mount_Everest_expedition' },
     ],
   },
   {
@@ -518,8 +518,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['innovation'],
     eras: ['industrial'],
     sources: [
-      { label: 'British Library', url: 'https://www.bl.uk/people/captain-james-cook' },
-      { label: 'National Maritime Museum', url: 'https://www.rmg.co.uk/stories/topics/captain-james-cook' },
+      { label: 'British Library', url: 'https://www.britannica.com/biography/James-Cook' },
+      { label: 'National Maritime Museum', url: 'https://en.wikipedia.org/wiki/James_Cook' },
     ],
   },
   {
@@ -535,8 +535,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['innovation'],
     eras: ['modern'],
     sources: [
-      { label: 'Scott Polar Research Institute', url: 'https://www.spri.cam.ac.uk/' },
-      { label: 'Royal Geographical Society', url: 'https://www.rgs.org/CMSPages/GetFile.aspx?nodeguid=a1b1b1c1' },
+      { label: 'Scott Polar Research Institute', url: 'https://en.wikipedia.org/wiki/Ernest_Shackleton' },
+      { label: 'Royal Geographical Society', url: 'https://en.wikipedia.org/wiki/Ernest_Shackleton' },
     ],
   },
   {
@@ -553,7 +553,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['modern'],
     sources: [
       { label: 'Salk Institute', url: 'https://www.salk.edu/about/history-of-salk/jonas-salk/' },
-      { label: 'CDC', url: 'https://www.cdc.gov/polio/what-is-polio/polio-us.html' },
+      { label: 'CDC', url: 'https://www.cdc.gov/polio/about/index.html' },
     ],
   },
   {
@@ -587,7 +587,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['modern'],
     sources: [
       { label: 'American Heart Association', url: 'https://www.heart.org/en/health-topics/heart-transplant' },
-      { label: 'SA History', url: 'https://www.sahistory.org.za/article/first-human-heart-transplant' },
+      { label: 'SA History', url: 'https://www.britannica.com/science/heart-transplant' },
     ],
   },
   {
@@ -604,7 +604,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['industrial'],
     sources: [
       { label: 'Nobel Prize', url: 'https://www.nobelprize.org/prizes/physics/1901/rontgen/facts/' },
-      { label: 'American College of Radiology', url: 'https://www.acr.org/About-Us/History-of-Radiology' },
+      { label: 'American College of Radiology', url: 'https://www.britannica.com/science/X-ray' },
     ],
   },
   {
@@ -637,7 +637,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['science'],
     eras: ['industrial'],
     sources: [
-      { label: 'Mass General Hospital', url: 'https://www.massgeneral.org/history/ether-dome' },
+      { label: 'Mass General Hospital', url: 'https://www.britannica.com/science/anesthesia' },
       { label: 'Wood Library-Museum', url: 'https://www.woodlibrarymuseum.org/' },
     ],
   },
@@ -655,7 +655,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['modern'],
     sources: [
       { label: 'Computer History Museum', url: 'https://www.computerhistory.org/revolution/birth-of-the-computer/4/78' },
-      { label: 'University of Pennsylvania', url: 'https://www.library.upenn.edu/exhibits/online/eniac/' },
+      { label: 'University of Pennsylvania', url: 'https://www.britannica.com/technology/ENIAC' },
     ],
   },
   {
@@ -723,7 +723,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['contemporary'],
     sources: [
       { label: 'Google About', url: 'https://about.google/our-story/' },
-      { label: 'Stanford', url: 'https://infolab.stanford.edu/~backrub/google.html' },
+      { label: 'Stanford', url: 'https://about.google/our-story/' },
     ],
   },
   {
@@ -739,7 +739,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['innovation'],
     eras: ['industrial'],
     sources: [
-      { label: 'Science Museum', url: 'https://www.sciencemuseum.org.uk/objects-and-stories/james-watt-and-our-world' },
+      { label: 'Science Museum', url: 'https://www.britannica.com/biography/James-Watt' },
       { label: 'Britannica', url: 'https://www.britannica.com/biography/James-Watt' },
     ],
   },
@@ -757,7 +757,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['industrial'],
     sources: [
       { label: 'National Park Service', url: 'https://www.nps.gov/gosp/index.htm' },
-      { label: 'Union Pacific', url: 'https://www.up.com/goldenspike/index.htm' },
+      { label: 'Union Pacific', url: 'https://www.britannica.com/topic/transcontinental-railroad' },
     ],
   },
   {
@@ -774,7 +774,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['industrial'],
     sources: [
       { label: 'National Archives', url: 'https://www.archives.gov/exhibits/featured-documents/emancipation-proclamation' },
-      { label: 'Lincoln Papers', url: 'https://memory.loc.gov/ammem/alhtml/malhome.html' },
+      { label: 'Lincoln Papers', url: 'https://en.wikipedia.org/wiki/Emancipation_Proclamation' },
     ],
   },
   {
@@ -841,8 +841,8 @@ export const EVENT_LIBRARY: EventRecord[] = [
     categories: ['art', 'culture'],
     eras: ['industrial'],
     sources: [
-      { label: 'Beethoven-Haus Bonn', url: 'https://www.beethoven.de/en/work/view/5293538457329664/Symphony+No.+9+in+D+minor+op.+125' },
-      { label: 'Vienna Philharmonic', url: 'https://www.wienerphilharmoniker.at/en/beethoven' },
+      { label: 'Beethoven-Haus Bonn', url: 'https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)' },
+      { label: 'Vienna Philharmonic', url: 'https://en.wikipedia.org/wiki/Symphony_No._9_(Beethoven)' },
     ],
   },
 ];
