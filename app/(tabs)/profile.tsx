@@ -5,7 +5,7 @@ import DateTimePicker, {
 import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Alert,
-  Animated,
+  Animated as RNAnimated,
   Easing,
   Image,
   Modal,
@@ -19,9 +19,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
 import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
+import { ProgressiveBlurHeader } from '@/components/ui/progressive-blur-header';
 import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
+import { useProgressiveHeaderScroll } from '@/hooks/use-progressive-header-scroll';
 import { useUserContext } from '@/contexts/user-context';
 import { trackEvent } from '@/services/analytics';
 import {
@@ -1150,13 +1153,13 @@ const PreferencePickerModal = ({
   children: ReactNode;
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useRef(new RNAnimated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
       progress.setValue(0);
-      Animated.timing(progress, {
+      RNAnimated.timing(progress, {
         toValue: 1,
         duration: 280,
         easing: Easing.out(Easing.cubic),
@@ -1169,7 +1172,7 @@ const PreferencePickerModal = ({
       return;
     }
 
-    Animated.timing(progress, {
+    RNAnimated.timing(progress, {
       toValue: 0,
       duration: 220,
       easing: Easing.in(Easing.cubic),
@@ -1202,13 +1205,13 @@ const PreferencePickerModal = ({
     <Modal animationType="none" transparent visible={isMounted} onRequestClose={onClose}>
       <View style={styles.pickerOverlay}>
         <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={onClose}>
-          <Animated.View
+          <RNAnimated.View
             pointerEvents="none"
             style={[StyleSheet.absoluteFill, styles.pickerBackdrop, { opacity: backdropOpacity }]}
           />
         </Pressable>
 
-        <Animated.View
+        <RNAnimated.View
           style={[
             styles.pickerSheet,
             {
@@ -1236,7 +1239,7 @@ const PreferencePickerModal = ({
               <Text style={styles.signOutLabel}>Done</Text>
             </Pressable>
           </View>
-        </Animated.View>
+        </RNAnimated.View>
       </View>
     </Modal>
   );
@@ -1317,6 +1320,10 @@ const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
+  const { onScroll, scrollY } = useProgressiveHeaderScroll();
+  const largeHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 56], [1, 0], Extrapolation.CLAMP),
+  }));
   const [showDeletePasswordModal, setShowDeletePasswordModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [activePreferenceModal, setActivePreferenceModal] = useState<PreferenceModalType>(null);
@@ -1560,11 +1567,13 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <ScrollView
+        <Animated.ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: contentInsetBottom }]}
           showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
-          <View style={styles.heroCard}>
+          <Animated.View style={[styles.heroCard, largeHeaderStyle]}>
             <View style={styles.heroBadge}>
               <Text style={styles.heroBadgeText}>
                 {isAnonymousSession ? 'Personal Archive' : 'Archive Synced'}
@@ -1601,7 +1610,7 @@ const ProfileScreen = () => {
               <HeroMetric label="Eras" value={selectedErasCount} styles={styles} theme={theme} />
             </View>
 
-          </View>
+          </Animated.View>
 
           <SectionBlock
             eyebrow="Reading Ritual"
@@ -1859,8 +1868,14 @@ const ProfileScreen = () => {
               <Text style={styles.signOutLabel}>Reset onboarding</Text>
             </Pressable>
           </View>
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
+
+      <ProgressiveBlurHeader
+        scrollY={scrollY}
+        topInset={insets.top}
+        testID="profile-progressive-blur-header"
+      />
 
       <Modal
         animationType="fade"

@@ -5,15 +5,16 @@ import {
   Dimensions,
   Platform,
   Pressable,
-  ScrollView,
   Share,
   StyleSheet,
   Text,
   View,
   type LayoutChangeEvent,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
+import { ProgressiveBlurHeader } from '@/components/ui/progressive-blur-header';
 import { SavedStories } from '@/components/explore/SavedStories';
 import { CategoryExploreGrid } from '@/components/home/CategoryExploreGrid';
 import { MonthlyCollectionHero } from '@/components/home/MonthlyCollectionHero';
@@ -26,6 +27,7 @@ import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
 import { useMonthlyCollection } from '@/hooks/use-monthly-collection';
+import { useProgressiveHeaderScroll } from '@/hooks/use-progressive-header-scroll';
 import { useSavedEvents } from '@/hooks/use-saved-events';
 import { trackEvent } from '@/services/analytics';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -484,9 +486,14 @@ HeroCarouselCard.displayName = 'HeroCarouselCard';
 
 const HomeScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { profile } = useUserContext();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
+  const { onScroll, scrollY } = useProgressiveHeaderScroll();
+  const largeHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 56], [1, 0], Extrapolation.CLAMP),
+  }));
   const today = useMemo(() => getDateParts(new Date(), { timeZone: profile?.timezone }), [profile?.timezone]);
   const { events: digestEvents, loading: digestLoading, error: digestError } = useDailyDigestEvents({
     month: today.month,
@@ -797,20 +804,22 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <ScrollView
+        <Animated.ScrollView
           contentContainerStyle={styles.scrollContent}
           bounces={false}
           alwaysBounceVertical={false}
           overScrollMode="never"
           showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
-          <View style={styles.sectionHeader}>
+          <Animated.View style={[styles.sectionHeader, largeHeaderStyle]}>
             <Text style={styles.sectionLabel}>Today&apos;s Moment</Text>
             <Text style={styles.sectionHelper}>
               {new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date(today.isoDate))}
             </Text>
             {statusMessage ? <Text style={styles.sectionHelper}>{statusMessage}</Text> : null}
-          </View>
+          </Animated.View>
 
           <View style={styles.heroCarouselContainer} onLayout={handleHeroCarouselLayout}>
             <PeekCarousel
@@ -896,8 +905,14 @@ const HomeScreen = () => {
 
           <View style={styles.bottomSpacer} />
 
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
+
+      <ProgressiveBlurHeader
+        scrollY={scrollY}
+        topInset={insets.top}
+        testID="home-progressive-blur-header"
+      />
     </SafeAreaView>
   );
 };

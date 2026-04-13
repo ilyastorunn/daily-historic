@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -15,9 +14,11 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
 import { FilterModal, type FilterState } from '@/components/explore/FilterModal';
+import { ProgressiveBlurHeader } from '@/components/ui/progressive-blur-header';
 import { YouMightBeInterested } from '@/components/explore/YouMightBeInterested';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { heroEvent } from '@/constants/events';
@@ -25,6 +26,7 @@ import { formatCategoryLabel } from '@/constants/personalization';
 import type { CategoryOption } from '@/contexts/onboarding-context';
 import { useUserContext } from '@/contexts/user-context';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
+import { useProgressiveHeaderScroll } from '@/hooks/use-progressive-header-scroll';
 import { useYMBI } from '@/hooks/use-ymbi';
 import { trackEvent } from '@/services/analytics';
 import {
@@ -740,6 +742,7 @@ const ExploreScreen = () => {
   const params = useLocalSearchParams<{ category?: string }>();
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
   const { profile, authUser } = useUserContext();
 
   const today = useMemo(
@@ -1121,10 +1124,45 @@ const ExploreScreen = () => {
     timeZone: profile?.timezone,
   });
 
+  const handleScrollMetrics = useCallback(
+    ({
+      y,
+      viewportHeight,
+      contentHeight,
+    }: {
+      y: number;
+      viewportHeight: number;
+      contentHeight: number;
+    }) => {
+      // Disable pagination when date is selected (all events already loaded)
+      if (!showResults || !searchState.hasMore || searchState.loading) {
+        return;
+      }
+
+      if (contentHeight <= 0) {
+        return;
+      }
+
+      const scrollPercentage = (viewportHeight + y) / contentHeight;
+      // Fetch next page when 70% scrolled
+      if (scrollPercentage >= 0.7) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, searchState.hasMore, searchState.loading, showResults]
+  );
+
+  const { onScroll, scrollY } = useProgressiveHeaderScroll({
+    onScrollMetrics: handleScrollMetrics,
+  });
+  const largeHeaderStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 56], [1, 0], Extrapolation.CLAMP),
+  }));
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <ScrollView
+        <Animated.ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -1135,27 +1173,15 @@ const ExploreScreen = () => {
               tintColor={theme.colors.accentPrimary}
             />
           }
-          onScroll={(event) => {
-            // Disable pagination when date is selected (all events already loaded)
-            if (!showResults || !searchState.hasMore || searchState.loading) return;
-
-            const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-            const scrollPercentage =
-              (layoutMeasurement.height + contentOffset.y) / contentSize.height;
-
-            // Fetch next page when 70% scrolled
-            if (scrollPercentage >= 0.7) {
-              fetchNextPage();
-            }
-          }}
-          scrollEventThrottle={400}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
         >
-          <View style={styles.sectionHeader}>
+          <Animated.View style={[styles.sectionHeader, largeHeaderStyle]}>
             <Text style={styles.sectionTitle}>Explore</Text>
             <Text style={styles.helperText}>
               Search the archive, skim collections, or jump to a date.
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Search Section */}
           <View style={styles.searchSection}>
@@ -1369,8 +1395,14 @@ const ExploreScreen = () => {
               />
             </>
           )}
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
+
+      <ProgressiveBlurHeader
+        scrollY={scrollY}
+        topInset={insets.top}
+        testID="explore-progressive-blur-header"
+      />
 
       <CalendarModal
         visible={calendarVisible}
