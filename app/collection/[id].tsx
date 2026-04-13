@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme';
@@ -11,7 +11,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { trackEvent } from '@/services/analytics';
 
 const CollectionDetailScreen = () => {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, source, monthKey } = useLocalSearchParams<{ id?: string; source?: string; monthKey?: string }>();
   const router = useRouter();
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -21,9 +21,19 @@ const CollectionDetailScreen = () => {
 
   useEffect(() => {
     if (id) {
-      trackEvent('collections_detail_opened', { collection_id: id });
+      trackEvent('monthly_collection_opened', {
+        collection_id: id,
+        source: source ?? 'collection_screen',
+        month_key: monthKey,
+      });
     }
-  }, [id]);
+  }, [id, monthKey, source]);
+
+  useEffect(() => {
+    if (id && source?.includes('iae')) {
+      trackEvent('iae_deeplink_opened', { collection_id: id, source });
+    }
+  }, [id, source]);
 
   return (
     <View style={styles.safeArea}>
@@ -33,7 +43,8 @@ const CollectionDetailScreen = () => {
           {collection ? (
             <CollectionHeroSection
               title={collection.title}
-              blurb={collection.blurb}
+              subtitle={collection.subtitle}
+              blurb={collection.heroBlurb ?? collection.blurb}
               coverImageUrl={collection.coverUrl}
             />
           ) : null}
@@ -45,6 +56,13 @@ const CollectionDetailScreen = () => {
           {/* Event Cards List */}
           {collection?.items && collection.items.length > 0 ? (
             <View style={styles.cardList}>
+              {collection.iaeMeta ? (
+                <View style={styles.iaeCallout}>
+                  <Text style={styles.iaeLabel}>In-App Event</Text>
+                  <Text style={styles.iaeTitle}>{collection.iaeMeta.eventName}</Text>
+                  <Text style={styles.iaeBlurb}>{collection.iaeMeta.shortPromo}</Text>
+                </View>
+              ) : null}
               {collection.items.map((item) => (
                 <TimelineCard
                   key={item.id}
@@ -136,6 +154,34 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     cardList: {
       paddingHorizontal: 20, // Minimum 20pt margin per NorthStar
       gap: 16, // Minimum 16pt between cards per NorthStar
+    },
+    iaeCallout: {
+      backgroundColor: theme.colors.surfaceSubtle,
+      borderRadius: theme.radius.md,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.borderSubtle,
+      padding: theme.spacing.lg,
+      gap: theme.spacing.xs,
+    },
+    iaeLabel: {
+      fontFamily: sansFamily,
+      fontSize: theme.typography.helper.fontSize,
+      lineHeight: theme.typography.helper.lineHeight,
+      color: theme.colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    iaeTitle: {
+      fontFamily: Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' }),
+      fontSize: 22,
+      lineHeight: 28,
+      color: theme.colors.textPrimary,
+    },
+    iaeBlurb: {
+      fontFamily: sansFamily,
+      fontSize: theme.typography.body.fontSize,
+      lineHeight: theme.typography.body.lineHeight,
+      color: theme.colors.textSecondary,
     },
     bottomSafeArea: {
       backgroundColor: theme.colors.screen,

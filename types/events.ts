@@ -62,3 +62,24 @@ export interface DailyDigestDocument {
   createdAt?: FirestoreTimestamp;
   updatedAt?: FirestoreTimestamp;
 }
+
+export interface MonthlyCollectionIAEMeta {
+  eventName: string;
+  shortPromo: string;
+  longPromo: string;
+  ctaLabel: string;
+}
+
+export interface MonthlyCollectionDocument {
+  id: string;
+  monthKey: string;
+  title: string;
+  subtitle: string;
+  summary: string;
+  heroBlurb: string;
+  coverUrl: string;
+  imageUrl?: string;
+  featuredEventIds: string[];
+  eventIds: string[];
+  iaeMeta: MonthlyCollectionIAEMeta;
+}

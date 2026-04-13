@@ -7,11 +7,12 @@ import { createLinearGradientSource } from '@/utils/gradient';
 
 export type CollectionHeroSectionProps = {
   title: string;
+  subtitle?: string;
   blurb?: string;
   coverImageUrl?: string;
 };
 
-export const CollectionHeroSection = ({ title, blurb, coverImageUrl }: CollectionHeroSectionProps) => {
+export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }: CollectionHeroSectionProps) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => buildStyles(theme), [theme]);
@@ -56,6 +57,11 @@ export const CollectionHeroSection = ({ title, blurb, coverImageUrl }: Collectio
             <Text style={styles.title} numberOfLines={3}>
               {title}
             </Text>
+            {subtitle ? (
+              <Text style={styles.subtitle} numberOfLines={2}>
+                {subtitle}
+              </Text>
+            ) : null}
             {blurb ? (
               <Text style={styles.blurb} numberOfLines={3}>
                 {blurb}
@@ -115,5 +121,12 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
       textShadowColor: 'rgba(0, 0, 0, 0.3)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 4,
+    },
+    subtitle: {
+      fontFamily: 'System',
+      fontSize: 14,
+      lineHeight: 20,
+      color: 'rgba(255, 255, 255, 0.88)',
+      letterSpacing: 0.2,
     },
   });

@@ -64,6 +64,11 @@ export const formatIsoDateLabel = (
   return formatter.format(date);
 };
 
+export const getMonthKey = (date: Date, options: DatePartsOptions = {}) => {
+  const { month, year } = getDateParts(date, options);
+  return `${year}-${toTwoDigits(month)}`;
+};
+
 export const getIsoWeekKey = (date: Date, options: DatePartsOptions = {}) => {
   const { timeZone } = options;
   const parts = getDateParts(date, { timeZone });

@@ -16,20 +16,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SavedStories } from '@/components/explore/SavedStories';
 import { CategoryExploreGrid } from '@/components/home/CategoryExploreGrid';
+import { MonthlyCollectionHero } from '@/components/home/MonthlyCollectionHero';
+import { MonthlyFeaturedEvents } from '@/components/home/MonthlyFeaturedEvents';
 import { TimeMachineBlock } from '@/components/home/TimeMachineBlock';
-import { WeeklyCollectionsGrid } from '@/components/home/WeeklyCollectionsGrid';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { PeekCarousel } from '@/components/ui/peek-carousel';
 import { heroEvent } from '@/constants/events';
 import { useUserContext } from '@/contexts/user-context';
 import { useDailyDigestEvents } from '@/hooks/use-daily-digest-events';
 import { useEventEngagement } from '@/hooks/use-event-engagement';
+import { useMonthlyCollection } from '@/hooks/use-monthly-collection';
 import { useSavedEvents } from '@/hooks/use-saved-events';
-import { useWeeklyCollections } from '@/hooks/use-weekly-collections';
 import { trackEvent } from '@/services/analytics';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 import type { FirestoreEventDocument } from '@/types/events';
-import { getDateParts, getIsoWeekKey } from '@/utils/dates';
+import { getDateParts, getIsoWeekKey, getMonthKey } from '@/utils/dates';
 import {
   getEventImageUri,
   getEventLocation,
@@ -522,17 +523,27 @@ const HomeScreen = () => {
     return getIsoWeekKey(referenceDate, { timeZone: profile?.timezone });
   }, [profile?.timezone, today.isoDate]);
 
+  const monthKey = useMemo(() => {
+    const referenceDate = today.isoDate ? new Date(`${today.isoDate}T00:00:00Z`) : new Date();
+    return getMonthKey(referenceDate, { timeZone: profile?.timezone });
+  }, [profile?.timezone, today.isoDate]);
+
   const {
-    items: weeklyCollectionItems,
-    loading: weeklyCollectionsLoading,
-    error: weeklyCollectionsError,
-  } = useWeeklyCollections({ weekKey: isoWeekKey, limit: 4 });
+    item: monthlyCollection,
+    loading: monthlyCollectionLoading,
+    error: monthlyCollectionError,
+  } = useMonthlyCollection({
+    monthKey,
+    weekKey: isoWeekKey,
+    limit: 4,
+    enabled: Boolean(monthKey),
+  });
 
   useEffect(() => {
-    if (weeklyCollectionsError) {
-      console.error('Failed to load weekly collections', weeklyCollectionsError);
+    if (monthlyCollectionError) {
+      console.error('Failed to load monthly collection', monthlyCollectionError);
     }
-  }, [weeklyCollectionsError]);
+  }, [monthlyCollectionError]);
 
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroCarouselWidth, setHeroCarouselWidth] = useState<number | null>(null);
@@ -549,14 +560,9 @@ const HomeScreen = () => {
     totalCount: savedStoriesCount,
   } = useSavedEvents({ limit: HOME_SAVED_STORIES_PREVIEW_LIMIT });
 
-  const weeklyCollections = useMemo(
-    () =>
-      weeklyCollectionItems.map((collection) => ({
-        id: collection.id,
-        title: collection.title,
-        coverUrl: collection.coverUrl || defaultHeroItem.imageUri || '',
-      })),
-    [defaultHeroItem.imageUri, weeklyCollectionItems]
+  const monthlyFeaturedItems = useMemo(
+    () => monthlyCollection?.featuredItems ?? [],
+    [monthlyCollection?.featuredItems]
   );
 
   const heroCarouselItems = useMemo(() => {
@@ -679,18 +685,50 @@ const HomeScreen = () => {
     [router]
   );
 
-  const handleOpenCollection = useCallback(
-    (collectionId: string, index: number) => {
-      trackEvent('collections_tile_opened', { collection_id: collectionId, index, week_key: isoWeekKey });
-      router.push({ pathname: '/collection/[id]', params: { id: collectionId } });
-    },
-    [isoWeekKey, router]
-  );
+  const handleOpenMonthlyCollection = useCallback(() => {
+    if (!monthlyCollection) {
+      return;
+    }
 
-  const handleSeeAllCollections = useCallback(() => {
-    trackEvent('collections_see_all_clicked', { week_key: isoWeekKey });
-    router.push('/explore');
-  }, [isoWeekKey, router]);
+    trackEvent('monthly_collection_opened', {
+      collection_id: monthlyCollection.id,
+      month_key: monthKey,
+      week_key: isoWeekKey,
+      source: 'home_monthly_hero',
+    });
+    router.push({
+      pathname: '/collection/[id]',
+      params: { id: monthlyCollection.id, source: 'home-monthly-hero', monthKey },
+    });
+  }, [isoWeekKey, monthKey, monthlyCollection, router]);
+
+  const handleSeeAllMonthlyCollection = useCallback(() => {
+    if (!monthlyCollection) {
+      return;
+    }
+    trackEvent('monthly_collection_see_all_clicked', {
+      collection_id: monthlyCollection.id,
+      month_key: monthKey,
+      week_key: isoWeekKey,
+    });
+    router.push({
+      pathname: '/collection/[id]',
+      params: { id: monthlyCollection.id, source: 'home-monthly-see-all', monthKey },
+    });
+  }, [isoWeekKey, monthKey, monthlyCollection, router]);
+
+  const handleMonthlyFeaturedEventPress = useCallback(
+    (eventId: string, index: number) => {
+      trackEvent('monthly_featured_event_opened', {
+        event_id: eventId,
+        index,
+        month_key: monthKey,
+        week_key: isoWeekKey,
+      });
+      handleOpenEvent(eventId, 'home-monthly-featured', index, monthlyFeaturedItems.map((item) => item.id));
+    },
+    [handleOpenEvent, isoWeekKey, monthKey, monthlyFeaturedItems]
+  );
 
   const timeMachineImage = useMemo(
     () => defaultHeroItem.imageUri ?? getImageUri(heroEvent.image) ?? '',
@@ -772,13 +810,39 @@ const HomeScreen = () => {
             />
           </View>
 
-          <WeeklyCollectionsGrid
-            items={weeklyCollections}
-            loading={weeklyCollectionsLoading}
-            onOpen={handleOpenCollection}
-            onSeeAll={handleSeeAllCollections}
-            testID="home-weekly-collections"
+          {monthlyCollection ? (
+            <MonthlyCollectionHero
+              title={monthlyCollection.title}
+              subtitle={monthlyCollection.subtitle}
+              heroBlurb={monthlyCollection.heroBlurb}
+              monthLabel={new Intl.DateTimeFormat('en-US', {
+                month: 'long',
+                year: 'numeric',
+              }).format(new Date(`${monthKey}-01T00:00:00Z`))}
+              coverUrl={monthlyCollection.coverUrl || defaultHeroItem.imageUri || ''}
+              ctaLabel={monthlyCollection.iaeMeta.ctaLabel}
+              onPress={handleOpenMonthlyCollection}
+              loading={monthlyCollectionLoading}
+              testID="home-monthly-collection-hero"
+            />
+          ) : null}
+
+          <MonthlyFeaturedEvents
+            items={monthlyFeaturedItems}
+            loading={monthlyCollectionLoading}
+            onPress={handleMonthlyFeaturedEventPress}
+            testID="home-monthly-featured-events"
           />
+
+          {monthlyCollection ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleSeeAllMonthlyCollection}
+              style={({ pressed }) => [{ alignSelf: 'flex-end' }, pressed && { opacity: 0.85 }]}
+            >
+              <Text style={styles.sectionHelper}>See full monthly collection</Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.timeMachineContainer}>
             <TimeMachineBlock

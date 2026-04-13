@@ -46,6 +46,27 @@ export type EventCollection = {
   eventIds: string[];
 };
 
+export type MonthlyCollectionIAEMeta = {
+  eventName: string;
+  shortPromo: string;
+  longPromo: string;
+  ctaLabel: string;
+};
+
+export type MonthlyCollection = {
+  id: string;
+  monthKey: string; // YYYY-MM
+  title: string;
+  subtitle: string;
+  summary: string;
+  heroBlurb: string;
+  image: ImageSource;
+  coverImage: ImageSource;
+  featuredEventIds: string[]; // Exactly 4
+  eventIds: string[]; // 8-12, includes featured ids
+  iaeMeta: MonthlyCollectionIAEMeta;
+};
+
 export const HERO_EVENT_ID = 'apollo-11-first-footsteps';
 
 export const EVENT_LIBRARY: EventRecord[] = [
@@ -88,6 +109,10 @@ export const EVENT_LIBRARY: EventRecord[] = [
       {
         label: 'Library of Congress',
         url: 'https://www.loc.gov/item/today-in-history/august-26',
+      },
+      {
+        label: 'National Archives',
+        url: 'https://www.archives.gov/milestone-documents/19th-amendment',
       },
     ],
   },
@@ -151,6 +176,10 @@ export const EVENT_LIBRARY: EventRecord[] = [
         label: 'The British Museum',
         url: 'https://www.britishmuseum.org/collection/object/Y_EA24',
       },
+      {
+        label: 'Britannica',
+        url: 'https://www.britannica.com/topic/Rosetta-Stone',
+      },
     ],
   },
   {
@@ -167,6 +196,7 @@ export const EVENT_LIBRARY: EventRecord[] = [
     eras: ['contemporary'],
     sources: [
       { label: 'Sally Ride Science', url: 'https://sallyridescience.ucsd.edu/about/' },
+      { label: 'NASA', url: 'https://www.nasa.gov/people/sally-ride/' },
     ],
   },
   {
@@ -1040,6 +1070,492 @@ export const EVENT_COLLECTIONS: EventCollection[] = [
     ],
   },
 ];
+
+export const MONTHLY_COLLECTIONS: MonthlyCollection[] = [
+  {
+    id: 'monthly-2026-01-turning-points-in-technology',
+    monthKey: '2026-01',
+    title: 'Turning Points in Technology',
+    subtitle: 'Milestones that rewired how humans build, think, and connect',
+    summary: 'A cross-era look at inventions that shifted daily life and global infrastructure.',
+    heroBlurb:
+      'From early mechanical breakthroughs to the internet and smartphones, this collection maps the moments that changed modern capability.',
+    image: buildWikimediaImageSource('File:Eniac.jpg'),
+    coverImage: buildWikimediaImageSource('File:Internet_map_1024.jpg'),
+    featuredEventIds: ['first-computer-eniac', 'internet-arpanet', 'www-invention', 'first-iphone'],
+    eventIds: [
+      'first-computer-eniac',
+      'internet-arpanet',
+      'www-invention',
+      'first-iphone',
+      'google-founding',
+      'ada-lovelace-analytical',
+      'steam-engine-watt',
+      'transcontinental-railroad',
+      'apollo-11-first-footsteps',
+    ],
+    iaeMeta: {
+      eventName: 'January Collection: Turning Points in Technology',
+      shortPromo: 'From ENIAC to iPhone, explore the breakthroughs that built modern life.',
+      longPromo:
+        'A premium January collection tracing the decisive inventions and systems that transformed communication, mobility, and computing.',
+      ctaLabel: 'Explore January Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-02-revolutions-and-rights',
+    monthKey: '2026-02',
+    title: 'Revolutions & Rights',
+    subtitle: 'Struggles and reforms that expanded freedom and representation',
+    summary: 'Key civic moments where protest, law, and leadership changed who could be heard.',
+    heroBlurb:
+      'This month follows the major turning points in rights movements, from abolition-era reform to 20th-century civil rights breakthroughs.',
+    image: buildWikimediaImageSource('File:Emancipation_proclamation.jpg'),
+    coverImage: buildWikimediaImageSource('File:Selma_to_Montgomery_Marches.jpg'),
+    featuredEventIds: [
+      'women-suffrage-usa',
+      'rosa-parks-bus-boycott',
+      'harriet-tubman-underground',
+      'emancipation-proclamation',
+    ],
+    eventIds: [
+      'women-suffrage-usa',
+      'rosa-parks-bus-boycott',
+      'harriet-tubman-underground',
+      'emancipation-proclamation',
+      'malala-nobel-peace',
+      'emmeline-pankhurst-suffragette',
+      'civil-war-begins',
+      'florence-nightingale-nursing',
+      'amelia-earhart-atlantic',
+    ],
+    iaeMeta: {
+      eventName: 'February Collection: Revolutions & Rights',
+      shortPromo: 'Landmark moments that widened the boundaries of freedom.',
+      longPromo:
+        'Follow the stories of activists, reformers, and policy pivots that reshaped rights, participation, and civic identity.',
+      ctaLabel: 'Open February Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-03-women-who-changed-history',
+    monthKey: '2026-03',
+    title: 'Women Who Changed History',
+    subtitle: 'Leaders in science, rights, and exploration',
+    summary: 'A focused collection on women whose actions altered institutions and imagination.',
+    heroBlurb:
+      'This collection highlights women whose discoveries, courage, and leadership changed public life and scientific progress.',
+    image: buildWikimediaImageSource('File:Marie_Curie_c1920.jpg'),
+    coverImage: buildWikimediaImageSource('File:Sally_Ride_in_1984.jpg'),
+    featuredEventIds: [
+      'marie-curie-nobel',
+      'ada-lovelace-analytical',
+      'amelia-earhart-atlantic',
+      'malala-nobel-peace',
+    ],
+    eventIds: [
+      'marie-curie-nobel',
+      'ada-lovelace-analytical',
+      'amelia-earhart-atlantic',
+      'malala-nobel-peace',
+      'women-in-stem-week',
+      'florence-nightingale-nursing',
+      'harriet-tubman-underground',
+      'emmeline-pankhurst-suffragette',
+      'women-suffrage-usa',
+    ],
+    iaeMeta: {
+      eventName: 'March Collection: Women Who Changed History',
+      shortPromo: 'Nine stories of women who redirected science, rights, and society.',
+      longPromo:
+        'A premium March collection featuring landmark contributions by women whose work and courage transformed history across domains.',
+      ctaLabel: 'View March Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-04-age-of-discovery',
+    monthKey: '2026-04',
+    title: 'Age of Discovery',
+    subtitle: 'Journeys that redrew the map of human possibility',
+    summary: 'From oceans to orbit, these milestones expanded humanity’s frontier.',
+    heroBlurb:
+      'A curated sequence of turning points that transformed the unknown into the known, from early expeditions to modern spaceflight.',
+    image: buildWikimediaImageSource('File:Magellan_Elcano_Circumnavigation-en.svg'),
+    coverImage: buildWikimediaImageSource('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
+    featuredEventIds: [
+      'apollo-11-first-footsteps',
+      'magellan-circumnavigation',
+      'lewis-clark-expedition',
+      'hillary-everest',
+    ],
+    eventIds: [
+      'apollo-11-first-footsteps',
+      'magellan-circumnavigation',
+      'lewis-clark-expedition',
+      'hillary-everest',
+      'amundsen-south-pole',
+      'cook-pacific-voyage',
+      'shackleton-endurance',
+      'amelia-earhart-atlantic',
+      'women-in-stem-week',
+    ],
+    iaeMeta: {
+      eventName: 'April Collection: Age of Discovery',
+      shortPromo: 'Epic voyages and frontier breakthroughs, curated for April.',
+      longPromo:
+        'Follow the moments that pushed humanity beyond familiar horizons, from circumnavigation to the Moon landing.',
+      ctaLabel: 'Explore April Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-05-art-and-culture-shifts',
+    monthKey: '2026-05',
+    title: 'Art & Culture Shifts',
+    subtitle: 'Works and movements that changed how societies see themselves',
+    summary: 'Landmark creative moments that reframed beauty, identity, and expression.',
+    heroBlurb:
+      'From Renaissance ceilings to jazz revolutions, this collection traces the cultural pivots that still shape modern taste.',
+    image: buildWikimediaImageSource('File:Claude_Monet,_Impression,_soleil_levant.jpg'),
+    coverImage: buildWikimediaImageSource('File:Michelangelo_-_Creation_of_Adam_(cropped).jpg'),
+    featuredEventIds: [
+      'sistine-chapel-ceiling',
+      'impressionism-monet',
+      'harlem-renaissance-jazz',
+      'beethoven-ninth-symphony',
+    ],
+    eventIds: [
+      'sistine-chapel-ceiling',
+      'impressionism-monet',
+      'harlem-renaissance-jazz',
+      'beethoven-ninth-symphony',
+      'rosetta-stone-decode',
+      'women-suffrage-usa',
+      'emmeline-pankhurst-suffragette',
+      'malala-nobel-peace',
+      'rosa-parks-bus-boycott',
+    ],
+    iaeMeta: {
+      eventName: 'May Collection: Art & Culture Shifts',
+      shortPromo: 'The masterpieces and movements that rewired modern culture.',
+      longPromo:
+        'Experience iconic artistic milestones and social-cultural turning points in one premium, story-first collection.',
+      ctaLabel: 'Open May Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-06-war-peace-and-diplomacy',
+    monthKey: '2026-06',
+    title: 'War, Peace, and Diplomacy',
+    subtitle: 'Conflicts and negotiations that reshaped the 20th century',
+    summary: 'Critical moments where military force and political strategy changed world order.',
+    heroBlurb:
+      'This month examines inflection points in global conflict and diplomacy, where single decisions altered the course of nations.',
+    image: buildWikimediaImageSource('File:Into_the_Jaws_of_Death_23-0455M_edit.jpg'),
+    coverImage: buildWikimediaImageSource('File:Raising_the_Flag_on_Iwo_Jima,_larger_-_edit1.jpg'),
+    featuredEventIds: [
+      'd-day-normandy-landing',
+      'ww1-armistice',
+      'hiroshima-atomic-bomb',
+      'cuban-missile-crisis',
+    ],
+    eventIds: [
+      'd-day-normandy-landing',
+      'ww1-armistice',
+      'hiroshima-atomic-bomb',
+      'cuban-missile-crisis',
+      'pearl-harbor-attack',
+      'battle-of-stalingrad',
+      'treaty-of-versailles',
+      'emancipation-proclamation',
+      'civil-war-begins',
+    ],
+    iaeMeta: {
+      eventName: 'June Collection: War, Peace, and Diplomacy',
+      shortPromo: 'Turning points in conflict, negotiation, and global power.',
+      longPromo:
+        'Explore decisive wartime events and diplomatic crises that continue to influence geopolitics today.',
+      ctaLabel: 'View June Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-07-space-and-scientific-ambition',
+    monthKey: '2026-07',
+    title: 'Space & Scientific Ambition',
+    subtitle: 'Breakthroughs that pushed limits in labs and beyond Earth',
+    summary: 'A monthly arc of high-stakes science, from molecular discovery to lunar exploration.',
+    heroBlurb:
+      'This collection pairs frontier science with the era-defining ambition of space exploration and modern research.',
+    image: buildWikimediaImageSource('File:Apollo_11_Saturn_V_lifting_off_on_July_16,_1969.jpg'),
+    coverImage: buildWikimediaImageSource('File:Hubble_ultra_deep_field.jpg'),
+    featuredEventIds: [
+      'apollo-11-first-footsteps',
+      'marie-curie-nobel',
+      'dna-structure-discovery',
+      'salk-polio-vaccine',
+    ],
+    eventIds: [
+      'apollo-11-first-footsteps',
+      'marie-curie-nobel',
+      'dna-structure-discovery',
+      'salk-polio-vaccine',
+      'first-heart-transplant',
+      'xray-discovery',
+      'germ-theory-pasteur',
+      'women-in-stem-week',
+      'ada-lovelace-analytical',
+    ],
+    iaeMeta: {
+      eventName: 'July Collection: Space & Scientific Ambition',
+      shortPromo: 'From Curie to Apollo, discover science at its boldest.',
+      longPromo:
+        'A July collection spotlighting world-changing discoveries and the scientific ambition that carried humanity to the Moon.',
+      ctaLabel: 'Explore July Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-08-medical-breakthroughs',
+    monthKey: '2026-08',
+    title: 'Medical Breakthroughs',
+    subtitle: 'Moments that redefined prevention, diagnosis, and survival',
+    summary: 'A concentrated look at breakthroughs that transformed public health and clinical medicine.',
+    heroBlurb:
+      'Track the milestones that changed medicine from painful intervention to data-driven prevention and life-saving treatment.',
+    image: buildWikimediaImageSource('File:Jonas_Salk_candid.jpg'),
+    coverImage: buildWikimediaImageSource('File:Penicillin_core.svg'),
+    featuredEventIds: [
+      'salk-polio-vaccine',
+      'dna-structure-discovery',
+      'first-heart-transplant',
+      'xray-discovery',
+    ],
+    eventIds: [
+      'salk-polio-vaccine',
+      'dna-structure-discovery',
+      'first-heart-transplant',
+      'xray-discovery',
+      'germ-theory-pasteur',
+      'anesthesia-first-use',
+      'florence-nightingale-nursing',
+      'marie-curie-nobel',
+      'women-in-stem-week',
+    ],
+    iaeMeta: {
+      eventName: 'August Collection: Medical Breakthroughs',
+      shortPromo: 'The discoveries that made modern medicine possible.',
+      longPromo:
+        'An August premium collection featuring the breakthroughs behind safer surgery, vaccines, imaging, and molecular medicine.',
+      ctaLabel: 'Open August Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-09-industrial-transformations',
+    monthKey: '2026-09',
+    title: 'Industrial Transformations',
+    subtitle: 'Infrastructure, engines, and systems that scaled modern society',
+    summary: 'How engineering and logistics rewired economies and everyday life.',
+    heroBlurb:
+      'From steam power to national rail networks, this collection follows the industrial shifts that accelerated the modern world.',
+    image: buildWikimediaImageSource('File:James-watt-1736-1819-engineer-inventor-of-the-stea.jpg'),
+    coverImage: buildWikimediaImageSource('File:Spinning_jenny.jpg'),
+    featuredEventIds: [
+      'steam-engine-watt',
+      'transcontinental-railroad',
+      'ada-lovelace-analytical',
+      'germ-theory-pasteur',
+    ],
+    eventIds: [
+      'steam-engine-watt',
+      'transcontinental-railroad',
+      'ada-lovelace-analytical',
+      'germ-theory-pasteur',
+      'anesthesia-first-use',
+      'civil-war-begins',
+      'emancipation-proclamation',
+      'first-computer-eniac',
+      'florence-nightingale-nursing',
+    ],
+    iaeMeta: {
+      eventName: 'September Collection: Industrial Transformations',
+      shortPromo: 'Steam, rail, and systems that scaled the modern era.',
+      longPromo:
+        'A September collection on infrastructure breakthroughs that redefined productivity, mobility, and social organization.',
+      ctaLabel: 'View September Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-10-ideas-that-changed-civilization',
+    monthKey: '2026-10',
+    title: 'Ideas That Changed Civilization',
+    subtitle: 'Concepts and cultural pivots that altered the human story',
+    summary: 'From language decoding to networked knowledge, this is history through transformative ideas.',
+    heroBlurb:
+      'This month traces key ideas and works that shifted how societies understand power, beauty, and shared knowledge.',
+    image: buildWikimediaImageSource('File:Rosetta_Stone.JPG'),
+    coverImage: buildWikimediaImageSource('File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg'),
+    featuredEventIds: [
+      'rosetta-stone-decode',
+      'magellan-circumnavigation',
+      'sistine-chapel-ceiling',
+      'beethoven-ninth-symphony',
+    ],
+    eventIds: [
+      'rosetta-stone-decode',
+      'magellan-circumnavigation',
+      'sistine-chapel-ceiling',
+      'beethoven-ninth-symphony',
+      'impressionism-monet',
+      'ada-lovelace-analytical',
+      'germ-theory-pasteur',
+      'www-invention',
+      'dna-structure-discovery',
+    ],
+    iaeMeta: {
+      eventName: 'October Collection: Ideas That Changed Civilization',
+      shortPromo: 'Nine ideas and works that still shape how we think.',
+      longPromo:
+        'An October editorial collection connecting art, science, and exploration through the ideas that redirected civilization.',
+      ctaLabel: 'Explore October Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-11-nations-reforms-and-identity',
+    monthKey: '2026-11',
+    title: 'Nations, Reforms, and Identity',
+    subtitle: 'Political turning points that reshaped borders, rights, and belonging',
+    summary: 'A collection of nation-defining reforms and strategic decisions across two centuries.',
+    heroBlurb:
+      'This month follows events where policy, diplomacy, and activism redefined how states and citizens relate to power.',
+    image: buildWikimediaImageSource('File:William_Orpen_-_The_Signing_of_Peace_in_the_Hall_of_Mirrors.jpg'),
+    coverImage: buildWikimediaImageSource('File:Emancipation_proclamation.jpg'),
+    featuredEventIds: [
+      'treaty-of-versailles',
+      'cuban-missile-crisis',
+      'women-suffrage-usa',
+      'rosa-parks-bus-boycott',
+    ],
+    eventIds: [
+      'treaty-of-versailles',
+      'cuban-missile-crisis',
+      'women-suffrage-usa',
+      'rosa-parks-bus-boycott',
+      'emancipation-proclamation',
+      'civil-war-begins',
+      'harriet-tubman-underground',
+      'ww1-armistice',
+      'd-day-normandy-landing',
+    ],
+    iaeMeta: {
+      eventName: 'November Collection: Nations, Reforms, and Identity',
+      shortPromo: 'The policy and protest moments that redefined modern citizenship.',
+      longPromo:
+        'A November collection on decisive reforms, diplomatic crises, and civic turning points that shaped national identity.',
+      ctaLabel: 'Open November Collection',
+    },
+  },
+  {
+    id: 'monthly-2026-12-year-end-defining-moments',
+    monthKey: '2026-12',
+    title: 'Year-End Defining Moments',
+    subtitle: 'High-impact events that changed global direction',
+    summary: 'A premium year-end edit of moments that shifted strategy, science, and world order.',
+    heroBlurb:
+      'This closing collection brings together pivotal events with lasting global consequences, from wartime decisions to technological leaps.',
+    image: buildWikimediaImageSource('File:The_USS_Arizona_(BB-39)_burning_after_the_Japanese_attack_on_Pearl_Harbor_-_NARA_195617_-_Edit.jpg'),
+    coverImage: buildWikimediaImageSource('File:Raising_the_Flag_on_Iwo_Jima,_larger_-_edit1.jpg'),
+    featuredEventIds: [
+      'ww1-armistice',
+      'pearl-harbor-attack',
+      'd-day-normandy-landing',
+      'hiroshima-atomic-bomb',
+    ],
+    eventIds: [
+      'ww1-armistice',
+      'pearl-harbor-attack',
+      'd-day-normandy-landing',
+      'hiroshima-atomic-bomb',
+      'battle-of-stalingrad',
+      'treaty-of-versailles',
+      'cuban-missile-crisis',
+      'apollo-11-first-footsteps',
+      'internet-arpanet',
+    ],
+    iaeMeta: {
+      eventName: 'December Collection: Year-End Defining Moments',
+      shortPromo: 'Nine events that changed the trajectory of the modern world.',
+      longPromo:
+        'A December flagship collection featuring decisive global moments across conflict, diplomacy, and scientific progress.',
+      ctaLabel: 'View December Collection',
+    },
+  },
+];
+
+const monthlyCollectionMonthKeyPattern = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+const validateMonthlyCollections = (collections: MonthlyCollection[]) => {
+  const eventMap = new Map(EVENT_LIBRARY.map((event) => [event.id, event]));
+  const monthKeys = new Set<string>();
+  const years = new Set<string>();
+  const months = new Set<number>();
+
+  for (const collection of collections) {
+    if (!monthlyCollectionMonthKeyPattern.test(collection.monthKey)) {
+      throw new Error(`Invalid monthKey format: ${collection.monthKey}`);
+    }
+    if (monthKeys.has(collection.monthKey)) {
+      throw new Error(`Duplicate monthKey detected: ${collection.monthKey}`);
+    }
+    monthKeys.add(collection.monthKey);
+    years.add(collection.monthKey.slice(0, 4));
+    months.add(Number(collection.monthKey.slice(5, 7)));
+
+    if (collection.featuredEventIds.length !== 4) {
+      throw new Error(`Collection ${collection.id} must have exactly 4 featuredEventIds`);
+    }
+    if (collection.eventIds.length < 8 || collection.eventIds.length > 12) {
+      throw new Error(`Collection ${collection.id} must include 8 to 12 eventIds`);
+    }
+    if (new Set(collection.eventIds).size !== collection.eventIds.length) {
+      throw new Error(`Collection ${collection.id} has duplicate eventIds`);
+    }
+    if (!collection.coverImage) {
+      throw new Error(`Collection ${collection.id} is missing a coverImage`);
+    }
+    if (!collection.image) {
+      throw new Error(`Collection ${collection.id} is missing an image`);
+    }
+
+    for (const eventId of collection.eventIds) {
+      const event = eventMap.get(eventId);
+      if (!event) {
+        throw new Error(`Collection ${collection.id} references unknown eventId: ${eventId}`);
+      }
+      if (!Array.isArray(event.sources) || event.sources.length < 2) {
+        throw new Error(
+          `Collection ${collection.id} references event without 2+ sources: ${eventId}`
+        );
+      }
+    }
+    for (const featuredEventId of collection.featuredEventIds) {
+      if (!collection.eventIds.includes(featuredEventId)) {
+        throw new Error(
+          `Collection ${collection.id} has featuredEventId not present in eventIds: ${featuredEventId}`
+        );
+      }
+    }
+  }
+
+  if (collections.length !== 12) {
+    throw new Error(`Monthly collections must include exactly 12 entries, received ${collections.length}`);
+  }
+  if (years.size !== 1) {
+    throw new Error('Monthly collections must belong to the same calendar year');
+  }
+  if (months.size !== 12) {
+    throw new Error('Monthly collections must cover all 12 months of the year');
+  }
+};
+
+validateMonthlyCollections(MONTHLY_COLLECTIONS);
 
 export const QUICK_FILTERS: { id: EventCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
