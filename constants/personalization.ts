@@ -1,4 +1,4 @@
-import type { CategoryOption, EraOption } from '@/contexts/onboarding-context';
+import type { CategoryOption, EraOption } from '@/shared/taxonomy';
 
 export const ERA_LABELS: Record<EraOption, string> = {
   prehistory: 'Prehistory',

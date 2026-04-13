@@ -1,4 +1,5 @@
 import type { HistoricalEventRecord, WikidataEntitySummary } from './types';
+import { deriveEraFromYear } from '../../shared/taxonomy';
 
 const CATEGORY_BY_KEYWORD: { regex: RegExp; category: string }[] = [
   { regex: /world war|wwi|world war i|world war ii|wwii|\bbattle\b|\bwar\b/i, category: 'world-wars' },
@@ -28,21 +29,6 @@ const TAGS_BY_ENTITY: Record<string, string> = {
   Q180684: 'air-accident',
   Q178561: 'spaceflight',
   Q43229: 'revolution',
-};
-
-const determineEra = (year?: number, exactDate?: string): string | undefined => {
-  const derivedYear = year ?? (exactDate ? Number.parseInt(exactDate.slice(0, 4), 10) : undefined);
-  if (derivedYear === undefined || Number.isNaN(derivedYear)) {
-    return undefined;
-  }
-
-  if (derivedYear < -3000) return 'prehistory';
-  if (derivedYear < 500) return 'ancient';
-  if (derivedYear < 1500) return 'medieval';
-  if (derivedYear < 1800) return 'early-modern';
-  if (derivedYear < 1900) return 'nineteenth';
-  if (derivedYear < 2000) return 'twentieth';
-  return 'contemporary';
 };
 
 const applyKeywordRules = (text: string, accumulator: Set<string>) => {
@@ -92,6 +78,10 @@ export interface ClassificationResult {
   tags: string[];
 }
 
+export const inferEraForEvent = (year?: number, exactDate?: string): string | undefined => {
+  return deriveEraFromYear(year, exactDate);
+};
+
 export const classifyEvent = ({
   event,
   primaryEntity,
@@ -120,7 +110,7 @@ export const classifyEvent = ({
     categories.add('surprise');
   }
 
-  const era = determineEra(event.year, primaryEntity?.pointInTime ?? event.enrichment?.exactDate);
+  const era = inferEraForEvent(event.year, primaryEntity?.pointInTime ?? event.enrichment?.exactDate);
 
   return {
     categories: Array.from(categories),

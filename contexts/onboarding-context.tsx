@@ -1,30 +1,10 @@
 import { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
 import type { ReactNode } from 'react';
+import type { CategoryOption, EraOption } from '@/shared/taxonomy';
 
 type PushPermission = 'unknown' | 'enabled' | 'declined';
 
 type AccountSelection = 'email' | 'google' | 'apple' | 'meta' | 'anonymous' | null;
-
-type EraOption =
-  | 'prehistory'
-  | 'ancient'
-  | 'medieval'
-  | 'early-modern'
-  | 'nineteenth'
-  | 'twentieth'
-  | 'contemporary';
-
-type CategoryOption =
-  | 'world-wars'
-  | 'ancient-civilizations'
-  | 'science-discovery'
-  | 'art-culture'
-  | 'politics'
-  | 'inventions'
-  | 'natural-disasters'
-  | 'civil-rights'
-  | 'exploration'
-  | 'surprise';
 
 type RatingValue = 1 | 2 | 3 | 4 | 5 | null;
 

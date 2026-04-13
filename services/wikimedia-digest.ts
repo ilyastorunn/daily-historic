@@ -1,5 +1,6 @@
 import type { CategoryOption } from '@/contexts/onboarding-context';
 import type { DailyDigestDocument, FirestoreEventDocument, FirestoreMediaAsset, FirestoreRelatedPage } from '@/types/events';
+import { deriveEraFromYear } from '@/shared/taxonomy';
 
 const WIKIMEDIA_ON_THIS_DAY_ENDPOINT =
   'https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected';
@@ -358,6 +359,7 @@ export const fetchWikimediaDailyDigest = async ({
 
     const eventId = buildEventId(event, resolvedMonth, resolvedDay, index);
     const categories = inferCategories(event, relatedPages);
+    const era = deriveEraFromYear(event.year);
 
     return {
       eventId,
@@ -365,6 +367,7 @@ export const fetchWikimediaDailyDigest = async ({
       summary: event.text ?? '',
       text: event.text ?? '',
       categories,
+      era,
       tags: [],
       date: {
         month: resolvedMonth,

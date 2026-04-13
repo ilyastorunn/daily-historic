@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import type { DailyDigestRecord, HistoricalEventRecord } from './types';
+import { CATEGORY_OPTIONS, ERA_OPTIONS } from '../../shared/taxonomy';
 
 const mediaAssetSchema = z.object({
   id: z.string().min(1),
@@ -44,14 +45,39 @@ const enrichmentSchema = z
   })
   .optional();
 
+const validCategorySet = new Set<string>(CATEGORY_OPTIONS);
+const validEraSet = new Set<string>(ERA_OPTIONS);
+
+const categoriesSchema = z.array(z.string()).min(1).superRefine((categories, context) => {
+  for (const category of categories) {
+    if (!validCategorySet.has(category)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Unknown category "${category}"`,
+      });
+    }
+  }
+
+  if (categories.includes('surprise') && categories.length > 1) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: '"surprise" cannot be combined with other categories',
+    });
+  }
+});
+
+const eraSchema = z.string().refine((era) => validEraSet.has(era), {
+  message: `era must be one of: ${ERA_OPTIONS.join(', ')}`,
+});
+
 const eventSchema = z.object({
   eventId: z.string().min(1),
   canonicalKey: z.string().min(1),
   year: z.number().int().optional(),
   text: z.string().min(1),
   summary: z.string().min(1),
-  categories: z.array(z.string()),
-  era: z.string().optional(),
+  categories: categoriesSchema,
+  era: eraSchema,
   tags: z.array(z.string()),
   date: z.object({
     month: z.number().int().min(1).max(12),

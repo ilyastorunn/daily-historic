@@ -2,26 +2,9 @@
  * Shared types for Firebase Functions
  */
 
-export type CategoryOption =
-  | "ancient-civilizations"
-  | "art-literature"
-  | "conflict-wars"
-  | "culture-society"
-  | "exploration"
-  | "inventions"
-  | "leaders-figures"
-  | "movements"
-  | "religion"
-  | "science-discovery";
+import type { CategoryOption, EraOption } from "../../shared/taxonomy";
 
-export type EraOption =
-  | "ancient"
-  | "medieval"
-  | "renaissance"
-  | "enlightenment"
-  | "nineteenth"
-  | "twentieth"
-  | "twentyfirst";
+export type { CategoryOption, EraOption };
 
 export interface FirestoreEventDocument {
   eventId: string;

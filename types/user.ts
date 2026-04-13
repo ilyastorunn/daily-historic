@@ -2,10 +2,9 @@ import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 import type {
   AccountSelection,
-  CategoryOption,
-  EraOption,
   PushPermission,
 } from '@/contexts/onboarding-context';
+import type { CategoryOption, EraOption } from '@/shared/taxonomy';
 
 export type ReactionValue = 'appreciate' | 'insight';
 export type ReactionMap = Record<string, ReactionValue>;

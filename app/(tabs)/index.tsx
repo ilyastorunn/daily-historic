@@ -284,9 +284,9 @@ const selectPreferredDigestEvent = (
   events: FirestoreEventDocument[],
   preferredCategories: string[] | undefined,
   preferredEras: string[] | undefined
-): FirestoreEventDocument | null => {
+): { event: FirestoreEventDocument | null; reason: 'none' | 'matched_era' | 'matched_category' | 'fallback_first' } => {
   if (events.length === 0) {
-    return null;
+    return { event: null, reason: 'none' };
   }
 
   const categoryMatches =
@@ -302,7 +302,15 @@ const selectPreferredDigestEvent = (
       ? categoryMatches.filter((event) => event.era && preferredEras.includes(event.era))
       : categoryMatches;
 
-  return eraMatches[0] ?? categoryMatches[0] ?? events[0] ?? null;
+  if (eraMatches[0]) {
+    return { event: eraMatches[0], reason: 'matched_era' };
+  }
+
+  if (categoryMatches[0]) {
+    return { event: categoryMatches[0], reason: 'matched_category' };
+  }
+
+  return { event: events[0] ?? null, reason: 'fallback_first' };
 };
 
 type HeroCarouselCta = 'continue' | 'preview';
@@ -486,10 +494,11 @@ const HomeScreen = () => {
     year: today.year,
   });
 
-  const preferredEvent = useMemo(
+  const preferredSelection = useMemo(
     () => selectPreferredDigestEvent(digestEvents, profile?.categories, profile?.eras),
     [digestEvents, profile?.categories, profile?.eras]
   );
+  const preferredEvent = preferredSelection.event;
 
   const defaultHeroItem = useMemo<HeroCarouselItem>(
     () => ({
@@ -548,6 +557,7 @@ const HomeScreen = () => {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [heroCarouselWidth, setHeroCarouselWidth] = useState<number | null>(null);
   const lastViewedHeroIdRef = useRef<string | null>(null);
+  const lastSelectionMetricRef = useRef<string | null>(null);
 
   const isPremiumUser = useMemo(() => {
     const inferredProfile = profile as { isPremium?: boolean } | null;
@@ -650,6 +660,24 @@ const HomeScreen = () => {
       setActiveHeroIndex(0);
     }
   }, [activeHeroIndex, heroCarouselItems.length]);
+
+  useEffect(() => {
+    if (!preferredEvent?.eventId || digestLoading) {
+      return;
+    }
+
+    const metricKey = `${preferredEvent.eventId}:${preferredSelection.reason}:${digestEvents.length}`;
+    if (lastSelectionMetricRef.current === metricKey) {
+      return;
+    }
+    lastSelectionMetricRef.current = metricKey;
+
+    trackEvent('home_hero_selection_resolved', {
+      event_id: preferredEvent.eventId,
+      selection_reason: preferredSelection.reason,
+      digest_events_count: digestEvents.length,
+    });
+  }, [digestEvents.length, digestLoading, preferredEvent?.eventId, preferredSelection.reason]);
 
   useEffect(() => {
     const currentItem = heroCarouselItems[activeHeroIndex];
