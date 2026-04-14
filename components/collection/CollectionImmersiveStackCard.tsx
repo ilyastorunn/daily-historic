@@ -1,6 +1,6 @@
-import React, { memo, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Image } from 'expo-image';
-import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAppTheme } from '@/theme';
 import { categoryLabelFromId } from '@/utils/categories';
@@ -15,16 +15,27 @@ type CollectionImmersiveStackCardProps = {
   imageUrl?: string;
   categoryId?: string;
   isActive: boolean;
+  cardHeight?: number;
   onPress?: (id: string) => void;
 };
 
 export const COLLECTION_STACK_CARD_HEIGHT = 236;
 
 export const CollectionImmersiveStackCard = memo(
-  ({ id, title, summary, year, imageUrl, categoryId, isActive, onPress }: CollectionImmersiveStackCardProps) => {
+  ({
+    id,
+    title,
+    summary,
+    year,
+    imageUrl,
+    categoryId,
+    isActive,
+    cardHeight,
+    onPress,
+  }: CollectionImmersiveStackCardProps) => {
     const theme = useAppTheme();
-    const styles = useMemo(() => buildStyles(theme), [theme]);
-    const emphasis = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+    const effectiveCardHeight = cardHeight ?? COLLECTION_STACK_CARD_HEIGHT;
+    const styles = useMemo(() => buildStyles(theme, effectiveCardHeight), [theme, effectiveCardHeight]);
 
     const gradientOverlay = useMemo(
       () =>
@@ -39,45 +50,22 @@ export const CollectionImmersiveStackCard = memo(
       []
     );
 
-    useEffect(() => {
-      Animated.spring(emphasis, {
-        toValue: isActive ? 1 : 0,
-        useNativeDriver: true,
-        friction: 10,
-        tension: 80,
-      }).start();
-    }, [emphasis, isActive]);
-
-    const animatedCardStyle = {
-      transform: [
-        {
-          scale: emphasis.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.95, 1],
-          }),
-        },
-        {
-          translateY: emphasis.interpolate({
-            inputRange: [0, 1],
-            outputRange: [10, 0],
-          }),
-        },
-      ],
-      opacity: emphasis.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.74, 1],
-      }),
-    };
-
     return (
-      <Animated.View style={[styles.cardWrap, animatedCardStyle]}>
+      <View style={styles.cardWrap}>
         <Pressable
           accessibilityRole="button"
           onPress={() => onPress?.(id)}
-          style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }]}
+          style={({ pressed }) => [styles.card, !isActive && styles.cardPassive, pressed && { opacity: 0.9 }]}
         >
           {imageUrl ? (
-            <Image source={createImageSource(imageUrl)} style={styles.image} contentFit="cover" />
+            <Image
+              source={createImageSource(imageUrl)}
+              style={styles.image}
+              contentFit="cover"
+              transition={0}
+              cachePolicy="memory-disk"
+              recyclingKey={id}
+            />
           ) : (
             <View style={styles.imageFallback} />
           )}
@@ -90,7 +78,7 @@ export const CollectionImmersiveStackCard = memo(
               </View>
             ) : null}
 
-            <Text style={styles.title} numberOfLines={isActive ? 2 : 3}>
+            <Text style={[styles.title, !isActive && styles.titlePassive]} numberOfLines={isActive ? 2 : 3}>
               {title}
             </Text>
 
@@ -108,43 +96,47 @@ export const CollectionImmersiveStackCard = memo(
             ) : null}
           </View>
         </Pressable>
-      </Animated.View>
+      </View>
     );
   }
 );
 
 CollectionImmersiveStackCard.displayName = 'CollectionImmersiveStackCard';
 
-const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
+const buildStyles = (theme: ReturnType<typeof useAppTheme>, cardHeight: number) => {
   const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
   const serifFamily = Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' });
 
   return StyleSheet.create({
     cardWrap: {
-      height: '100%',
+      height: cardHeight,
     },
     card: {
-      flex: 1,
+      height: cardHeight,
       borderRadius: 18,
       overflow: 'hidden',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: 'rgba(255,255,255,0.18)',
-      backgroundColor: theme.colors.surfaceSubtle,
+      backgroundColor: '#171512',
       shadowColor: theme.colors.shadowColor,
       shadowOffset: { width: 0, height: 12 },
       shadowOpacity: 0.2,
       shadowRadius: 20,
       elevation: 5,
     },
+    cardPassive: {
+      shadowOpacity: 0.1,
+      elevation: 2,
+    },
     image: {
       width: '100%',
       height: '100%',
-      backgroundColor: theme.colors.surfaceSubtle,
+      backgroundColor: '#171512',
     },
     imageFallback: {
       width: '100%',
       height: '100%',
-      backgroundColor: theme.colors.surfaceSubtle,
+      backgroundColor: '#171512',
     },
     gradientOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -182,6 +174,10 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       textShadowColor: 'rgba(0,0,0,0.38)',
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 3,
+    },
+    titlePassive: {
+      fontSize: 29,
+      lineHeight: 33,
     },
     summary: {
       fontFamily: sansFamily,

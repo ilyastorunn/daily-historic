@@ -10,11 +10,18 @@ export type CollectionHeroSectionProps = {
   subtitle?: string;
   blurb?: string;
   coverImageUrl?: string;
+  baseHeight?: number;
 };
 
 export const COLLECTION_HERO_BASE_HEIGHT = 480;
 
-export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }: CollectionHeroSectionProps) => {
+export const CollectionHeroSection = ({
+  title,
+  subtitle,
+  blurb,
+  coverImageUrl,
+  baseHeight = COLLECTION_HERO_BASE_HEIGHT,
+}: CollectionHeroSectionProps) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => buildStyles(theme), [theme]);
@@ -33,7 +40,7 @@ export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }:
     []
   );
 
-  const heroHeight = COLLECTION_HERO_BASE_HEIGHT + insets.top;
+  const heroHeight = baseHeight + insets.top;
 
   return (
     <View style={styles.hero}>
