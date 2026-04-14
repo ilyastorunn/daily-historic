@@ -90,7 +90,7 @@ const skeletonItems: MonthlyFeaturedEventSummary[] = Array.from({ length: 4 }, (
 
 export const MonthlyFeaturedEvents: React.FC<MonthlyFeaturedEventsProps> = ({
   title = "This Week's 4 Picks",
-  helperText = 'A concise weekly edit from this month’s premium collection.',
+  helperText = '4 stories are auto-selected weekly from the active monthly collection.',
   items,
   loading,
   onPress,

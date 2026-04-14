@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Image } from 'expo-image';
+import { BlurView } from 'expo-blur';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAppTheme, type ThemeDefinition } from '@/theme';
@@ -11,8 +12,10 @@ type MonthlyCollectionHeroProps = {
   subtitle: string;
   heroBlurb: string;
   monthLabel: string;
+  sectionLabel?: string;
+  sectionHelper?: string;
+  cadenceText?: string;
   coverUrl: string;
-  ctaLabel?: string;
   loading?: boolean;
   onPress: () => void;
   testID?: string;
@@ -36,7 +39,7 @@ const buildStyles = (theme: ThemeDefinition) => {
       elevation: 5,
     },
     imageWrap: {
-      height: 260,
+      height: 340,
       width: '100%',
       backgroundColor: theme.colors.surfaceSubtle,
     },
@@ -53,6 +56,36 @@ const buildStyles = (theme: ThemeDefinition) => {
       right: theme.spacing.lg,
       bottom: theme.spacing.lg,
       gap: theme.spacing.xs,
+    },
+    topOverlayWrap: {
+      position: 'absolute',
+      left: theme.spacing.lg,
+      right: theme.spacing.lg,
+      top: theme.spacing.lg,
+      borderRadius: theme.radius.md,
+      overflow: 'hidden',
+    },
+    topOverlayBlur: {
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255,255,255,0.22)',
+      backgroundColor: 'rgba(12, 10, 6, 0.22)',
+    },
+    sectionBadgeText: {
+      fontFamily: sansFamily,
+      color: 'rgba(255,255,255,0.95)',
+      fontSize: theme.typography.helper.fontSize - 1,
+      lineHeight: theme.typography.helper.lineHeight,
+      letterSpacing: 0.9,
+      textTransform: 'uppercase',
+    },
+    sectionHelper: {
+      marginTop: 2,
+      fontFamily: sansFamily,
+      color: 'rgba(255,255,255,0.92)',
+      fontSize: theme.typography.helper.fontSize,
+      lineHeight: theme.typography.helper.lineHeight,
     },
     monthLabel: {
       fontFamily: sansFamily,
@@ -86,18 +119,12 @@ const buildStyles = (theme: ThemeDefinition) => {
       fontSize: theme.typography.body.fontSize,
       lineHeight: theme.typography.body.lineHeight,
     },
-    ctaButton: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm,
-      borderRadius: theme.radius.pill,
-      backgroundColor: theme.colors.textPrimary,
-    },
-    ctaText: {
+    cadenceText: {
       fontFamily: sansFamily,
-      color: theme.colors.screen,
+      color: theme.colors.textTertiary,
       fontSize: theme.typography.helper.fontSize,
-      letterSpacing: 0.3,
+      lineHeight: theme.typography.helper.lineHeight,
+      letterSpacing: 0.15,
     },
     loadingState: {
       opacity: 0.7,
@@ -110,8 +137,10 @@ export const MonthlyCollectionHero: React.FC<MonthlyCollectionHeroProps> = ({
   subtitle,
   heroBlurb,
   monthLabel,
+  sectionLabel = 'Monthly Collection',
+  sectionHelper = 'A premium editorial set refreshed every month.',
+  cadenceText = 'Updated monthly • Weekly picks refresh automatically',
   coverUrl,
-  ctaLabel = 'Open collection',
   loading,
   onPress,
   testID,
@@ -143,6 +172,12 @@ export const MonthlyCollectionHero: React.FC<MonthlyCollectionHeroProps> = ({
       <View style={styles.imageWrap}>
         <Image source={createImageSource(coverUrl)} style={styles.image} contentFit="cover" />
         <Image source={gradient} style={styles.gradient} contentFit="cover" />
+        <View style={styles.topOverlayWrap}>
+          <BlurView intensity={28} tint="dark" style={styles.topOverlayBlur}>
+            <Text style={styles.sectionBadgeText}>{sectionLabel}</Text>
+            <Text style={styles.sectionHelper}>{sectionHelper}</Text>
+          </BlurView>
+        </View>
         <View style={styles.textOverlay}>
           <Text style={styles.monthLabel}>{monthLabel}</Text>
           <Text style={styles.title}>{title}</Text>
@@ -152,9 +187,7 @@ export const MonthlyCollectionHero: React.FC<MonthlyCollectionHeroProps> = ({
 
       <View style={styles.body}>
         <Text style={styles.blurb}>{heroBlurb}</Text>
-        <View style={styles.ctaButton}>
-          <Text style={styles.ctaText}>{ctaLabel}</Text>
-        </View>
+        <Text style={styles.cadenceText}>{cadenceText}</Text>
       </View>
     </Pressable>
   );
