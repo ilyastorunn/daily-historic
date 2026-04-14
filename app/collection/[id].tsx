@@ -1,14 +1,24 @@
-import React, { useEffect, useMemo } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme';
 import { useCollectionDetail } from '@/hooks/use-collection-detail';
-import { CollectionHeroSection } from '@/components/collection/CollectionHeroSection';
-import { CollectionEventCard } from '@/components/collection/CollectionEventCard';
+import {
+  CollectionHeroSection,
+  COLLECTION_HERO_BASE_HEIGHT,
+} from '@/components/collection/CollectionHeroSection';
+import {
+  CollectionImmersiveStackCard,
+  COLLECTION_STACK_CARD_HEIGHT,
+} from '@/components/collection/CollectionImmersiveStackCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { trackEvent } from '@/services/analytics';
+
+const STACK_CARD_GAP = 14;
+const STACK_TOP_SPACER = 12;
+const STACK_SNAP_INTERVAL = COLLECTION_STACK_CARD_HEIGHT + STACK_CARD_GAP;
 
 const CollectionDetailScreen = () => {
   const { id, source, monthKey } = useLocalSearchParams<{ id?: string; source?: string; monthKey?: string }>();
@@ -16,8 +26,12 @@ const CollectionDetailScreen = () => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => buildStyles(theme), [theme]);
+  const heroHeight = COLLECTION_HERO_BASE_HEIGHT + insets.top;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
 
   const { collection, loading, error } = useCollectionDetail({ collectionId: id ?? null, enabled: Boolean(id) });
+  const collectionItems = collection?.items ?? [];
 
   useEffect(() => {
     if (id) {
@@ -35,43 +49,98 @@ const CollectionDetailScreen = () => {
     }
   }, [id, source]);
 
+  const stackStartOffset = heroHeight + STACK_TOP_SPACER;
+
+  const snapOffsets = useMemo(() => {
+    if (!collectionItems.length) {
+      return undefined;
+    }
+
+    const offsets: number[] = [0];
+    for (let index = 0; index < collectionItems.length; index += 1) {
+      offsets.push(stackStartOffset + index * STACK_SNAP_INTERVAL);
+    }
+    return offsets;
+  }, [collectionItems.length, stackStartOffset]);
+
+  const updateActiveIndexFromOffset = useCallback(
+    (offsetY: number) => {
+      if (!collectionItems.length) {
+        return;
+      }
+
+      const relativeOffset = offsetY - stackStartOffset;
+      const nextIndex = Math.round(relativeOffset / STACK_SNAP_INTERVAL);
+      const clamped = Math.max(0, Math.min(collectionItems.length - 1, nextIndex));
+      if (activeIndexRef.current !== clamped) {
+        activeIndexRef.current = clamped;
+        setActiveIndex(clamped);
+      }
+    },
+    [collectionItems.length, stackStartOffset]
+  );
+
+  const listHeader = useMemo(() => {
+    if (!collection) {
+      return null;
+    }
+
+    return (
+      <View>
+        <CollectionHeroSection
+          title={collection.title}
+          subtitle={collection.subtitle}
+          blurb={collection.heroBlurb ?? collection.blurb}
+          coverImageUrl={collection.coverUrl}
+        />
+        <View style={styles.stackTopSpacer} />
+      </View>
+    );
+  }, [collection, styles.stackTopSpacer]);
+
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Hero Section */}
-          {collection ? (
-            <CollectionHeroSection
-              title={collection.title}
-              subtitle={collection.subtitle}
-              blurb={collection.heroBlurb ?? collection.blurb}
-              coverImageUrl={collection.coverUrl}
-            />
-          ) : null}
-
-          {/* Loading & Error States */}
-          {loading ? <Text style={styles.helper}>Loading stories…</Text> : null}
-          {error ? <Text style={styles.error}>Unable to load this collection.</Text> : null}
-
-          {/* Event Cards List */}
-          {collection?.items && collection.items.length > 0 ? (
-            <View style={styles.cardList}>
-              {collection.items.map((item) => (
-                <View key={item.id} style={styles.cardWrap}>
-                  <CollectionEventCard
-                    id={item.id}
-                    title={item.title}
-                    summary={item.summary}
-                    imageUrl={item.imageUrl}
-                    dateISO={item.year ? String(item.year) : undefined}
-                    categoryId={item.categoryIds?.[0]}
-                    onPress={(eventId) => router.push({ pathname: '/event/[id]', params: { id: eventId } })}
-                  />
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </ScrollView>
+        {collection ? (
+          <FlatList
+            data={collectionItems}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item, index }) => (
+              <View style={styles.stackItemWrap}>
+                <CollectionImmersiveStackCard
+                  id={item.id}
+                  title={item.title}
+                  summary={item.summary}
+                  year={item.year ? String(item.year) : undefined}
+                  imageUrl={item.imageUrl}
+                  categoryId={item.categoryIds?.[0]}
+                  isActive={index === activeIndex}
+                  onPress={(eventId) => router.push({ pathname: '/event/[id]', params: { id: eventId } })}
+                />
+              </View>
+            )}
+            ListHeaderComponent={listHeader}
+            contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + theme.spacing.xxl }]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            decelerationRate="fast"
+            snapToOffsets={snapOffsets}
+            snapToAlignment="start"
+            scrollEventThrottle={16}
+            onScroll={(event) => updateActiveIndexFromOffset(event.nativeEvent.contentOffset.y)}
+            onMomentumScrollEnd={(event) => updateActiveIndexFromOffset(event.nativeEvent.contentOffset.y)}
+            getItemLayout={(_, index) => ({
+              length: STACK_SNAP_INTERVAL,
+              offset: stackStartOffset + index * STACK_SNAP_INTERVAL,
+              index,
+            })}
+          />
+        ) : (
+          <View style={styles.stateContainer}>
+            {loading ? <Text style={styles.helper}>Loading stories…</Text> : null}
+            {!loading && error ? <Text style={styles.error}>Unable to load this collection.</Text> : null}
+          </View>
+        )}
 
         {/* Floating Navigation Bar */}
         <View style={[styles.navBar, { top: insets.top + theme.spacing.lg }]}>
@@ -103,9 +172,18 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     container: {
       flex: 1,
     },
-    scrollContent: {
-      paddingBottom: 40,
-      gap: 0,
+    stateContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      gap: theme.spacing.sm,
+    },
+    listContent: {
+      paddingBottom: theme.spacing.xxl,
+    },
+    stackTopSpacer: {
+      height: STACK_TOP_SPACER,
     },
     navBar: {
       position: 'absolute',
@@ -145,17 +223,10 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       color: theme.colors.borderStrong,
       textAlign: 'center',
     },
-    cardList: {
-      paddingHorizontal: 20, // Minimum 20pt margin per NorthStar
-      marginTop: 12,
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginHorizontal: 14,
-      rowGap: 14,
-    },
-    cardWrap: {
-      width: '50%',
-      paddingHorizontal: 6,
+    stackItemWrap: {
+      height: STACK_SNAP_INTERVAL,
+      paddingHorizontal: 20,
+      paddingBottom: STACK_CARD_GAP,
     },
     bottomSafeArea: {
       backgroundColor: theme.colors.screen,

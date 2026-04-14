@@ -12,6 +12,8 @@ export type CollectionHeroSectionProps = {
   coverImageUrl?: string;
 };
 
+export const COLLECTION_HERO_BASE_HEIGHT = 480;
+
 export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }: CollectionHeroSectionProps) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -31,7 +33,7 @@ export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }:
     []
   );
 
-  const heroHeight = 480 + insets.top;
+  const heroHeight = COLLECTION_HERO_BASE_HEIGHT + insets.top;
 
   return (
     <View style={styles.hero}>
