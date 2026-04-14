@@ -63,7 +63,7 @@ const requestAlgolia = async (
 const waitForTask = async (indexName: string, taskId: number) => {
   const { appId, adminApiKey } = getAlgoliaAdminConfig();
 
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  for (let attempt = 0; attempt < 240; attempt += 1) {
     const response = await fetch(
       `https://${appId}.algolia.net/1/indexes/${encodeURIComponent(indexName)}/task/${taskId}`,
       {

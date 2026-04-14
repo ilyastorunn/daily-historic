@@ -47,12 +47,31 @@ export interface FunctionAlgoliaSearchRecord {
   popularityScore: number;
 }
 
+const MAX_TITLE_CHARS = 180;
+const MAX_SUMMARY_CHARS = 320;
+const MAX_SEARCHABLE_TEXT_CHARS = 2200;
+const MAX_LOCATION_CHARS = 120;
+const MAX_TAG_CHARS = 48;
+const MAX_TAGS = 20;
+
 const stripHtml = (value?: string | null) => {
   if (!value) {
     return "";
   }
 
   return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+};
+
+const truncate = (value: string, maxChars: number) => {
+  if (value.length <= maxChars) {
+    return value;
+  }
+
+  if (maxChars <= 1) {
+    return value.slice(0, maxChars);
+  }
+
+  return `${value.slice(0, maxChars - 1).trimEnd()}…`;
 };
 
 const resolvePrimaryPage = (event: FunctionSearchRecordEvent) => {
@@ -121,7 +140,7 @@ const buildSearchableText = (event: FunctionSearchRecordEvent) => {
     if (page.extract) buffer.push(stripHtml(page.extract));
   }
 
-  return buffer.filter(Boolean).join(" ").trim();
+  return truncate(buffer.filter(Boolean).join(" ").trim(), MAX_SEARCHABLE_TEXT_CHARS);
 };
 
 export const toAlgoliaSearchRecord = (
@@ -144,20 +163,27 @@ export const toAlgoliaSearchRecord = (
     stripHtml(primaryPage?.extract) ||
     "Tap to open the full story.";
 
+  const normalizedTags = Array.isArray(event.tags)
+    ? event.tags
+        .map((tag) => truncate(stripHtml(tag), MAX_TAG_CHARS))
+        .filter(Boolean)
+        .slice(0, MAX_TAGS)
+    : [];
+
   return {
     objectID: event.eventId,
     eventId: event.eventId,
-    title,
-    summary,
+    title: truncate(title, MAX_TITLE_CHARS),
+    summary: truncate(summary, MAX_SUMMARY_CHARS),
     searchableText: buildSearchableText(event),
-    tags: Array.isArray(event.tags) ? event.tags : [],
+    tags: normalizedTags,
     categories: Array.isArray(event.categories) ? event.categories : [],
     era: event.era,
     year: event.year,
     month: event.date?.month,
     day: event.date?.day,
     imageUrl: resolveImageUrl(primaryPage),
-    location: stripHtml(primaryPage?.description) || undefined,
+    location: truncate(stripHtml(primaryPage?.description) || "", MAX_LOCATION_CHARS) || undefined,
     updatedAt: coerceTimestamp(event.updatedAt),
     editorialBoost: 0,
     popularityScore: 0,

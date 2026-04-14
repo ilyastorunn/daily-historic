@@ -10,6 +10,7 @@ type Options = {
   maxEmptyCategoriesRatio: number;
   maxMissingEraRatio: number;
   requireAlgolia: boolean;
+  minAlgoliaCoverageRatio: number;
 };
 
 type SearchCase = {
@@ -30,6 +31,7 @@ const parseArgs = (): Options => {
     maxEmptyCategoriesRatio: 0,
     maxMissingEraRatio: 0,
     requireAlgolia: false,
+    minAlgoliaCoverageRatio: 0.98,
   };
 
   for (const token of process.argv.slice(2)) {
@@ -55,6 +57,9 @@ const parseArgs = (): Options => {
         break;
       case '--require-algolia':
         options.requireAlgolia = true;
+        break;
+      case '--min-algolia-coverage-ratio':
+        if (value) options.minAlgoliaCoverageRatio = Number.parseFloat(value);
         break;
       default:
         break;
@@ -126,7 +131,11 @@ const runAlgoliaChecks = async (sampleSize: number, requireAlgolia: boolean) => 
     if (requireAlgolia) {
       throw new Error('Algolia environment variables are required for this QC run');
     }
-    return { skipped: true, cases: [] as Array<{ name: string; hits: number; violations: number }> };
+    return {
+      skipped: true,
+      totalHits: 0,
+      cases: [] as Array<{ name: string; hits: number; violations: number }>,
+    };
   }
 
   const cases: SearchCase[] = [
@@ -138,6 +147,32 @@ const runAlgoliaChecks = async (sampleSize: number, requireAlgolia: boolean) => 
   ];
 
   const results: Array<{ name: string; hits: number; violations: number }> = [];
+  let totalHits = 0;
+
+  {
+    const response = await fetch(
+      `https://${appId}-dsn.algolia.net/1/indexes/${encodeURIComponent(indexName)}/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Algolia-API-Key': apiKey,
+          'X-Algolia-Application-Id': appId,
+        },
+        body: JSON.stringify({
+          query: '',
+          page: 0,
+          hitsPerPage: 1,
+          attributesToRetrieve: ['eventId'],
+        }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Algolia totalHits probe failed: ${response.status}`);
+    }
+    const payload = (await response.json()) as { nbHits?: number };
+    totalHits = typeof payload.nbHits === 'number' ? payload.nbHits : 0;
+  }
 
   for (const testCase of cases) {
     const payload = {
@@ -176,7 +211,7 @@ const runAlgoliaChecks = async (sampleSize: number, requireAlgolia: boolean) => 
     });
   }
 
-  return { skipped: false, cases: results };
+  return { skipped: false, totalHits, cases: results };
 };
 
 const run = async () => {
@@ -239,6 +274,7 @@ const run = async () => {
 
   const algolia = await runAlgoliaChecks(options.sampleSize, options.requireAlgolia);
   const totalAlgoliaViolations = algolia.cases.reduce((sum, item) => sum + item.violations, 0);
+  const algoliaCoverageRatio = total === 0 ? 0 : algolia.totalHits / total;
 
   const report = {
     summary: {
@@ -257,6 +293,12 @@ const run = async () => {
       maxEmptyCategoriesRatio: options.maxEmptyCategoriesRatio,
       maxMissingEraRatio: options.maxMissingEraRatio,
       maxAlgoliaViolations: 0,
+      minAlgoliaCoverageRatio: options.minAlgoliaCoverageRatio,
+    },
+    coverage: {
+      firestoreTotal: total,
+      algoliaTotalHits: algolia.totalHits,
+      algoliaCoverageRatio,
     },
   };
 
@@ -267,7 +309,8 @@ const run = async () => {
     missingEraRatio > options.maxMissingEraRatio ||
     invalidCategories > 0 ||
     invalidEra > 0 ||
-    totalAlgoliaViolations > 0;
+    totalAlgoliaViolations > 0 ||
+    (!algolia.skipped && algoliaCoverageRatio < options.minAlgoliaCoverageRatio);
 
   if (failed) {
     process.exit(1);

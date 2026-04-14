@@ -6,6 +6,7 @@ import { clearAlgoliaIndex, configureAlgoliaIndices, upsertAlgoliaRecords } from
 import { toAlgoliaSearchRecord } from "../search/algolia-record";
 
 const BATCH_SIZE = 500;
+const MAX_OVERSIZE_RETRIES_PER_RECORD = 2;
 
 const extractOversizedObjectId = (error: unknown): string | null => {
   const message = error instanceof Error ? error.message : String(error);
@@ -13,41 +14,69 @@ const extractOversizedObjectId = (error: unknown): string | null => {
   return match?.[1] ?? null;
 };
 
+const truncate = (value: string, maxChars: number) => {
+  if (value.length <= maxChars) {
+    return value;
+  }
+
+  if (maxChars <= 1) {
+    return value.slice(0, maxChars);
+  }
+
+  return `${value.slice(0, maxChars - 1).trimEnd()}…`;
+};
+
+const aggressivelyCompactRecord = (record: NonNullable<ReturnType<typeof toAlgoliaSearchRecord>>) => {
+  return {
+    ...record,
+    title: truncate(record.title, 120),
+    summary: truncate(record.summary, 220),
+    searchableText: truncate(record.searchableText, 900),
+    location: record.location ? truncate(record.location, 80) : undefined,
+    tags: record.tags.slice(0, 10).map((tag) => truncate(tag, 24)),
+  };
+};
+
 const upsertWithOversizeRecovery = async (
   records: NonNullable<ReturnType<typeof toAlgoliaSearchRecord>>[]
 ) => {
   if (records.length === 0) {
-    return;
+    return 0;
   }
 
   let remaining = [...records];
-  const skippedOversized: string[] = [];
+  const retryCountById = new Map<string, number>();
 
   while (remaining.length > 0) {
     try {
       await upsertAlgoliaRecords(remaining);
-      if (skippedOversized.length > 0) {
-        console.warn(
-          `[Algolia Reindex] Skipped ${skippedOversized.length} oversized record(s): ${skippedOversized.join(", ")}`
-        );
-      }
-      return;
+      return remaining.length;
     } catch (error) {
       const oversizedId = extractOversizedObjectId(error);
       if (!oversizedId) {
         throw error;
       }
 
-      const nextRemaining = remaining.filter((record) => record.objectID !== oversizedId);
-      if (nextRemaining.length === remaining.length) {
+      const index = remaining.findIndex((record) => record.objectID === oversizedId);
+      if (index < 0) {
         throw error;
       }
 
-      skippedOversized.push(oversizedId);
-      remaining = nextRemaining;
-      console.warn(`[Algolia Reindex] Dropping oversized record ${oversizedId} and continuing...`);
+      const retries = (retryCountById.get(oversizedId) ?? 0) + 1;
+      retryCountById.set(oversizedId, retries);
+
+      if (retries > MAX_OVERSIZE_RETRIES_PER_RECORD) {
+        throw new Error(
+          `Record ${oversizedId} is still oversized after ${MAX_OVERSIZE_RETRIES_PER_RECORD} compaction attempt(s).`
+        );
+      }
+
+      remaining[index] = aggressivelyCompactRecord(remaining[index]);
+      console.warn(`[Algolia Reindex] Compacting oversized record ${oversizedId} (attempt ${retries})...`);
     }
   }
+
+  return 0;
 };
 
 const main = async () => {
@@ -81,9 +110,9 @@ const main = async () => {
       })
       .filter((record): record is NonNullable<typeof record> => record !== null);
 
-    await upsertWithOversizeRecovery(records);
+    const persistedCount = await upsertWithOversizeRecovery(records);
 
-    indexedCount += records.length;
+    indexedCount += persistedCount;
     lastEventId = snapshot.docs[snapshot.docs.length - 1]?.id ?? null;
 
     console.log(`[Algolia Reindex] Indexed ${indexedCount} records so far`);
