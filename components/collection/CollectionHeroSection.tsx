@@ -31,7 +31,7 @@ export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }:
     []
   );
 
-  const heroHeight = 400 + insets.top;
+  const heroHeight = 480 + insets.top;
 
   return (
     <View style={styles.hero}>
@@ -98,7 +98,7 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     textContainer: {
       position: 'absolute',
-      bottom: 24, // Bottom padding per NorthStar
+      bottom: 22,
       left: 20,
       right: 20,
       gap: theme.spacing.sm,

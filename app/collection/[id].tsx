@@ -5,8 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme';
 import { useCollectionDetail } from '@/hooks/use-collection-detail';
-import { TimelineCard } from '@/components/time-machine/TimelineCard';
 import { CollectionHeroSection } from '@/components/collection/CollectionHeroSection';
+import { CollectionEventCard } from '@/components/collection/CollectionEventCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { trackEvent } from '@/services/analytics';
 
@@ -56,24 +56,18 @@ const CollectionDetailScreen = () => {
           {/* Event Cards List */}
           {collection?.items && collection.items.length > 0 ? (
             <View style={styles.cardList}>
-              {collection.iaeMeta ? (
-                <View style={styles.iaeCallout}>
-                  <Text style={styles.iaeLabel}>In-App Event</Text>
-                  <Text style={styles.iaeTitle}>{collection.iaeMeta.eventName}</Text>
-                  <Text style={styles.iaeBlurb}>{collection.iaeMeta.shortPromo}</Text>
-                </View>
-              ) : null}
               {collection.items.map((item) => (
-                <TimelineCard
-                  key={item.id}
-                  id={item.id}
-                  title={item.title}
-                  summary={item.summary}
-                  imageUrl={item.imageUrl}
-                  dateISO={item.year ? String(item.year) : undefined}
-                  categoryId={item.categoryIds?.[0]}
-                  onPress={(eventId) => router.push({ pathname: '/event/[id]', params: { id: eventId } })}
-                />
+                <View key={item.id} style={styles.cardWrap}>
+                  <CollectionEventCard
+                    id={item.id}
+                    title={item.title}
+                    summary={item.summary}
+                    imageUrl={item.imageUrl}
+                    dateISO={item.year ? String(item.year) : undefined}
+                    categoryId={item.categoryIds?.[0]}
+                    onPress={(eventId) => router.push({ pathname: '/event/[id]', params: { id: eventId } })}
+                  />
+                </View>
               ))}
             </View>
           ) : null}
@@ -111,7 +105,7 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     },
     scrollContent: {
       paddingBottom: 40,
-      gap: 20, // 20pt spacing between sections
+      gap: 0,
     },
     navBar: {
       position: 'absolute',
@@ -153,35 +147,15 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     },
     cardList: {
       paddingHorizontal: 20, // Minimum 20pt margin per NorthStar
-      gap: 16, // Minimum 16pt between cards per NorthStar
+      marginTop: 12,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: 14,
+      rowGap: 14,
     },
-    iaeCallout: {
-      backgroundColor: theme.colors.surfaceSubtle,
-      borderRadius: theme.radius.md,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.borderSubtle,
-      padding: theme.spacing.lg,
-      gap: theme.spacing.xs,
-    },
-    iaeLabel: {
-      fontFamily: sansFamily,
-      fontSize: theme.typography.helper.fontSize,
-      lineHeight: theme.typography.helper.lineHeight,
-      color: theme.colors.textSecondary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    iaeTitle: {
-      fontFamily: Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' }),
-      fontSize: 22,
-      lineHeight: 28,
-      color: theme.colors.textPrimary,
-    },
-    iaeBlurb: {
-      fontFamily: sansFamily,
-      fontSize: theme.typography.body.fontSize,
-      lineHeight: theme.typography.body.lineHeight,
-      color: theme.colors.textSecondary,
+    cardWrap: {
+      width: '50%',
+      paddingHorizontal: 6,
     },
     bottomSafeArea: {
       backgroundColor: theme.colors.screen,

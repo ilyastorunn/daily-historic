@@ -59,7 +59,7 @@
     "vitest": "^3.2.4"
   },
   "main": "expo-router/entry",
-  "name": "codex-deneme",
+  "name": "historiq",
   "private": true,
   "scripts": {
     "analyze:events": "tsx scripts/analyze-events.ts",

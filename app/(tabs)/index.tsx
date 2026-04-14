@@ -78,7 +78,7 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     scrollContent: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl,
+      paddingTop: spacing.lg,
       paddingBottom: spacing.md, // Reduced to minimize gap above tab bar
       gap: spacing.xxl, // 40pt - Generous spacing for better breathability
     },
@@ -544,6 +544,31 @@ const HomeScreen = () => {
     return getMonthKey(referenceDate, { timeZone: profile?.timezone });
   }, [profile?.timezone, today.isoDate]);
 
+  const monthLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        year: 'numeric',
+      }).format(new Date(`${monthKey}-01T00:00:00Z`)),
+    [monthKey]
+  );
+
+  const monthNameLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+      }).format(new Date(`${monthKey}-01T00:00:00Z`)),
+    [monthKey]
+  );
+
+  const weeklyEditLabel = useMemo(() => {
+    const weekMatch = isoWeekKey.match(/W(\d{1,2})/);
+    if (!weekMatch) {
+      return undefined;
+    }
+    return `Week ${weekMatch[1]} Edit`;
+  }, [isoWeekKey]);
+
   const {
     item: monthlyCollection,
     loading: monthlyCollectionLoading,
@@ -828,6 +853,7 @@ const HomeScreen = () => {
               onIndexChange={handleHeroIndexChange}
               itemWidth={computedHeroWidth}
               gap={0}
+              contentPaddingVertical={0}
               renderItem={({ item, index }) => (
                 <HeroCarouselCard
                   item={item}
@@ -848,38 +874,29 @@ const HomeScreen = () => {
           </View>
 
           {monthlyCollection ? (
-            <MonthlyCollectionHero
-              title={monthlyCollection.title}
-              subtitle={monthlyCollection.subtitle}
-              heroBlurb={monthlyCollection.heroBlurb}
-              monthLabel={new Intl.DateTimeFormat('en-US', {
-                month: 'long',
-                year: 'numeric',
-              }).format(new Date(`${monthKey}-01T00:00:00Z`))}
-              coverUrl={monthlyCollection.coverUrl || defaultHeroItem.imageUri || ''}
-              ctaLabel={monthlyCollection.iaeMeta.ctaLabel}
-              onPress={handleOpenMonthlyCollection}
-              loading={monthlyCollectionLoading}
-              testID="home-monthly-collection-hero"
-            />
+            <View style={{ marginTop: -40 }}>
+              <MonthlyCollectionHero
+                title={monthlyCollection.title}
+                subtitle={monthlyCollection.subtitle}
+                heroBlurb={monthlyCollection.heroBlurb}
+                monthLabel={monthLabel}
+                coverUrl={monthlyCollection.coverUrl || defaultHeroItem.imageUri || ''}
+                onPress={handleOpenMonthlyCollection}
+                loading={monthlyCollectionLoading}
+                testID="home-monthly-collection-hero"
+              />
+            </View>
           ) : null}
 
           <MonthlyFeaturedEvents
+            collectionLabel={monthNameLabel}
+            weekLabel={weeklyEditLabel}
             items={monthlyFeaturedItems}
             loading={monthlyCollectionLoading}
             onPress={handleMonthlyFeaturedEventPress}
+            onSeeAllPress={monthlyCollection ? handleSeeAllMonthlyCollection : undefined}
             testID="home-monthly-featured-events"
           />
-
-          {monthlyCollection ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleSeeAllMonthlyCollection}
-              style={({ pressed }) => [{ alignSelf: 'flex-end' }, pressed && { opacity: 0.85 }]}
-            >
-              <Text style={styles.sectionHelper}>See full monthly collection</Text>
-            </Pressable>
-          ) : null}
 
           <View style={styles.timeMachineContainer}>
             <TimeMachineBlock
