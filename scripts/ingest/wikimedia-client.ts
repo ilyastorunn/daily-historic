@@ -9,7 +9,7 @@ import type {
   MediaAssetSummary,
   EventSourceRef,
 } from './types';
-import { buildTimeMachineCanonicalKey } from '../../utils/time-machine';
+import { buildTimeMachineCanonicalKey, toTimeMachineDateISO } from '../../utils/time-machine';
 
 const WIKIMEDIA_ON_THIS_DAY_ENDPOINT = 'https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected';
 const ON_THIS_DAY_PARSER_VERSION = 'wikimedia-on-this-day/v2';
@@ -160,9 +160,7 @@ export const normalizeEvent = (
     relatedPages[0]?.canonicalTitle ??
     relatedPages[0]?.displayTitle ??
     event.text;
-  const dateISO = `${String(event.year).padStart(4, '0')}-${String(context.month).padStart(2, '0')}-${String(
-    context.day
-  ).padStart(2, '0')}`;
+  const dateISO = toTimeMachineDateISO(event.year ?? 0, context.month, context.day);
   const canonicalKey = buildTimeMachineCanonicalKey({
     year: event.year ?? 0,
     month: context.month,

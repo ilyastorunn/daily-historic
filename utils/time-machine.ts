@@ -184,8 +184,14 @@ export const clampTimeMachineYear = (year: number) => {
   return year;
 };
 
+const formatIsoYear = (year: number) => {
+  const absoluteYear = Math.abs(Math.trunc(year));
+  const paddedYear = String(absoluteYear).padStart(4, '0');
+  return year < 0 ? `-${paddedYear}` : paddedYear;
+};
+
 export const toTimeMachineDateISO = (year: number, month: number, day: number) => {
-  const safeYear = String(year).padStart(4, '0');
+  const safeYear = formatIsoYear(year);
   const safeMonth = String(month).padStart(2, '0');
   const safeDay = String(day).padStart(2, '0');
   return `${safeYear}-${safeMonth}-${safeDay}`;
