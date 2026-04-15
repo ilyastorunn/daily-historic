@@ -25,6 +25,7 @@ type PeekCarouselProps<T> = {
   onIndexChange?: (index: number) => void;
   itemWidth?: number;
   gap?: number;
+  contentPaddingVertical?: number;
   testID?: string;
 };
 
@@ -34,11 +35,9 @@ type ExtendedItem<T> = SpacerItem | ValueItem<T>;
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const createStyles = (theme: ThemeDefinition) =>
+const createStyles = (_theme: ThemeDefinition) =>
   StyleSheet.create({
-    listContent: {
-      paddingVertical: theme.spacing.lg,
-    },
+    listContent: {},
     itemContainer: {
       justifyContent: 'flex-start',
     },
@@ -54,6 +53,7 @@ export const PeekCarousel = <T,>({
   onIndexChange,
   itemWidth,
   gap,
+  contentPaddingVertical,
   testID,
 }: PeekCarouselProps<T>): React.ReactElement => {
   const theme = useAppTheme();
@@ -66,6 +66,7 @@ export const PeekCarousel = <T,>({
   const computedCardWidth = itemWidth ?? Math.round(effectiveWidth * 0.78);
   const cardWidth = Math.min(computedCardWidth, effectiveWidth);
   const itemGap = gap ?? spacing.lg;
+  const verticalPadding = contentPaddingVertical ?? spacing.lg;
   const fullItemWidth = cardWidth + itemGap;
   const sideInset = Math.max((effectiveWidth - cardWidth) / 2, 0);
   const spacerWidth = Math.max(sideInset - itemGap / 2, 0);
@@ -134,7 +135,6 @@ export const PeekCarousel = <T,>({
     const indexWithinTriplicatedData = rawIndex - 1;
 
     // Calculate which set we're in (prev, middle, next)
-    const totalItemsCount = data.length * 3;
     const setSize = data.length;
 
     // Get position within the triplicated items
@@ -233,7 +233,7 @@ export const PeekCarousel = <T,>({
       showsHorizontalScrollIndicator={false}
       bounces={false}
       style={{ flexGrow: 0 }}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={[styles.listContent, { paddingVertical: verticalPadding }]}
       onLayout={handleLayout}
       onScroll={Animated.event(
         [{ nativeEvent: { contentOffset: { x: scrollX } } }],

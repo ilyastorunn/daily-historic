@@ -494,8 +494,8 @@ const EventDetailScreen = () => {
               <>
                 <Text style={styles.secondaryCopy}>Sources</Text>
                 <View style={styles.sourceList}>
-                  {sources.map((source) => (
-                    <View key={source.url} style={styles.sourceRow}>
+                  {sources.map((source, index) => (
+                    <View key={`${source.url}-${index}`} style={styles.sourceRow}>
                       <IconSymbol name="chevron.right" size={16} color={theme.colors.textSecondary} />
                       <Pressable
                         accessibilityRole="link"

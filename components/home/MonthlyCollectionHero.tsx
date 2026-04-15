@@ -39,7 +39,7 @@ const buildStyles = (theme: ThemeDefinition) => {
       elevation: 5,
     },
     imageWrap: {
-      height: 340,
+      height: 380,
       width: '100%',
       backgroundColor: theme.colors.surfaceSubtle,
     },
@@ -59,25 +59,25 @@ const buildStyles = (theme: ThemeDefinition) => {
     },
     topOverlayWrap: {
       position: 'absolute',
-      left: theme.spacing.lg,
-      right: theme.spacing.lg,
-      top: theme.spacing.lg,
-      borderRadius: theme.radius.md,
+      left: theme.spacing.md,
+      top: theme.spacing.md,
+      borderRadius: theme.radius.pill,
       overflow: 'hidden',
+      zIndex: 2,
     },
     topOverlayBlur: {
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm + 2,
+      paddingVertical: 5,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255,255,255,0.22)',
-      backgroundColor: 'rgba(12, 10, 6, 0.22)',
+      borderColor: 'rgba(255,255,255,0.24)',
+      backgroundColor: 'rgba(12, 10, 6, 0.14)',
     },
     sectionBadgeText: {
       fontFamily: sansFamily,
       color: 'rgba(255,255,255,0.95)',
-      fontSize: theme.typography.helper.fontSize - 1,
-      lineHeight: theme.typography.helper.lineHeight,
-      letterSpacing: 0.9,
+      fontSize: 11,
+      lineHeight: 14,
+      letterSpacing: 0.7,
       textTransform: 'uppercase',
     },
     sectionHelper: {
@@ -98,8 +98,8 @@ const buildStyles = (theme: ThemeDefinition) => {
     title: {
       fontFamily: serifFamily,
       color: '#FFFFFF',
-      fontSize: 30,
-      lineHeight: 36,
+      fontSize: 32,
+      lineHeight: 38,
       letterSpacing: -0.35,
     },
     subtitle: {
@@ -137,7 +137,7 @@ export const MonthlyCollectionHero: React.FC<MonthlyCollectionHeroProps> = ({
   subtitle,
   heroBlurb,
   monthLabel,
-  sectionLabel = 'Monthly Collection',
+  sectionLabel = 'Collection of the Month',
   sectionHelper = 'A premium editorial set refreshed every month.',
   cadenceText = 'Updated monthly • Weekly picks refresh automatically',
   coverUrl,
@@ -172,10 +172,9 @@ export const MonthlyCollectionHero: React.FC<MonthlyCollectionHeroProps> = ({
       <View style={styles.imageWrap}>
         <Image source={createImageSource(coverUrl)} style={styles.image} contentFit="cover" />
         <Image source={gradient} style={styles.gradient} contentFit="cover" />
-        <View style={styles.topOverlayWrap}>
-          <BlurView intensity={28} tint="dark" style={styles.topOverlayBlur}>
+        <View pointerEvents="none" style={styles.topOverlayWrap}>
+          <BlurView intensity={30} tint="dark" style={styles.topOverlayBlur}>
             <Text style={styles.sectionBadgeText}>{sectionLabel}</Text>
-            <Text style={styles.sectionHelper}>{sectionHelper}</Text>
           </BlurView>
         </View>
         <View style={styles.textOverlay}>

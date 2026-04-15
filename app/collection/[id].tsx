@@ -1,14 +1,25 @@
-import React, { useEffect, useMemo } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Dimensions,
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme';
 import { useCollectionDetail } from '@/hooks/use-collection-detail';
-import { TimelineCard } from '@/components/time-machine/TimelineCard';
 import { CollectionHeroSection } from '@/components/collection/CollectionHeroSection';
+import { CollectionImmersiveStackCard } from '@/components/collection/CollectionImmersiveStackCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { PeekCarousel } from '@/components/ui/peek-carousel';
 import { trackEvent } from '@/services/analytics';
+
+const HERO_STACK_BASE_HEIGHT = 278;
 
 const CollectionDetailScreen = () => {
   const { id, source, monthKey } = useLocalSearchParams<{ id?: string; source?: string; monthKey?: string }>();
@@ -18,6 +29,11 @@ const CollectionDetailScreen = () => {
   const styles = useMemo(() => buildStyles(theme), [theme]);
 
   const { collection, loading, error } = useCollectionDetail({ collectionId: id ?? null, enabled: Boolean(id) });
+  const items = useMemo(() => collection?.items ?? [], [collection?.items]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [carouselWidth, setCarouselWidth] = useState<number | null>(null);
+  const [carouselRegionHeight, setCarouselRegionHeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -35,51 +51,91 @@ const CollectionDetailScreen = () => {
     }
   }, [id, source]);
 
+  useEffect(() => {
+    if (activeIndex >= items.length && items.length > 0) {
+      setActiveIndex(0);
+    }
+  }, [activeIndex, items.length]);
+
+  const handleCarouselLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > 0 && Math.abs(width - (carouselWidth ?? 0)) > 1) {
+      setCarouselWidth(width);
+    }
+    if (height > 0 && Math.abs(height - (carouselRegionHeight ?? 0)) > 1) {
+      setCarouselRegionHeight(height);
+    }
+  }, [carouselRegionHeight, carouselWidth]);
+
+  const fallbackWidth = useMemo(() => {
+    const screenWidth = Dimensions.get('window').width;
+    return Math.max(screenWidth - 40, 320);
+  }, []);
+
+  const computedItemWidth = carouselWidth ?? fallbackWidth;
+  const effectiveItemWidth = Math.max(270, computedItemWidth - 26);
+  const computedCardHeight = useMemo(() => {
+    if (!carouselRegionHeight) {
+      return 374;
+    }
+    return Math.max(346, carouselRegionHeight - 8);
+  }, [carouselRegionHeight]);
+
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Hero Section */}
-          {collection ? (
+        {collection ? (
+          <View style={styles.stage}>
             <CollectionHeroSection
               title={collection.title}
               subtitle={collection.subtitle}
               blurb={collection.heroBlurb ?? collection.blurb}
               coverImageUrl={collection.coverUrl}
+              baseHeight={HERO_STACK_BASE_HEIGHT}
             />
-          ) : null}
 
-          {/* Loading & Error States */}
-          {loading ? <Text style={styles.helper}>Loading stories…</Text> : null}
-          {error ? <Text style={styles.error}>Unable to load this collection.</Text> : null}
+            <View style={[styles.lowerPanel, { paddingBottom: insets.bottom + 2 }]}>
+              <View style={styles.carouselBlock} onLayout={handleCarouselLayout}>
+                <PeekCarousel
+                  data={items}
+                  keyExtractor={(item) => item.id}
+                  onIndexChange={setActiveIndex}
+                  itemWidth={effectiveItemWidth}
+                  gap={0}
+                  contentPaddingVertical={0}
+                  renderItem={({ item }) => (
+                    <CollectionImmersiveStackCard
+                      id={item.id}
+                      title={item.title}
+                      summary={item.summary}
+                      year={item.year ? String(item.year) : undefined}
+                      imageUrl={item.imageUrl}
+                      categoryId={item.categoryIds?.[0]}
+                      isActive={true}
+                      cardHeight={computedCardHeight}
+                      onPress={(eventId) => router.push({ pathname: '/event/[id]', params: { id: eventId } })}
+                    />
+                  )}
+                  testID="collection-detail-carousel"
+                />
+              </View>
 
-          {/* Event Cards List */}
-          {collection?.items && collection.items.length > 0 ? (
-            <View style={styles.cardList}>
-              {collection.iaeMeta ? (
-                <View style={styles.iaeCallout}>
-                  <Text style={styles.iaeLabel}>In-App Event</Text>
-                  <Text style={styles.iaeTitle}>{collection.iaeMeta.eventName}</Text>
-                  <Text style={styles.iaeBlurb}>{collection.iaeMeta.shortPromo}</Text>
+              {items.length > 1 ? (
+                <View style={styles.dotsRow}>
+                  {items.map((item, index) => (
+                    <View key={item.id} style={[styles.dot, index === activeIndex && styles.dotActive]} />
+                  ))}
                 </View>
               ) : null}
-              {collection.items.map((item) => (
-                <TimelineCard
-                  key={item.id}
-                  id={item.id}
-                  title={item.title}
-                  summary={item.summary}
-                  imageUrl={item.imageUrl}
-                  dateISO={item.year ? String(item.year) : undefined}
-                  categoryId={item.categoryIds?.[0]}
-                  onPress={(eventId) => router.push({ pathname: '/event/[id]', params: { id: eventId } })}
-                />
-              ))}
             </View>
-          ) : null}
-        </ScrollView>
+          </View>
+        ) : (
+          <View style={styles.stateContainer}>
+            {loading ? <Text style={styles.helper}>Loading stories…</Text> : null}
+            {!loading && error ? <Text style={styles.error}>Unable to load this collection.</Text> : null}
+          </View>
+        )}
 
-        {/* Floating Navigation Bar */}
         <View style={[styles.navBar, { top: insets.top + theme.spacing.lg }]}>
           <Pressable
             accessibilityRole="button"
@@ -91,7 +147,6 @@ const CollectionDetailScreen = () => {
           </Pressable>
         </View>
 
-        {/* Bottom Safe Area */}
         <View style={[styles.bottomSafeArea, { height: insets.bottom }]} />
       </View>
     </View>
@@ -109,9 +164,46 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
     container: {
       flex: 1,
     },
-    scrollContent: {
-      paddingBottom: 40,
-      gap: 20, // 20pt spacing between sections
+    stage: {
+      flex: 1,
+    },
+    lowerPanel: {
+      flex: 1,
+      backgroundColor: theme.colors.screen,
+      marginTop: 0,
+    },
+    carouselBlock: {
+      flex: 1,
+      marginTop: 10,
+      paddingHorizontal: 10,
+      justifyContent: 'flex-start',
+      overflow: 'hidden',
+    },
+    dotsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 2,
+      marginBottom: 2,
+      paddingHorizontal: 20,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 999,
+      backgroundColor: 'rgba(67, 62, 53, 0.28)',
+    },
+    dotActive: {
+      width: 18,
+      backgroundColor: theme.colors.textSecondary,
+    },
+    stateContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      gap: theme.spacing.sm,
     },
     navBar: {
       position: 'absolute',
@@ -120,8 +212,8 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       right: theme.spacing.lg,
       flexDirection: 'row',
       justifyContent: 'space-between',
-      zIndex: 100,
-      elevation: 100,
+      zIndex: 1200,
+      elevation: 1200,
     },
     navButton: {
       flexDirection: 'row',
@@ -150,38 +242,6 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) => {
       lineHeight: 20,
       color: theme.colors.borderStrong,
       textAlign: 'center',
-    },
-    cardList: {
-      paddingHorizontal: 20, // Minimum 20pt margin per NorthStar
-      gap: 16, // Minimum 16pt between cards per NorthStar
-    },
-    iaeCallout: {
-      backgroundColor: theme.colors.surfaceSubtle,
-      borderRadius: theme.radius.md,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.borderSubtle,
-      padding: theme.spacing.lg,
-      gap: theme.spacing.xs,
-    },
-    iaeLabel: {
-      fontFamily: sansFamily,
-      fontSize: theme.typography.helper.fontSize,
-      lineHeight: theme.typography.helper.lineHeight,
-      color: theme.colors.textSecondary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    iaeTitle: {
-      fontFamily: Platform.select({ ios: 'Times New Roman', android: 'serif', default: 'serif' }),
-      fontSize: 22,
-      lineHeight: 28,
-      color: theme.colors.textPrimary,
-    },
-    iaeBlurb: {
-      fontFamily: sansFamily,
-      fontSize: theme.typography.body.fontSize,
-      lineHeight: theme.typography.body.lineHeight,
-      color: theme.colors.textSecondary,
     },
     bottomSafeArea: {
       backgroundColor: theme.colors.screen,

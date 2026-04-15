@@ -10,9 +10,18 @@ export type CollectionHeroSectionProps = {
   subtitle?: string;
   blurb?: string;
   coverImageUrl?: string;
+  baseHeight?: number;
 };
 
-export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }: CollectionHeroSectionProps) => {
+export const COLLECTION_HERO_BASE_HEIGHT = 480;
+
+export const CollectionHeroSection = ({
+  title,
+  subtitle,
+  blurb,
+  coverImageUrl,
+  baseHeight = COLLECTION_HERO_BASE_HEIGHT,
+}: CollectionHeroSectionProps) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => buildStyles(theme), [theme]);
@@ -31,7 +40,7 @@ export const CollectionHeroSection = ({ title, subtitle, blurb, coverImageUrl }:
     []
   );
 
-  const heroHeight = 400 + insets.top;
+  const heroHeight = baseHeight + insets.top;
 
   return (
     <View style={styles.hero}>
@@ -98,7 +107,7 @@ const buildStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     textContainer: {
       position: 'absolute',
-      bottom: 24, // Bottom padding per NorthStar
+      bottom: 22,
       left: 20,
       right: 20,
       gap: theme.spacing.sm,
