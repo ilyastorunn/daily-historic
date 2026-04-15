@@ -5,12 +5,9 @@ import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { requestNotificationPermission } from '@/services/notifications';
 import { useAppTheme } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
 import { createOnboardingStyles, spacingScale } from '../styles';
 
-const appleIllustration = require('@/assets/illustrations/apple.png');
-const newtonIllustration = require('@/assets/illustrations/newton.png');
 
 const localStyles = StyleSheet.create({
   scrollContent: {
@@ -22,10 +19,6 @@ const localStyles = StyleSheet.create({
   },
   actions: {
     gap: spacingScale.md,
-  },
-  illustrationScene: {
-    minHeight: 93,
-    marginBottom: -spacingScale.sm,
   },
   linkButton: {
     alignSelf: 'center',
@@ -89,23 +82,6 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
       </View>
 
       <View style={localStyles.actions}>
-        <View pointerEvents="box-none" style={[styles.inlineActionScene, localStyles.illustrationScene]}>
-          <DecorativeIllustration
-            source={newtonIllustration}
-            widthRatio={0.22}
-            minWidth={80}
-            maxWidth={93}
-          />
-          <DecorativeIllustration
-            source={appleIllustration}
-            widthRatio={0.22}
-            minWidth={82}
-            maxWidth={104}
-            top={8}
-            right={34}
-          />
-        </View>
-
         <Pressable
           style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
           onPress={handleEnable}

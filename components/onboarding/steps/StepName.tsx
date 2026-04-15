@@ -1,11 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Platform, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useOnboardingContext } from "@/contexts/onboarding-context";
 import { useAppTheme } from "@/theme";
 
-import DecorativeIllustration from "../DecorativeIllustration";
-import { createOnboardingStyles } from "../styles";
 import type { StepComponentProps } from "../types";
 
 const serifFamily = Platform.select({
@@ -18,12 +16,10 @@ const sansFamily = Platform.select({
   android: "sans-serif",
   default: "System",
 });
-const moonLandingIllustration = require("@/assets/illustrations/MoonLanding2.png");
 
 const StepName = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
-  const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
   const [focused, setFocused] = useState(false);
 
   const handleNameChange = (text: string) => {
@@ -32,23 +28,6 @@ const StepName = ({ onNext }: StepComponentProps) => {
 
   return (
     <View style={localStyles.container}>
-      <View
-        pointerEvents="box-none"
-        style={[
-          onboardingStyles.footerAnchoredScene,
-          localStyles.illustrationScene,
-        ]}
-      >
-        <DecorativeIllustration
-          source={moonLandingIllustration}
-          widthRatio={0.55}
-          minWidth={222}
-          maxWidth={273}
-          right={0}
-          bottom={-28}
-        />
-      </View>
-
       <View style={localStyles.content}>
         <View style={localStyles.masthead}>
           <Text
@@ -106,9 +85,6 @@ const localStyles = StyleSheet.create({
   content: {
     gap: 48,
     position: "relative",
-  },
-  illustrationScene: {
-    bottom: -10,
   },
   masthead: {
     alignItems: "center",

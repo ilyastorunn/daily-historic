@@ -19,17 +19,11 @@ import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useUserContext } from '@/contexts/user-context';
 import { useAppTheme } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
 import type { StepComponentProps } from '../types';
 import { createOnboardingStyles, spacingScale } from '../styles';
 
-const leftHandIllustration = require('@/assets/illustrations/adamleft.png');
-const rightHandIllustration = require('@/assets/illustrations/adamright.png');
 
 const localStyles = StyleSheet.create({
-  heroScene: {
-    minHeight: 220,
-  },
   heroCopy: {
     maxWidth: 250,
   },
@@ -290,26 +284,10 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
       >
         <View style={styles.accountContent}>
           <View style={styles.accountHeroContainer}>
-            <View pointerEvents="box-none" style={[styles.inlineActionScene, localStyles.heroScene]}>
-              <DecorativeIllustration
-                source={leftHandIllustration}
-                widthRatio={0.2}
-                minWidth={70}
-                maxWidth={86}
-                top={18}
-                left={-spacingScale.lg}
-              />
+            <View pointerEvents="box-none" style={styles.inlineActionScene}>
               <Text accessibilityRole="header" style={[styles.accountHero, localStyles.heroCopy]}>
                 {`Your moment in\nhistory awaits.`}
               </Text>
-              <DecorativeIllustration
-                source={rightHandIllustration}
-                widthRatio={0.2}
-                minWidth={70}
-                maxWidth={86}
-                top={18}
-                right={-spacingScale.lg}
-              />
             </View>
           </View>
 

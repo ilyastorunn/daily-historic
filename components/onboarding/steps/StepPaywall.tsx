@@ -6,12 +6,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
-import { createOnboardingStyles, spacingScale } from '../styles';
+import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
 
-const moonLandingIllustration = require('@/assets/illustrations/MoonLanding2.png');
-const columnIllustration = require('@/assets/illustrations/column.png');
 
 const PLAN_OPTIONS = [
   {
@@ -85,10 +82,6 @@ const createStyles = (theme: ThemeDefinition) => {
       color: 'rgba(255,255,255,0.84)',
       fontSize: 15,
       lineHeight: 22,
-    },
-    heroScene: {
-      minHeight: 156,
-      justifyContent: 'flex-end',
     },
     featureList: {
       gap: spacing.md,
@@ -252,26 +245,6 @@ const StepPaywall = ({ onNext }: StepComponentProps) => {
             One subscription, curated like a museum pass: fewer interruptions, more meaning.
           </Text>
 
-          <View pointerEvents="box-none" style={styles.heroScene}>
-            <DecorativeIllustration
-              source={columnIllustration}
-              widthRatio={0.2}
-              minWidth={76}
-              maxWidth={104}
-              left={-spacingScale.sm}
-              bottom={0}
-              opacity={0.92}
-            />
-            <DecorativeIllustration
-              source={moonLandingIllustration}
-              widthRatio={0.42}
-              minWidth={164}
-              maxWidth={210}
-              bottom={-spacingScale.md}
-              right={-spacingScale.xs}
-              opacity={0.98}
-            />
-          </View>
         </LinearGradient>
       </View>
 

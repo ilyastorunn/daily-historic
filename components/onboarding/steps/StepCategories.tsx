@@ -1,14 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { type CategoryOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
-import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
-
-const frenchRevolutionIllustration = require('@/assets/illustrations/FrenchRevolution.png');
 
 const categoryOptions: { value: CategoryOption; label: string; icon: any }[] = [
   { value: 'world-wars', label: 'World Wars', icon: require('@/assets/icons/World-Wars.png') },
@@ -28,13 +24,6 @@ interface CategoryChipProps {
   onPress: () => void;
   themedStyles: any;
   theme: ThemeDefinition;
-}
-
-interface CategoriesContinueButtonProps {
-  disabled: boolean;
-  onPress: () => void;
-  buttonStyles: any;
-  themedStyles: any;
 }
 
 const CategoryChip = ({ option, selected, onPress, themedStyles, theme }: CategoryChipProps) => {
@@ -64,58 +53,16 @@ const CategoryChip = ({ option, selected, onPress, themedStyles, theme }: Catego
         accessibilityState={{ selected }}
         accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
         testID={`category-card-${option.value}`}
-        style={({ pressed }) => [
-          themedStyles.cardInner,
-          pressed && themedStyles.cardPressed,
-        ]}
+        style={({ pressed }) => [themedStyles.cardInner, pressed && themedStyles.cardPressed]}
       >
-        <Image source={option.icon} style={themedStyles.cardIcon} />
-        <Text style={themedStyles.cardLabel}>{option.label}</Text>
+        <View style={[themedStyles.cardIconWrap, selected && themedStyles.cardIconWrapSelected]}>
+          <Image source={option.icon} style={themedStyles.cardIcon} />
+        </View>
+        <Text numberOfLines={2} style={[themedStyles.cardLabel, selected && themedStyles.cardLabelSelected]}>
+          {option.label}
+        </Text>
       </Pressable>
     </Animated.View>
-  );
-};
-
-const CategoriesContinueButton = ({
-  disabled,
-  onPress,
-  buttonStyles,
-  themedStyles,
-}: CategoriesContinueButtonProps) => {
-  return (
-    <View style={themedStyles.ctaSection}>
-      <View style={themedStyles.ctaFamily}>
-        <View pointerEvents="none" style={themedStyles.ctaIllustration}>
-          <DecorativeIllustration
-            source={frenchRevolutionIllustration}
-            widthRatio={0.2}
-            minWidth={82}
-            maxWidth={96}
-            style={themedStyles.ctaIllustrationImage}
-          />
-        </View>
-
-        <Pressable
-          onPress={onPress}
-          disabled={disabled}
-          style={({ pressed }) => [
-            buttonStyles.primaryButton,
-            themedStyles.fullWidthButton,
-            disabled && buttonStyles.primaryButtonDisabled,
-            pressed && !disabled && buttonStyles.primaryButtonPressed,
-          ]}
-        >
-          <Text
-            style={[
-              buttonStyles.primaryButtonText,
-              disabled && buttonStyles.primaryButtonTextDisabled,
-            ]}
-          >
-            Continue
-          </Text>
-        </Pressable>
-      </View>
-    </View>
   );
 };
 
@@ -131,17 +78,20 @@ const createStyles = (theme: ThemeDefinition) => {
       overflow: 'visible',
       paddingHorizontal: 20,
     },
-    contentArea: {
-      flex: 1,
-      paddingBottom: spacing.lg,
-    },
     topContent: {
       gap: spacing.xl,
-      flexShrink: 1,
+      paddingBottom: spacing.lg,
     },
     header: {
       gap: spacing.sm,
       paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    listScroll: {
+      flex: 1,
+    },
+    listContent: {
+      paddingBottom: spacing.xl,
     },
     title: {
       fontFamily: serifFamily,
@@ -151,76 +101,64 @@ const createStyles = (theme: ThemeDefinition) => {
       color: colors.textPrimary,
       fontWeight: '400',
     },
-    ctaSection: {
-      width: '100%',
-      marginTop: 'auto',
-    },
-    ctaFamily: {
-      width: '100%',
-      position: 'relative',
-      paddingTop: 66,
-    },
-    ctaIllustration: {
-      width: '100%',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      alignItems: 'center',
-      overflow: 'visible',
-    },
-    ctaIllustrationImage: {
-      marginBottom: -12,
-    },
     cardGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'center',
       gap: spacing.sm,
       paddingTop: spacing.md,
       alignContent: 'flex-start',
     },
     card: {
-      borderRadius: radius.pill,
+      width: '48.5%',
+      borderRadius: radius.lg,
       borderWidth: 2,
       overflow: 'hidden',
     },
     cardInner: {
       backgroundColor: mode === 'dark' ? colors.surfaceElevated : colors.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 9,
+      minHeight: 112,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
     },
     cardPressed: {
-      opacity: 0.7,
+      opacity: 0.9,
+    },
+    cardIconWrap: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceElevated,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    cardIconWrapSelected: {
+      borderColor: colors.accentMuted,
+      backgroundColor: colors.appBackground,
     },
     cardIcon: {
-      width: 25,
-      height: 25,
+      width: 24,
+      height: 24,
     },
     cardLabel: {
       fontFamily: sansFamily,
       fontSize: 14,
-      lineHeight: 19,
-      fontWeight: '500',
+      lineHeight: 18,
+      fontWeight: '600',
       color: colors.textPrimary,
     },
-    fullWidthButton: {
-      flex: 0,
-      width: '100%',
+    cardLabelSelected: {
+      color: colors.accentPrimary,
     },
   });
 };
 
-const StepCategories = ({ onNext }: StepComponentProps) => {
+const StepCategories = (_props: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
   const themedStyles = useMemo(() => createStyles(theme), [theme]);
-  const { styles: onboardingStyles } = useMemo(() => createOnboardingStyles(theme), [theme]);
-
-  const isNextDisabled = !(state.categories.includes('surprise') || state.categories.length >= 1);
 
   const toggleCategory = (value: CategoryOption) => {
     if (value === 'surprise') {
@@ -237,12 +175,19 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
 
   return (
     <View style={themedStyles.container}>
-      <View style={themedStyles.contentArea}>
-        <View style={themedStyles.topContent}>
-          <View style={themedStyles.header}>
-            <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
-          </View>
+      <View style={themedStyles.header}>
+        <Text style={themedStyles.title}>What are your{'\n'}interests?</Text>
+      </View>
 
+      <ScrollView
+        style={themedStyles.listScroll}
+        contentContainerStyle={themedStyles.listContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        contentInsetAdjustmentBehavior="never"
+      >
+        <View style={themedStyles.topContent}>
           <View style={themedStyles.cardGrid}>
             {categoryOptions.map((option) => {
               const selected = state.categories.includes(option.value);
@@ -259,13 +204,7 @@ const StepCategories = ({ onNext }: StepComponentProps) => {
             })}
           </View>
         </View>
-        <CategoriesContinueButton
-          buttonStyles={onboardingStyles}
-          disabled={isNextDisabled}
-          onPress={onNext}
-          themedStyles={themedStyles}
-        />
-      </View>
+      </ScrollView>
     </View>
   );
 };

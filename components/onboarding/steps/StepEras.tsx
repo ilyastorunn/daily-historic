@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { type EraOption, useOnboardingContext } from '@/contexts/onboarding-context';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
-import DecorativeIllustration from '../DecorativeIllustration';
-import type { StepComponentProps } from '../types';
 import { createOnboardingStyles } from '../styles';
-
-const paintingIllustration = require('@/assets/illustrations/painting.png');
+import type { StepComponentProps } from '../types';
 
 const options: { value: EraOption; label: string; icon: any }[] = [
   { value: 'prehistory', label: 'Prehistory', icon: require('@/assets/icons/Prehistory.png') },
@@ -55,13 +52,14 @@ const EraChip = ({ option, selected, onPress, themedStyles, theme }: EraChipProp
         accessibilityState={{ selected }}
         accessibilityHint={selected ? 'Double tap to deselect' : 'Double tap to select'}
         testID={`era-card-${option.value}`}
-        style={({ pressed }) => [
-          themedStyles.cardInner,
-          pressed && themedStyles.cardPressed,
-        ]}
+        style={({ pressed }) => [themedStyles.cardInner, pressed && themedStyles.cardPressed]}
       >
-        <Image source={option.icon} style={themedStyles.cardIcon} />
-        <Text style={themedStyles.cardLabel}>{option.label}</Text>
+        <View style={[themedStyles.cardIconWrap, selected && themedStyles.cardIconWrapSelected]}>
+          <Image source={option.icon} style={themedStyles.cardIcon} />
+        </View>
+        <Text numberOfLines={2} style={[themedStyles.cardLabel, selected && themedStyles.cardLabelSelected]}>
+          {option.label}
+        </Text>
       </Pressable>
     </Animated.View>
   );
@@ -76,13 +74,19 @@ const createStyles = (theme: ThemeDefinition) => {
     container: {
       flex: 1,
       paddingHorizontal: 20,
-      justifyContent: 'center',
       position: 'relative',
       overflow: 'visible',
     },
     header: {
       gap: spacing.sm,
-      marginBottom: spacing.xl,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    listScroll: {
+      flex: 1,
+    },
+    listContent: {
+      paddingBottom: spacing.lg,
     },
     title: {
       fontFamily: serifFamily,
@@ -92,41 +96,54 @@ const createStyles = (theme: ThemeDefinition) => {
       color: colors.textPrimary,
       fontWeight: '400',
     },
-    illustrationScene: {
-      bottom: -76,
-    },
     cardGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'center',
       gap: spacing.sm,
     },
     card: {
-      borderRadius: radius.pill,
+      width: '48.5%',
+      borderRadius: radius.lg,
       borderWidth: 2,
       overflow: 'hidden',
     },
     cardInner: {
       backgroundColor: mode === 'dark' ? colors.surfaceElevated : colors.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 9,
+      minHeight: 112,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
     },
     cardPressed: {
-      opacity: 0.7,
+      opacity: 0.9,
+    },
+    cardIconWrap: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceElevated,
+      borderWidth: 1,
+      borderColor: colors.borderSubtle,
+    },
+    cardIconWrapSelected: {
+      borderColor: colors.accentMuted,
+      backgroundColor: colors.appBackground,
     },
     cardIcon: {
-      width: 25,
-      height: 25,
+      width: 24,
+      height: 24,
     },
     cardLabel: {
       fontFamily: sansFamily,
       fontSize: 14,
-      lineHeight: 19,
-      fontWeight: '500',
+      lineHeight: 18,
+      fontWeight: '600',
       color: colors.textPrimary,
+    },
+    cardLabelSelected: {
+      color: colors.accentPrimary,
     },
   });
 };
@@ -139,47 +156,40 @@ const StepEras = (_props: StepComponentProps) => {
   const eras = state.eras;
 
   const toggleOption = (option: EraOption) => {
-    const next = eras.includes(option)
-      ? eras.filter((item) => item !== option)
-      : [...eras, option];
-
+    const next = eras.includes(option) ? eras.filter((item) => item !== option) : [...eras, option];
     updateState({ eras: next });
   };
 
   return (
-    <View style={[onboardingStyles.stepScroll, themedStyles.container]}>
-      <View
-        pointerEvents="box-none"
-        style={[onboardingStyles.footerAnchoredScene, themedStyles.illustrationScene]}
-      >
-        <DecorativeIllustration
-          source={paintingIllustration}
-          widthRatio={0.42}
-          minWidth={148}
-          maxWidth={194}
-          right={12}
-        />
-      </View>
-
+    <View style={themedStyles.container}>
       <View style={themedStyles.header}>
         <Text style={themedStyles.title}>Which eras do you{'\n'}prefer?</Text>
       </View>
 
-      <View style={themedStyles.cardGrid}>
-        {options.map((option) => {
-          const selected = eras.includes(option.value);
-          return (
-            <EraChip
-              key={option.value}
-              option={option}
-              selected={selected}
-              onPress={() => toggleOption(option.value)}
-              themedStyles={themedStyles}
-              theme={theme}
-            />
-          );
-        })}
-      </View>
+      <ScrollView
+        style={themedStyles.listScroll}
+        contentContainerStyle={[onboardingStyles.stepScroll, themedStyles.listContent]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        contentInsetAdjustmentBehavior="never"
+      >
+        <View style={themedStyles.cardGrid}>
+          {options.map((option) => {
+            const selected = eras.includes(option.value);
+            return (
+              <EraChip
+                key={option.value}
+                option={option}
+                selected={selected}
+                onPress={() => toggleOption(option.value)}
+                themedStyles={themedStyles}
+                theme={theme}
+              />
+            );
+          })}
+        </View>
+      </ScrollView>
     </View>
   );
 };
