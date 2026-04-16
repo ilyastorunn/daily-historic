@@ -29,6 +29,8 @@ service cloud.firestore {
           'notificationTime',
           'pushPermission',
           'heroPreviewSeen',
+          'goal',
+          'painPoints',
           'themePreference',
           'additionalNotes',
           'onboardingCompleted',
@@ -61,7 +63,9 @@ service cloud.firestore {
         && (!('eras' in incomingData) || incomingData.eras is list)
         && (!('onboardingCompleted' in incomingData) || incomingData.onboardingCompleted is bool)
         && (!('categoriesSkipped' in incomingData) || incomingData.categoriesSkipped is bool)
-        && (!('notificationEnabled' in incomingData) || incomingData.notificationEnabled is bool);
+        && (!('notificationEnabled' in incomingData) || incomingData.notificationEnabled is bool)
+        && (!('goal' in incomingData) || incomingData.goal == null || incomingData.goal is string)
+        && (!('painPoints' in incomingData) || incomingData.painPoints is list);
     }
 
     function isValidSavedEventWrite(eventId) {
@@ -92,6 +96,8 @@ service cloud.firestore {
           'notificationTime',
           'pushPermission',
           'heroPreviewSeen',
+          'goal',
+          'painPoints',
           'themePreference',
           'additionalNotes',
           'onboardingCompleted',

@@ -10,6 +10,15 @@ type RatingValue = 1 | 2 | 3 | 4 | 5 | null;
 
 type PaywallPlan = 'annual' | 'monthly';
 
+type GoalOption = 'learn-daily' | 'impress-friends' | 'find-perspective' | 'just-curious';
+
+type PainPointOption =
+  | 'forget-daily'
+  | 'dry-academic'
+  | 'too-many-apps'
+  | 'dont-know-where-to-start'
+  | 'no-continuity';
+
 type OnboardingState = {
   stepIndex: number;
   displayName: string;
@@ -28,6 +37,10 @@ type OnboardingState = {
   heroPreviewSeen: boolean;
   ratingValue: RatingValue;
   selectedPaywallPlan: PaywallPlan;
+  goal: GoalOption | null;
+  painPoints: PainPointOption[];
+  tinderLikes: string[];
+  tinderDismissals: string[];
 };
 
 type OnboardingAction =
@@ -68,6 +81,10 @@ const createInitialState = (
   heroPreviewSeen: false,
   ratingValue: null,
   selectedPaywallPlan: 'annual',
+  goal: null,
+  painPoints: [],
+  tinderLikes: [],
+  tinderDismissals: [],
   ...overrides,
 });
 
@@ -178,4 +195,6 @@ export type {
   PushPermission,
   RatingValue,
   PaywallPlan,
+  GoalOption,
+  PainPointOption,
 };

@@ -3,16 +3,20 @@ import type { JSX } from 'react';
 import type { OnboardingState } from '@/contexts/onboarding-context';
 
 type StepKey =
+  | 'hook'
+  | 'goal'
   | 'name'
-  | 'welcome'
-  | 'preview'
+  | 'pain-points'
+  | 'social-proof'
+  | 'tinder-cards'
+  | 'solution'
   | 'categories'
   | 'eras'
+  | 'personalizing'
   | 'notification-permission'
   | 'notification-time'
-  | 'rate-us'
-  | 'paywall'
-  | 'account';
+  | 'account'
+  | 'paywall';
 
 type StepComponentProps = {
   onNext: () => void;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -17,30 +17,15 @@ import { useRouter } from 'expo-router';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { useUserContext } from '@/contexts/user-context';
+import { readLastUsedAuthProvider, type LastUsedAuthProvider } from '@/services/last-used-auth';
 import { useAppTheme } from '@/theme';
 
 import type { StepComponentProps } from '../types';
 import { createOnboardingStyles, spacingScale } from '../styles';
 
-
 const localStyles = StyleSheet.create({
   heroCopy: {
     maxWidth: 250,
-  },
-  statusCard: {
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
-    gap: spacingScale.sm,
-    paddingVertical: spacingScale.md,
-    paddingHorizontal: spacingScale.lg,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
-  },
-  statusTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
   },
   helperText: {
     maxWidth: 300,
@@ -59,7 +44,27 @@ const localStyles = StyleSheet.create({
   authRow: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'flex-start',
     gap: spacingScale.md,
+  },
+  authOption: {
+    width: 72,
+    alignItems: 'center',
+    gap: spacingScale.xs,
+  },
+  lastUsedBadge: {
+    paddingHorizontal: spacingScale.sm,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: 'rgba(112, 141, 118, 0.16)',
+  },
+  lastUsedBadgeText: {
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    color: '#5B6D5F',
   },
   accountLinkRow: {
     flexDirection: 'row',
@@ -91,12 +96,6 @@ const providerLabels = {
   email: 'Create with Email',
 };
 
-const connectedLabels = {
-  google: 'Google is connected',
-  apple: 'Apple is connected',
-  email: 'Email account is connected',
-};
-
 type EmailSheetMode = 'create' | 'sign-in';
 
 const StepAccount = ({ onNext }: StepComponentProps) => {
@@ -108,6 +107,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     authBusy,
     authError,
     authUser,
+    profile,
     clearAuthError,
     isAnonymousSession,
     linkWithApple,
@@ -122,6 +122,33 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
   const [confirmPassword, setConfirmPassword] = useState(state.accountPasswordConfirm);
   const [showEmailSheet, setShowEmailSheet] = useState(false);
   const [emailSheetMode, setEmailSheetMode] = useState<EmailSheetMode>('create');
+  const [storedLastUsedProvider, setStoredLastUsedProvider] = useState<LastUsedAuthProvider | null>(
+    null
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadLastUsedProvider = async () => {
+      try {
+        const provider = await readLastUsedAuthProvider();
+
+        if (mounted) {
+          setStoredLastUsedProvider(provider);
+        }
+      } catch {
+        if (mounted) {
+          setStoredLastUsedProvider(null);
+        }
+      }
+    };
+
+    void loadLastUsedProvider();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const gradientUri = useMemo(() => {
     const heroTone = dynamicColors.heroBackground ?? dynamicColors.screen;
@@ -153,20 +180,28 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
     authAccountSelection === 'email'
       ? authAccountSelection
       : null;
-  const hasConnectedAccount = !isAnonymousSession && connectedAccountSelection !== null;
+  const profileAccountSelection =
+    profile?.accountSelection === 'google' ||
+    profile?.accountSelection === 'apple' ||
+    profile?.accountSelection === 'email'
+      ? profile.accountSelection
+      : null;
+  const continueAccountSelection = connectedAccountSelection ?? profileAccountSelection;
+  const resolvedLastUsedProvider =
+    connectedAccountSelection ?? storedLastUsedProvider ?? profileAccountSelection;
 
   const runHaptic = () => {
     void Haptics.selectionAsync().catch(() => undefined);
   };
 
   const handleContinueWithConnectedAccount = () => {
-    if (!authAccountSelection) {
+    if (!continueAccountSelection) {
       return;
     }
 
     clearAuthError();
     updateState({
-      accountSelection: authAccountSelection,
+      accountSelection: continueAccountSelection,
       emailAddress: state.emailAddress || authUser?.email || '',
       termsAccepted: true,
     });
@@ -292,86 +327,99 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
           </View>
 
           <View style={styles.accountActions}>
-            {hasConnectedAccount ? (
-              <View style={localStyles.statusCard}>
-                <Text style={[localStyles.statusTitle, { color: theme.colors.textPrimary }]}>
-                  {connectedLabels[connectedAccountSelection]}
-                </Text>
-                <Text style={localStyles.helperText}>
-                  Your guest progress is ready to keep under this account.
-                </Text>
+            <View style={localStyles.authRow}>
+              {Platform.OS === 'ios' ? (
+                <View style={localStyles.authOption}>
+                  <Pressable
+                    accessibilityLabel={providerLabels.apple}
+                    accessibilityRole="button"
+                    accessibilityState={{ busy: authBusy }}
+                    disabled={authBusy || !isAnonymousSession}
+                    hitSlop={spacingScale.xs}
+                    onPress={() => void handleApplePress()}
+                    style={({ pressed }) => [
+                      styles.authButton,
+                      (authBusy || !isAnonymousSession) && styles.disabledButton,
+                      pressed && styles.authButtonPressed,
+                    ]}
+                  >
+                    <Ionicons name="logo-apple" size={28} style={styles.authButtonIcon} />
+                  </Pressable>
+                  {resolvedLastUsedProvider === 'apple' ? (
+                    <View style={localStyles.lastUsedBadge}>
+                      <Text style={localStyles.lastUsedBadgeText}>Last used</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+
+              <View style={localStyles.authOption}>
                 <Pressable
+                  accessibilityLabel={providerLabels.google}
                   accessibilityRole="button"
-                  disabled={authBusy}
-                  onPress={handleContinueWithConnectedAccount}
+                  accessibilityState={{ busy: authBusy }}
+                  disabled={authBusy || !isAnonymousSession}
+                  hitSlop={spacingScale.xs}
+                  onPress={() => void handleGooglePress()}
                   style={({ pressed }) => [
-                    styles.primaryButton,
-                    authBusy && styles.primaryButtonDisabled,
-                    pressed && !authBusy && styles.primaryButtonPressed,
+                    styles.authButton,
+                    (authBusy || !isAnonymousSession) && styles.disabledButton,
+                    pressed && styles.authButtonPressed,
                   ]}
                 >
-                  <Text style={styles.primaryButtonText}>Continue</Text>
+                  <Ionicons name="logo-google" size={28} style={styles.authButtonIcon} />
                 </Pressable>
+                {resolvedLastUsedProvider === 'google' ? (
+                  <View style={localStyles.lastUsedBadge}>
+                    <Text style={localStyles.lastUsedBadgeText}>Last used</Text>
+                  </View>
+                ) : null}
               </View>
-            ) : (
-              <>
-                <View style={localStyles.authRow}>
-                  {Platform.OS === 'ios' ? (
-                    <Pressable
-                      accessibilityLabel={providerLabels.apple}
-                      accessibilityRole="button"
-                      accessibilityState={{ busy: authBusy }}
-                      disabled={authBusy}
-                      hitSlop={spacingScale.xs}
-                      onPress={() => void handleApplePress()}
-                      style={({ pressed }) => [
-                        styles.authButton,
-                        authBusy && styles.disabledButton,
-                        pressed && styles.authButtonPressed,
-                      ]}
-                    >
-                      <Ionicons name="logo-apple" size={28} style={styles.authButtonIcon} />
-                    </Pressable>
-                  ) : null}
 
-                  <Pressable
-                    accessibilityLabel={providerLabels.google}
-                    accessibilityRole="button"
-                    accessibilityState={{ busy: authBusy }}
-                    disabled={authBusy}
-                    hitSlop={spacingScale.xs}
-                    onPress={() => void handleGooglePress()}
-                    style={({ pressed }) => [
-                      styles.authButton,
-                      authBusy && styles.disabledButton,
-                      pressed && styles.authButtonPressed,
-                    ]}
-                  >
-                    <Ionicons name="logo-google" size={28} style={styles.authButtonIcon} />
-                  </Pressable>
+              <View style={localStyles.authOption}>
+                <Pressable
+                  accessibilityLabel={providerLabels.email}
+                  accessibilityRole="button"
+                  accessibilityState={{ busy: authBusy }}
+                  disabled={authBusy || !isAnonymousSession}
+                  hitSlop={spacingScale.xs}
+                  onPress={() => openEmailSheet('create')}
+                  style={({ pressed }) => [
+                    styles.authButton,
+                    (authBusy || !isAnonymousSession) && styles.disabledButton,
+                    pressed && styles.authButtonPressed,
+                  ]}
+                >
+                  <Ionicons name="mail-outline" size={28} style={styles.authButtonIcon} />
+                </Pressable>
+                {resolvedLastUsedProvider === 'email' ? (
+                  <View style={localStyles.lastUsedBadge}>
+                    <Text style={localStyles.lastUsedBadgeText}>Last used</Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
 
-                  <Pressable
-                    accessibilityLabel={providerLabels.email}
-                    accessibilityRole="button"
-                    accessibilityState={{ busy: authBusy }}
-                    disabled={authBusy}
-                    hitSlop={spacingScale.xs}
-                    onPress={() => openEmailSheet('create')}
-                    style={({ pressed }) => [
-                      styles.authButton,
-                      authBusy && styles.disabledButton,
-                      pressed && styles.authButtonPressed,
-                    ]}
-                  >
-                    <Ionicons name="mail-outline" size={28} style={styles.authButtonIcon} />
-                  </Pressable>
-                </View>
+            <Text style={localStyles.helperText}>
+              {isAnonymousSession
+                ? 'Connect a real account now to keep your saved stories and preferences.'
+                : 'You are already connected. Continue to keep using this account.'}
+            </Text>
 
-                <Text style={localStyles.helperText}>
-                  Connect a real account now to keep your saved stories and preferences.
-                </Text>
-              </>
-            )}
+            {!isAnonymousSession ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={authBusy}
+                onPress={handleContinueWithConnectedAccount}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  authBusy && styles.primaryButtonDisabled,
+                  pressed && !authBusy && styles.primaryButtonPressed,
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>Continue</Text>
+              </Pressable>
+            ) : null}
 
             {authError ? <Text style={localStyles.authError}>{authError}</Text> : null}
 

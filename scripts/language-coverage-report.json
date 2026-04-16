@@ -1,0 +1,131 @@
+{
+  "generatedAt": "2026-04-16T16:51:54.859Z",
+  "input": {
+    "langs": [
+      "en",
+      "tr",
+      "de",
+      "es",
+      "ar",
+      "fr",
+      "it",
+      "zh",
+      "ja",
+      "ru"
+    ],
+    "threshold": 0.6,
+    "batchSize": 50
+  },
+  "totals": {
+    "events": 19786,
+    "uniqueWikidataIds": 28422,
+    "eventsWithoutWikidata": 11
+  },
+  "recommendations": {
+    "recommendedLangs": [
+      "en",
+      "tr",
+      "de",
+      "es",
+      "ar",
+      "fr",
+      "it",
+      "zh",
+      "ja",
+      "ru"
+    ],
+    "excludedLangs": []
+  },
+  "byLanguage": [
+    {
+      "lang": "en",
+      "wikiKey": "enwiki",
+      "availableCount": 19775,
+      "unavailableCount": 11,
+      "coverageRatio": 0.999444051349439,
+      "coveragePct": 99.94,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "tr",
+      "wikiKey": "trwiki",
+      "availableCount": 19422,
+      "unavailableCount": 364,
+      "coverageRatio": 0.9816031537450722,
+      "coveragePct": 98.16,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "de",
+      "wikiKey": "dewiki",
+      "availableCount": 19629,
+      "unavailableCount": 157,
+      "coverageRatio": 0.9920650965329021,
+      "coveragePct": 99.21,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "es",
+      "wikiKey": "eswiki",
+      "availableCount": 19657,
+      "unavailableCount": 129,
+      "coverageRatio": 0.9934802385525119,
+      "coveragePct": 99.35,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "ar",
+      "wikiKey": "arwiki",
+      "availableCount": 19562,
+      "unavailableCount": 224,
+      "coverageRatio": 0.9886788638431214,
+      "coveragePct": 98.87,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "fr",
+      "wikiKey": "frwiki",
+      "availableCount": 19697,
+      "unavailableCount": 89,
+      "coverageRatio": 0.9955018700090973,
+      "coveragePct": 99.55,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "it",
+      "wikiKey": "itwiki",
+      "availableCount": 19602,
+      "unavailableCount": 184,
+      "coverageRatio": 0.9907004952997068,
+      "coveragePct": 99.07,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "zh",
+      "wikiKey": "zhwiki",
+      "availableCount": 19618,
+      "unavailableCount": 168,
+      "coverageRatio": 0.991509147882341,
+      "coveragePct": 99.15,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "ja",
+      "wikiKey": "jawiki",
+      "availableCount": 19550,
+      "unavailableCount": 236,
+      "coverageRatio": 0.9880723744061458,
+      "coveragePct": 98.81,
+      "meetsThreshold": true
+    },
+    {
+      "lang": "ru",
+      "wikiKey": "ruwiki",
+      "availableCount": 19635,
+      "unavailableCount": 151,
+      "coverageRatio": 0.9923683412513898,
+      "coveragePct": 99.24,
+      "meetsThreshold": true
+    }
+  ]
+}

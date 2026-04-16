@@ -73,14 +73,14 @@ const createStyles = (theme: ThemeDefinition) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: 20,
+      paddingHorizontal: 0,
       position: 'relative',
       overflow: 'visible',
     },
     header: {
       gap: spacing.sm,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.xl,
     },
     listScroll: {
       flex: 1,

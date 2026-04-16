@@ -16,7 +16,7 @@ type OptionRowProps = {
   iconColor?: string;
   iconSelectedColor?: string;
   onPress: () => void;
-  variant?: 'default' | 'subtle';
+  variant?: 'default' | 'subtle' | 'goal';
 };
 
 const OptionRow = ({
@@ -31,27 +31,34 @@ const OptionRow = ({
 }: OptionRowProps) => {
   const theme = useAppTheme();
   const { colors, styles } = useMemo(() => createOnboardingStyles(theme), [theme]);
+  const resolvedIconColor = selected
+    ? iconSelectedColor ?? (variant === 'goal' ? colors.accentPrimary : iconColor ?? colors.surface)
+    : iconColor ?? colors.textPrimary;
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.socialButton,
+        variant === 'goal' && styles.socialButtonGoal,
         variant === 'subtle' && styles.socialButtonSubtle,
         selected && styles.socialButtonSelected,
         pressed && styles.socialButtonPressed,
       ]}
     >
       {iconName ? (
-        <View style={[styles.socialButtonIcon, selected && styles.socialButtonIconSelected]}>
+        <View
+          style={[
+            styles.socialButtonIcon,
+            variant === 'goal' && styles.socialButtonIconGoal,
+            selected && styles.socialButtonIconSelected,
+            variant === 'goal' && selected && styles.socialButtonIconGoalSelected,
+          ]}
+        >
           <Ionicons
             name={iconName}
             size={20}
-            color={
-              selected
-                ? iconSelectedColor ?? iconColor ?? colors.surface
-                : iconColor ?? colors.textPrimary
-            }
+            color={resolvedIconColor}
           />
         </View>
       ) : null}

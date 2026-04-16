@@ -76,7 +76,7 @@ const createStyles = (theme: ThemeDefinition) => {
       flex: 1,
       position: 'relative',
       overflow: 'visible',
-      paddingHorizontal: 20,
+      paddingHorizontal: 0,
     },
     topContent: {
       gap: spacing.xl,
@@ -84,8 +84,8 @@ const createStyles = (theme: ThemeDefinition) => {
     },
     header: {
       gap: spacing.sm,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.xl,
     },
     listScroll: {
       flex: 1,

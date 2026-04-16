@@ -1,10 +1,14 @@
 export { default as StepAccount } from './StepAccount';
 export { default as StepCategories } from './StepCategories';
 export { default as StepEras } from './StepEras';
+export { default as StepGoal } from './StepGoal';
+export { default as StepHook } from './StepHook';
 export { default as StepName } from './StepName';
 export { default as StepNotificationPermission } from './StepNotificationPermission';
 export { default as StepNotificationTime } from './StepNotificationTime';
+export { default as StepPainPoints } from './StepPainPoints';
 export { default as StepPaywall } from './StepPaywall';
-export { default as StepPreview } from './StepPreview';
-export { default as StepRateUs } from './StepRateUs';
-export { default as StepWelcome } from './StepWelcome';
+export { default as StepPersonalizing } from './StepPersonalizing';
+export { default as StepSocialProof } from './StepSocialProof';
+export { default as StepSolution } from './StepSolution';
+export { default as StepTinderCards } from './StepTinderCards';

@@ -33,6 +33,7 @@ import {
   signInWithGoogleCredential,
 } from '@/services/auth';
 import { syncDailyNotificationFromProfile } from '@/services/notifications';
+import { persistLastUsedAuthProvider } from '@/services/last-used-auth';
 import type { OnboardingData, UserDocument, UserProfile } from '@/types/user';
 
 type OnboardingCompletionData = OnboardingData;
@@ -529,46 +530,62 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     [authUser, profile]
   );
 
+  const markLastUsedAuthProvider = useCallback(async (provider: 'google' | 'apple' | 'email') => {
+    try {
+      await persistLastUsedAuthProvider(provider);
+    } catch {
+      // Best effort only; authentication flow should not fail if persistence fails.
+    }
+  }, []);
+
   const linkWithGoogle = useCallback(async () => {
     return runAuthAction(async () => {
-      return linkWithGoogleCredential();
+      const result = await linkWithGoogleCredential();
+      await markLastUsedAuthProvider('google');
+      return result;
     });
-  }, [runAuthAction]);
+  }, [markLastUsedAuthProvider, runAuthAction]);
 
   const linkWithApple = useCallback(async () => {
     return runAuthAction(async () => {
-      return linkWithAppleCredential();
+      const result = await linkWithAppleCredential();
+      await markLastUsedAuthProvider('apple');
+      return result;
     });
-  }, [runAuthAction]);
+  }, [markLastUsedAuthProvider, runAuthAction]);
 
   const linkWithEmail = useCallback(
     async (email: string, password: string) => {
       await runAuthAction(async () => {
         await linkWithEmailCredential(email, password);
+        await markLastUsedAuthProvider('email');
       });
     },
-    [runAuthAction]
+    [markLastUsedAuthProvider, runAuthAction]
   );
 
   const signInWithGoogle = useCallback(async () => {
     await runAuthAction(async () => {
       await signInWithGoogleCredential();
+      await markLastUsedAuthProvider('google');
     });
-  }, [runAuthAction]);
+  }, [markLastUsedAuthProvider, runAuthAction]);
 
   const signInWithApple = useCallback(async () => {
     await runAuthAction(async () => {
       await signInWithAppleCredential();
+      await markLastUsedAuthProvider('apple');
     });
-  }, [runAuthAction]);
+  }, [markLastUsedAuthProvider, runAuthAction]);
 
   const signInWithEmail = useCallback(
     async (email: string, password: string) => {
       await runAuthAction(async () => {
         await signInWithEmailCredential(email, password);
+        await markLastUsedAuthProvider('email');
       });
     },
-    [runAuthAction]
+    [markLastUsedAuthProvider, runAuthAction]
   );
 
   const deleteAccount = useCallback(

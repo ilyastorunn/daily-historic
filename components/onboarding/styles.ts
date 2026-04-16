@@ -887,6 +887,10 @@ const createOnboardingStyles = (theme: ThemeDefinition) => {
       justifyContent: 'center',
       gap: spacingScale.md,
     },
+    socialButtonGoal: {
+      borderRadius: radiusScale.lg,
+      height: 80,
+    },
     socialButtonSubtle: {
       backgroundColor: colors.surfaceSubtle,
     },
@@ -911,8 +915,18 @@ const createOnboardingStyles = (theme: ThemeDefinition) => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    socialButtonIconGoal: {
+      width: 24,
+      height: 24,
+      borderRadius: 0,
+      backgroundColor: 'transparent',
+      marginLeft: -4,
+    },
     socialButtonIconSelected: {
       backgroundColor: colors.accentMuted,
+    },
+    socialButtonIconGoalSelected: {
+      backgroundColor: 'transparent',
     },
     socialButtonContent: {
       flex: 1,

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useOnboardingContext } from "@/contexts/onboarding-context";
 import { useAppTheme } from "@/theme";
@@ -7,9 +6,9 @@ import { useAppTheme } from "@/theme";
 import type { StepComponentProps } from "../types";
 
 const serifFamily = Platform.select({
-  ios: "Times New Roman",
+  ios: "Georgia",
   android: "serif",
-  default: "serif",
+  default: "Georgia",
 });
 const sansFamily = Platform.select({
   ios: "System",
@@ -20,7 +19,6 @@ const sansFamily = Platform.select({
 const StepName = ({ onNext }: StepComponentProps) => {
   const { state, updateState } = useOnboardingContext();
   const theme = useAppTheme();
-  const [focused, setFocused] = useState(false);
 
   const handleNameChange = (text: string) => {
     updateState({ displayName: text });
@@ -28,47 +26,40 @@ const StepName = ({ onNext }: StepComponentProps) => {
 
   return (
     <View style={localStyles.container}>
-      <View style={localStyles.content}>
-        <View style={localStyles.masthead}>
-          <Text
-            style={[localStyles.greeting, { color: theme.colors.textPrimary }]}
-          >
-            Welcome, Time Voyager
-          </Text>
-          <Text
-            style={[localStyles.subtext, { color: theme.colors.textSecondary }]}
-          >
-            How should we call you? Let&apos;s personalize your journey through
-            history.
-          </Text>
-        </View>
+      <View style={localStyles.typingContainer}>
+        <Text style={[localStyles.title, { color: theme.colors.textPrimary }]}>
+          Hi, I&apos;m Chrono. What should I call you?
+        </Text>
+      </View>
 
-        <View style={localStyles.inputArea}>
-          <TextInput
-            style={[
-              localStyles.nameInput,
-              {
-                color: theme.colors.textPrimary,
-                borderBottomColor: focused
-                  ? theme.colors.accentPrimary
-                  : theme.colors.borderSubtle,
-              },
-            ]}
-            placeholder="Your name"
-            placeholderTextColor={theme.colors.textTertiary}
-            value={state.displayName}
-            onChangeText={handleNameChange}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            autoCapitalize="words"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={onNext}
-            maxLength={50}
-            textAlign="center"
-            autoFocus
-          />
-        </View>
+      <View style={localStyles.mascotArea}>
+        <Image
+          source={require("../../../assets/mascot/deneme.png")}
+          style={localStyles.mascot}
+          resizeMode="contain"
+        />
+      </View>
+
+      <View style={localStyles.inputArea}>
+        <TextInput
+          style={[
+            localStyles.nameInput,
+            {
+              color: theme.colors.textSecondary,
+            },
+          ]}
+          placeholder="Your name"
+          placeholderTextColor={theme.colors.textSecondary}
+          value={state.displayName}
+          onChangeText={handleNameChange}
+          autoCapitalize="words"
+          autoCorrect={false}
+          returnKeyType="done"
+          onSubmitEditing={onNext}
+          maxLength={50}
+          textAlign="center"
+          autoFocus
+        />
       </View>
     </View>
   );
@@ -77,45 +68,49 @@ const StepName = ({ onNext }: StepComponentProps) => {
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    paddingBottom: 0,
-    position: "relative",
-    overflow: "visible",
+    justifyContent: "space-between",
+    paddingTop: 20,
+    paddingBottom: 12,
   },
-  content: {
-    gap: 48,
-    position: "relative",
+  typingContainer: {
+    paddingHorizontal: 28,
+    paddingTop: 18,
   },
-  masthead: {
-    alignItems: "center",
-    gap: 12,
-  },
-  greeting: {
+  title: {
     fontFamily: serifFamily,
     fontSize: 30,
     lineHeight: 36,
     letterSpacing: -0.6,
-    textAlign: "center",
+    fontWeight: "400",
   },
-  subtext: {
-    fontFamily: sansFamily,
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: "center",
+  mascotArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 0,
+  },
+  mascot: {
+    width: "108%",
+    maxWidth: 520,
+    height: 480,
+    marginBottom: -28,
   },
   inputArea: {
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
+    marginBottom: 30,
+    width: "100%",
+    gap: 10,
   },
   nameInput: {
-    fontFamily: serifFamily,
-    fontSize: 28,
-    lineHeight: 36,
-    letterSpacing: -0.4,
+    fontFamily: sansFamily,
+    fontSize: 33,
+    lineHeight: 40,
+    letterSpacing: -0.3,
     width: "100%",
-    borderBottomWidth: 1.5,
-    paddingBottom: 10,
-    paddingTop: 4,
+    minHeight: 72,
+    paddingVertical: 10,
+    includeFontPadding: false,
   },
 });
 

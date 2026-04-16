@@ -15,50 +15,81 @@ import {
   StepAccount,
   StepCategories,
   StepEras,
+  StepGoal,
+  StepHook,
   StepName,
   StepNotificationPermission,
   StepNotificationTime,
+  StepPainPoints,
   StepPaywall,
-  StepPreview,
-  StepRateUs,
-  StepWelcome,
+  StepPersonalizing,
+  StepSocialProof,
+  StepSolution,
+  StepTinderCards,
 } from '@/components/onboarding/steps';
 
 const steps: StepDefinition[] = [
   {
+    key: 'hook',
+    title: 'Welcome',
+    Component: StepHook,
+  },
+  {
+    key: 'goal',
+    title: 'Your Goal',
+    Component: StepGoal,
+    nextLabel: 'Continue',
+    shouldDisableNext: (state) => state.goal === null,
+  },
+  {
     key: 'name',
     title: 'Your Name',
     Component: StepName,
-    nextLabel: 'Get Started',
+    nextLabel: 'Continue',
     shouldDisableNext: (state) => !state.displayName.trim(),
   },
   {
-    key: 'welcome',
-    title: 'Welcome',
-    Component: StepWelcome,
-    nextLabel: 'Get Started',
+    key: 'pain-points',
+    title: 'Pain Points',
+    Component: StepPainPoints,
+    nextLabel: 'These are mine',
+    shouldDisableNext: (state) => state.painPoints.length === 0,
   },
   {
-    key: 'preview',
-    title: 'Preview',
-    Component: StepPreview,
+    key: 'social-proof',
+    title: 'Social Proof',
+    Component: StepSocialProof,
+    nextLabel: 'Looks good',
+  },
+  {
+    key: 'tinder-cards',
+    title: 'Swipe',
+    Component: StepTinderCards,
+  },
+  {
+    key: 'solution',
+    title: 'Your Plan',
+    Component: StepSolution,
+    nextLabel: 'Let\'s do it',
   },
   {
     key: 'categories',
     title: 'Categories',
     Component: StepCategories,
     shouldDisableNext: (state) => {
-      if (state.categoriesSkipped) {
-        return false;
-      }
-      const hasSelection = state.categories.includes('surprise') || state.categories.length >= 1;
-      return !hasSelection;
+      if (state.categoriesSkipped) return false;
+      return !(state.categories.includes('surprise') || state.categories.length >= 1);
     },
   },
   {
     key: 'eras',
     title: 'Eras',
     Component: StepEras,
+  },
+  {
+    key: 'personalizing',
+    title: 'Personalizing',
+    Component: StepPersonalizing,
   },
   {
     key: 'notification-permission',
@@ -78,17 +109,13 @@ const steps: StepDefinition[] = [
     Component: StepAccount,
     nextLabel: 'Create Account',
     shouldDisableNext: (state) => {
-      if (!state.accountSelection) {
-        return true;
-      }
-
+      if (!state.accountSelection) return true;
       if (state.accountSelection === 'email') {
         const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.emailAddress.trim());
         const passwordValid = state.accountPassword.length >= 8;
         const passwordsMatch = state.accountPassword === state.accountPasswordConfirm;
         return !(emailValid && passwordValid && passwordsMatch && state.termsAccepted);
       }
-
       return false;
     },
   },
@@ -97,12 +124,17 @@ const steps: StepDefinition[] = [
     title: 'Premium',
     Component: StepPaywall,
   },
-  {
-    key: 'rate-us',
-    title: 'Rate Us',
-    Component: StepRateUs,
-  },
 ];
+
+// Steps that manage their own CTA — hide the shared footer
+const STEPS_WITHOUT_FOOTER = new Set([
+  'hook',
+  'tinder-cards',
+  'notification-permission',
+  'personalizing',
+  'account',
+  'paywall',
+]);
 
 const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   const { state, goNext, goBack, goToStep, totalSteps, updateState } = useOnboardingContext();
@@ -112,6 +144,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
 
   const isFirstStep = state.stepIndex === 0;
 
+  // Skip notification-time if permission not granted
   useEffect(() => {
     const current = steps[state.stepIndex];
     if (current?.key === 'notification-time' && state.pushPermission !== 'enabled') {
@@ -120,41 +153,35 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   }, [goNext, state.pushPermission, state.stepIndex]);
 
   const currentStepDef = useMemo(() => steps[state.stepIndex], [state.stepIndex]);
-  const StepComponent = currentStepDef.Component;
+  const StepComponent = currentStepDef!.Component;
 
+  // Filter out notification-time from visible count when permission not granted
   const visibleSteps = useMemo(() => {
-    return steps.filter((definition) =>
-      definition.key === 'notification-time' ? state.pushPermission === 'enabled' : true
+    return steps.filter((def) =>
+      def.key === 'notification-time' ? state.pushPermission === 'enabled' : true
     );
   }, [state.pushPermission]);
 
   const currentVisibleIndex = useMemo(() => {
-    return visibleSteps.findIndex((definition) => definition.key === currentStepDef.key);
-  }, [currentStepDef.key, visibleSteps]);
+    return visibleSteps.findIndex((def) => def.key === currentStepDef!.key);
+  }, [currentStepDef, visibleSteps]);
 
   const displayedStepNumber = currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : state.stepIndex + 1;
   const displayedStepTotal = visibleSteps.length;
-
   const isLastVisibleStep = currentVisibleIndex === visibleSteps.length - 1;
-  const isReminderTimeStep = currentStepDef.key === 'notification-time';
+  const isReminderTimeStep = currentStepDef!.key === 'notification-time';
 
   const nextLabel = useMemo(() => {
-    const label = currentStepDef.nextLabel;
-    if (typeof label === 'function') {
-      return label(state);
-    }
-    if (label) {
-      return label;
-    }
+    const label = currentStepDef!.nextLabel;
+    if (typeof label === 'function') return label(state);
+    if (label) return label;
     return isLastVisibleStep ? 'Finish Setup' : 'Continue';
-  }, [currentStepDef.nextLabel, isLastVisibleStep, state]);
+  }, [currentStepDef, isLastVisibleStep, state]);
 
-  const isNextDisabled = currentStepDef.shouldDisableNext?.(state) ?? false;
+  const isNextDisabled = currentStepDef!.shouldDisableNext?.(state) ?? false;
 
   const handleNext = () => {
-    if (isNextDisabled) {
-      return;
-    }
+    if (isNextDisabled) return;
 
     if (state.stepIndex === totalSteps - 1) {
       const resolvedAccountSelection = state.accountSelection ?? authAccountSelection;
@@ -173,6 +200,8 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
             : undefined,
         pushPermission: state.pushPermission,
         timezone: state.timezone,
+        goal: state.goal,
+        painPoints: state.painPoints,
       };
 
       void completeOnboarding(onboardingData)
@@ -187,13 +216,11 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
   };
 
   const handleBack = () => {
-    if (isFirstStep) {
-      return;
-    }
+    if (isFirstStep) return;
 
     if (currentVisibleIndex > 0) {
       const targetKey = visibleSteps[currentVisibleIndex - 1]?.key;
-      const targetIndex = steps.findIndex((definition) => definition.key === targetKey);
+      const targetIndex = steps.findIndex((def) => def.key === targetKey);
       if (targetIndex >= 0) {
         goToStep(targetIndex);
         return;
@@ -208,13 +235,7 @@ const OnboardingStepper = ({ onComplete }: { onComplete: () => void }) => {
     goNext();
   };
 
-  const shouldShowFooter =
-    currentStepDef.key !== 'welcome' &&
-    currentStepDef.key !== 'notification-permission' &&
-    currentStepDef.key !== 'rate-us' &&
-    currentStepDef.key !== 'paywall' &&
-    currentStepDef.key !== 'account';
-
+  const shouldShowFooter = !STEPS_WITHOUT_FOOTER.has(currentStepDef!.key);
   const showBackButton = !isFirstStep;
 
   return (
@@ -336,22 +357,15 @@ const OnboardingRouteStateSync = ({
   const { state, goToStep, updateState } = useOnboardingContext();
 
   useEffect(() => {
-    if (!stepKey) {
-      return;
-    }
-
-    const targetIndex = steps.findIndex((definition) => definition.key === stepKey);
-
+    if (!stepKey) return;
+    const targetIndex = steps.findIndex((def) => def.key === stepKey);
     if (targetIndex >= 0 && state.stepIndex !== targetIndex) {
       goToStep(targetIndex);
     }
   }, [goToStep, state.stepIndex, stepKey]);
 
   useEffect(() => {
-    if (!displayName || state.displayName === displayName) {
-      return;
-    }
-
+    if (!displayName || state.displayName === displayName) return;
     updateState({ displayName });
   }, [displayName, state.displayName, updateState]);
 
@@ -369,8 +383,7 @@ const OnboardingScreen = () => {
   const displayName = getSingleParam(params.displayName)?.trim();
 
   const initialStateOverride = useMemo(() => {
-    const targetIndex = steps.findIndex((definition) => definition.key === stepKey);
-
+    const targetIndex = steps.findIndex((def) => def.key === stepKey);
     return {
       ...(targetIndex >= 0 ? { stepIndex: targetIndex } : {}),
       ...(displayName ? { displayName } : {}),

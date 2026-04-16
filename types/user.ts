@@ -2,6 +2,8 @@ import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 
 import type {
   AccountSelection,
+  GoalOption,
+  PainPointOption,
   PushPermission,
 } from '@/contexts/onboarding-context';
 import type { CategoryOption, EraOption } from '@/shared/taxonomy';
@@ -38,6 +40,10 @@ export interface OnboardingData {
   pushPermission: PushPermission;
   /** Whether the hero preview step was marked as seen. */
   heroPreviewSeen: boolean;
+  /** Primary motivation selected during onboarding goal question. */
+  goal?: GoalOption | null;
+  /** Pain points the user identified during onboarding. */
+  painPoints?: PainPointOption[];
   /** User's theme preference: light, dark, or system (follows device). */
   themePreference?: 'light' | 'dark' | 'system';
   /** Optional free-form notes or future extensions. */

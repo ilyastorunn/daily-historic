@@ -33,7 +33,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Monatlich` | `Schalte alle Historiq-Funktionen frei` |
-| Annual | `Historiq Pro Jährlich` | `Bestes Angebot – 58 % gegenüber monatlich` |
+| Annual | `Historiq Pro Jährlich` | `Bestes Angebot – 57 % gegenüber monatlich` |
 
 ---
 
@@ -42,7 +42,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Mensuel` | `Débloquez l'expérience Historiq complète` |
-| Annual | `Historiq Pro Annuel` | `Meilleur prix – économisez 58 % vs mensuel` |
+| Annual | `Historiq Pro Annuel` | `Meilleur prix – économisez 57 % vs mensuel` |
 
 > `fr-FR` ve `fr-CA` için aynı içerik kullanılabilir.
 
@@ -53,7 +53,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Maandelijks` | `Ontgrendel de volledige Historiq-ervaring` |
-| Annual | `Historiq Pro Jaarlijks` | `Beste waarde – 58% besparen vs maandelijks` |
+| Annual | `Historiq Pro Jaarlijks` | `Beste waarde – 57% besparen vs maandelijks` |
 
 ---
 
@@ -62,7 +62,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Månadsvis` | `Lås upp hela Historiq-upplevelsen` |
-| Annual | `Historiq Pro Årsvis` | `Bästa värde – spara 58 % vs månadsvis` |
+| Annual | `Historiq Pro Årsvis` | `Bästa värde – spara 57 % vs månadsvis` |
 
 ---
 
@@ -109,7 +109,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Mensual` | `Desbloquea la experiencia completa` |
-| Annual | `Historiq Pro Anual` | `El mejor precio – ahorra un 58 % vs mensual` |
+| Annual | `Historiq Pro Anual` | `El mejor precio – ahorra un 57 % vs mensual` |
 
 ---
 
@@ -156,7 +156,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Bulanan` | `Buka pengalaman Historiq yang lengkap` |
-| Annual | `Historiq Pro Tahunan` | `Nilai terbaik – hemat 58% vs bulanan` |
+| Annual | `Historiq Pro Tahunan` | `Nilai terbaik – hemat 56% vs bulanan` |
 
 ---
 
@@ -174,7 +174,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Mensal` | `Desbloqueie a experiência completa` |
-| Annual | `Historiq Pro Anual` | `Melhor valor – poupe 58% vs mensal` |
+| Annual | `Historiq Pro Anual` | `Melhor valor – poupe 53% vs mensal` |
 
 ---
 
@@ -205,7 +205,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Kuukausittain` | `Avaa koko Historiq-kokemus` |
-| Annual | `Historiq Pro Vuosittain` | `Paras arvo – säästä 58 % vs kk` |
+| Annual | `Historiq Pro Vuosittain` | `Paras arvo – säästä 57 % vs kk` |
 
 ---
 
@@ -274,7 +274,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Mensile` | `Sblocchi l'esperienza completa Historiq` |
-| Annual | `Historiq Pro Annuale` | `Miglior valore – risparmi il 58% vs mens.` |
+| Annual | `Historiq Pro Annuale` | `Miglior valore – risparmi il 57% vs mens.` |
 
 > Register: `Lei` (formal)
 
@@ -294,7 +294,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro 月度版` | `解锁完整的Historiq体验` |
-| Annual | `Historiq Pro 年度版` | `最佳价值 – 比月付节省58%` |
+| Annual | `Historiq Pro 年度版` | `最佳价值 – 比月付节省56%` |
 
 ---
 
@@ -334,7 +334,7 @@
 | Ürün | Display Name (≤30) | Description (≤45) |
 |------|--------------------|-------------------|
 | Monthly | `Historiq Pro Mesačne` | `Odomknite plný zážitok Historiq` |
-| Annual | `Historiq Pro Ročne` | `Najlepšia hodnota – ušetrite 58% vs mes.` |
+| Annual | `Historiq Pro Ročne` | `Najlepšia hodnota – ušetrite 53% vs mes.` |
 
 > Register: `vy` (formal)
 
