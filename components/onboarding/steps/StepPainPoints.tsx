@@ -135,7 +135,7 @@ const createStyles = (theme: ThemeDefinition) => {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
       gap: spacing.md,
-      minHeight: 60,
+      minHeight: 68,
     },
     chipInnerSelected: {
       backgroundColor: colors.accentSoft,

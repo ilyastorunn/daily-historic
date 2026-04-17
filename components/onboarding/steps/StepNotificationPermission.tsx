@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useOnboardingContext } from '@/contexts/onboarding-context';
 import { requestNotificationPermission } from '@/services/notifications';
@@ -8,26 +8,47 @@ import { useAppTheme } from '@/theme';
 import type { StepComponentProps } from '../types';
 import { createOnboardingStyles, spacingScale } from '../styles';
 
+const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
 
 const localStyles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'space-between',
+  container: {
+    flex: 1,
   },
   content: {
     gap: spacingScale.xl,
   },
+  mascotArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacingScale.sm,
+  },
+  mascot: {
+    width: '86%',
+    maxWidth: 320,
+    height: '100%',
+    maxHeight: 390,
+  },
   actions: {
-    gap: spacingScale.md,
+    width: '100%',
+    gap: spacingScale.xs,
+    paddingBottom: spacingScale.sm,
   },
   linkButton: {
     alignSelf: 'center',
-    minHeight: 48,
+    minHeight: 32,
     justifyContent: 'center',
     paddingHorizontal: spacingScale.md,
   },
   linkPressed: {
     opacity: 0.7,
+  },
+  title: {
+    fontFamily: serifFamily,
+    fontSize: 30,
+    lineHeight: 36,
+    letterSpacing: -0.6,
+    fontWeight: '400',
   },
 });
 
@@ -70,20 +91,30 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.stepScroll, localStyles.scrollContent]}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={localStyles.container}>
       <View style={localStyles.content}>
         <View style={styles.section}>
-          <Text style={styles.stepTitle}>Stay in sync with gentle reminders</Text>
+          <Text style={[styles.stepTitle, localStyles.title]}>Stay in sync with gentle reminders</Text>
           <Text style={styles.sectionCopy}>We send one handpicked moment each day. Quiet, useful, and always on your schedule.</Text>
         </View>
       </View>
 
+      <View style={localStyles.mascotArea}>
+        <Image
+          source={require('../../../assets/mascot/notification-permission.png')}
+          style={localStyles.mascot}
+          resizeMode="contain"
+          accessible={false}
+        />
+      </View>
+
       <View style={localStyles.actions}>
         <Pressable
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            { flex: 0, width: '100%' },
+            pressed && styles.primaryButtonPressed,
+          ]}
           onPress={handleEnable}
         >
           <Text style={styles.primaryButtonText}>Allow notifications</Text>
@@ -96,7 +127,7 @@ const StepNotificationPermission = ({ onNext }: StepComponentProps) => {
           <Text style={styles.ghostLink}>Maybe later</Text>
         </Pressable>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 

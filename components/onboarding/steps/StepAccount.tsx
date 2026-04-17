@@ -27,6 +27,11 @@ const localStyles = StyleSheet.create({
   heroCopy: {
     maxWidth: 250,
   },
+  heroTitle: {
+    fontSize: 30,
+    lineHeight: 36,
+    letterSpacing: -0.6,
+  },
   helperText: {
     maxWidth: 300,
     textAlign: 'center',
@@ -320,7 +325,7 @@ const StepAccount = ({ onNext }: StepComponentProps) => {
         <View style={styles.accountContent}>
           <View style={styles.accountHeroContainer}>
             <View pointerEvents="box-none" style={styles.inlineActionScene}>
-              <Text accessibilityRole="header" style={[styles.accountHero, localStyles.heroCopy]}>
+              <Text accessibilityRole="header" style={[styles.accountHero, localStyles.heroCopy, localStyles.heroTitle]}>
                 {`Your moment in\nhistory awaits.`}
               </Text>
             </View>

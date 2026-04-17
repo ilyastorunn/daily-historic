@@ -1,11 +1,22 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { EVENT_LIBRARY } from '@/constants/events';
 import { useAppTheme, type ThemeDefinition } from '@/theme';
 
 import { createOnboardingStyles } from '../styles';
 import type { StepComponentProps } from '../types';
+
+const TINDER_EVENT_IDS = [
+  'apollo-11-first-footsteps',
+  'rosa-parks-bus-boycott',
+  'first-iphone',
+  'd-day-normandy-landing',
+  'sistine-chapel-ceiling',
+  'salk-polio-vaccine',
+];
 
 const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
 const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
@@ -35,7 +46,7 @@ const createStyles = (theme: ThemeDefinition) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: spacing.xl,
+      paddingHorizontal: 0,
     },
     header: {
       paddingTop: spacing.md,
@@ -49,12 +60,14 @@ const createStyles = (theme: ThemeDefinition) => {
       letterSpacing: -0.6,
       color: colors.textPrimary,
       fontWeight: '400',
+      textAlign: 'left',
     },
     subtitle: {
       fontFamily: sansFamily,
       fontSize: 15,
       lineHeight: 22,
       color: colors.textSecondary,
+      textAlign: 'left',
     },
     proofPanel: {
       borderRadius: radius.xl,
@@ -197,6 +210,17 @@ const StepSocialProof = (_props: StepComponentProps) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { styles: shared } = useMemo(() => createOnboardingStyles(theme), [theme]);
+
+  useEffect(() => {
+    const urls = TINDER_EVENT_IDS
+      .map((id) => {
+        const img = EVENT_LIBRARY.find((e) => e.id === id)?.image;
+        if (!img || typeof img !== 'object' || !('uri' in img)) return null;
+        return (img as { uri: string }).uri;
+      })
+      .filter((uri): uri is string => Boolean(uri));
+    if (urls.length > 0) Image.prefetch(urls);
+  }, []);
 
   return (
     <ScrollView

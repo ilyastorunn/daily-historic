@@ -9,6 +9,7 @@ import type { StepComponentProps } from '../types';
 import { createOnboardingStyles } from '../styles';
 
 const sansFamily = Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' });
+const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
 
 const PHASES = [
   { icon: null, text: 'Analysing your preferences...' },
@@ -28,6 +29,15 @@ const createStyles = (theme: ThemeDefinition) => {
       fontSize: 15,
       lineHeight: 22,
       color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    title: {
+      fontFamily: serifFamily,
+      fontSize: 30,
+      lineHeight: 36,
+      letterSpacing: -0.6,
+      fontWeight: '400',
+      color: colors.textPrimary,
       textAlign: 'center',
     },
     checkIcon: {
@@ -76,7 +86,7 @@ const StepPersonalizing = ({ onNext }: StepComponentProps) => {
       ) : (
         <ActivityIndicator size="large" color={accentColor} />
       )}
-      <Text style={styles.stepTitle}>Curating your history feed...</Text>
+      <Text style={localStyles.title}>Curating your history feed...</Text>
       <Text style={localStyles.phaseText}>{currentPhase.text}</Text>
       <Text style={styles.sectionCopy}>
         Tuning your time machine with {eraSummary} era selections and favourite themes.

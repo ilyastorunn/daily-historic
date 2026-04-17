@@ -28,6 +28,7 @@ const quickOptions: TimeOption[] = [
   { value: '12:00', hint: 'Midday break' },
   { value: '17:00', hint: 'Evening wind-down' },
 ];
+const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' });
 
 const timeStringToDate = (value: string) => {
   const [hoursString, minutesString] = value.split(':');
@@ -123,7 +124,7 @@ const StepNotificationTime = (_props: StepComponentProps) => {
 
   return (
     <ScrollView contentContainerStyle={styles.stepScroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>When should we ping you?</Text>
+      <Text style={[styles.stepTitle, localStyles.title]}>When should we ping you?</Text>
       <Text style={styles.sectionCopy}>
         Pick a moment in the day for Chrono to deliver your highlight. You can change this anytime.
       </Text>
@@ -226,6 +227,13 @@ const StepNotificationTime = (_props: StepComponentProps) => {
 };
 
 const localStyles = StyleSheet.create({
+  title: {
+    fontFamily: serifFamily,
+    fontSize: 30,
+    lineHeight: 36,
+    letterSpacing: -0.6,
+    fontWeight: '400',
+  },
   customOptionHeader: {
     alignItems: 'center',
   },

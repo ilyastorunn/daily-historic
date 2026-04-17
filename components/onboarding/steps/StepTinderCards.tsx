@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, {
   interpolate,
   runOnJS,
@@ -29,6 +30,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 48;
 const CARD_HEIGHT = 340;
 const SWIPE_THRESHOLD = 100;
+const OVERLAY_GRADIENT = require('@/assets/images/onboarding-overlay-gradient.png');
 
 // Curated diverse set — 3+ categories, 3+ eras
 const TINDER_EVENT_IDS = [
@@ -52,7 +54,7 @@ const createStyles = (theme: ThemeDefinition) => {
       alignItems: 'center',
     },
     header: {
-      paddingHorizontal: spacing.xl,
+      paddingHorizontal: 0,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
       gap: spacing.xs,
@@ -65,12 +67,14 @@ const createStyles = (theme: ThemeDefinition) => {
       letterSpacing: -0.6,
       color: colors.textPrimary,
       fontWeight: '400',
+      textAlign: 'left',
     },
     subtitle: {
       fontFamily: sansFamily,
       fontSize: 15,
       lineHeight: 22,
       color: colors.textSecondary,
+      textAlign: 'left',
     },
     stackArea: {
       flex: 1,
@@ -95,37 +99,63 @@ const createStyles = (theme: ThemeDefinition) => {
       height: '100%',
     },
     cardOverlay: {
+      position: 'absolute',
+      left: spacing.lg,
+      right: spacing.lg,
+      bottom: spacing.lg,
+      gap: spacing.xs,
+    },
+    cardGradient: {
       ...StyleSheet.absoluteFillObject,
-      justifyContent: 'flex-end',
-      padding: spacing.lg,
+      opacity: 0.58,
+    },
+    cardTint: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(12, 9, 5, 0.22)',
+    },
+    cardTextPanel: {
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: 'rgba(12, 10, 6, 0.38)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255,255,255,0.24)',
       gap: spacing.xs,
     },
     cardBadge: {
       alignSelf: 'flex-start',
       paddingHorizontal: spacing.sm,
-      paddingVertical: 3,
+      paddingVertical: 4,
       borderRadius: radius.pill,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      marginBottom: spacing.xs,
+      backgroundColor: 'rgba(12, 10, 6, 0.5)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255,255,255,0.28)',
     },
     cardBadgeText: {
       fontFamily: sansFamily,
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600',
-      color: 'rgba(255,255,255,0.9)',
-      letterSpacing: 0.4,
+      color: 'rgba(255,255,255,0.96)',
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
     },
     cardTitle: {
       fontFamily: serifFamily,
-      fontSize: 20,
-      lineHeight: 26,
+      fontSize: 26,
+      lineHeight: 31,
       color: '#fff',
       fontWeight: '400',
+      textShadowColor: 'rgba(0, 0, 0, 0.72)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
     },
     cardMeta: {
       fontFamily: sansFamily,
       fontSize: 13,
-      color: 'rgba(255,255,255,0.72)',
+      color: 'rgba(255,255,255,0.9)',
+      textShadowColor: 'rgba(0, 0, 0, 0.7)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 3,
     },
     likeOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -272,25 +302,30 @@ const SwipeCard = ({ event, isTop, stackIndex, onSwipe, styles, theme }: SwipeCa
     <GestureDetector gesture={pan}>
       <Animated.View style={[styles.card, cardStyle]}>
         {event.image ? (
-          <Animated.Image
+          <Image
             source={event.image as any}
             style={styles.cardImage}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
           />
         ) : (
           <View style={[styles.cardImage, { backgroundColor: theme.colors.surfaceElevated }]} />
         )}
 
-        {/* Gradient overlay for text readability */}
+        <Image source={OVERLAY_GRADIENT} style={styles.cardGradient} contentFit="cover" />
+        <View style={styles.cardTint} />
+
         <View
           style={[styles.cardOverlay, { backgroundColor: 'transparent' }]}
           pointerEvents="none"
         >
-          <View style={styles.cardBadge}>
-            <Text style={styles.cardBadgeText}>{event.year}</Text>
+          <View style={styles.cardTextPanel}>
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>{event.year}</Text>
+            </View>
+            <Text style={styles.cardTitle} numberOfLines={2}>{event.title}</Text>
+            <Text style={styles.cardMeta} numberOfLines={1}>{event.location}</Text>
           </View>
-          <Text style={styles.cardTitle} numberOfLines={2}>{event.title}</Text>
-          <Text style={styles.cardMeta} numberOfLines={1}>{event.location}</Text>
         </View>
 
         {/* Like overlay */}

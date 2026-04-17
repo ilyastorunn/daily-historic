@@ -70,7 +70,7 @@ const steps: StepDefinition[] = [
     key: 'solution',
     title: 'Your Plan',
     Component: StepSolution,
-    nextLabel: 'Let\'s do it',
+    nextLabel: 'Continue',
   },
   {
     key: 'categories',

@@ -20,8 +20,8 @@ const createStyles = (theme: ThemeDefinition) => {
       justifyContent: 'space-between',
     },
     textSection: {
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.lg,
+      paddingHorizontal: 0,
+      paddingTop: spacing.xs,
       gap: spacing.md,
       alignItems: 'flex-start',
       width: '100%',
@@ -33,22 +33,27 @@ const createStyles = (theme: ThemeDefinition) => {
       letterSpacing: -0.6,
       color: colors.textPrimary,
       fontWeight: '400',
+      textAlign: 'left',
     },
     body: {
       fontFamily: sansFamily,
       fontSize: 15,
       lineHeight: 22,
       color: colors.textSecondary,
+      textAlign: 'left',
     },
     imageSection: {
       width: '100%',
       alignItems: 'center',
       flex: 1,
       justifyContent: 'center',
+      paddingVertical: spacing.sm,
     },
     mascot: {
-      width: 180,
-      height: 225,
+      width: '84%',
+      maxWidth: 320,
+      height: '100%',
+      maxHeight: 390,
     },
     actions: {
       width: '100%',
@@ -101,7 +106,7 @@ const StepHook = ({ onNext }: StepComponentProps) => {
             pressed && shared.primaryButtonPressed,
           ]}
         >
-          <Text style={shared.primaryButtonText}>Show me</Text>
+          <Text style={shared.primaryButtonText}>Let&apos;s go</Text>
         </Pressable>
         <Text style={[shared.legalText, { textAlign: 'center' }]}>
           Free to start. No account required.

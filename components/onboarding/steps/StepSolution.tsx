@@ -100,6 +100,7 @@ const createStyles = (theme: ThemeDefinition) => {
       borderWidth: 1,
       borderColor: colors.borderSubtle,
       padding: spacing.lg,
+      minHeight: 118,
       gap: spacing.sm,
       flexDirection: 'row',
       alignItems: 'flex-start',

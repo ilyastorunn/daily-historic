@@ -889,7 +889,7 @@ const createOnboardingStyles = (theme: ThemeDefinition) => {
     },
     socialButtonGoal: {
       borderRadius: radiusScale.lg,
-      height: 80,
+      height: 86,
     },
     socialButtonSubtle: {
       backgroundColor: colors.surfaceSubtle,

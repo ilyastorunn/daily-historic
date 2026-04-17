@@ -34,7 +34,7 @@ const StepName = ({ onNext }: StepComponentProps) => {
 
       <View style={localStyles.mascotArea}>
         <Image
-          source={require("../../../assets/mascot/deneme.png")}
+          source={require("../../../assets/mascot/pointy.png")}
           style={localStyles.mascot}
           resizeMode="contain"
         />
@@ -45,7 +45,7 @@ const StepName = ({ onNext }: StepComponentProps) => {
           style={[
             localStyles.nameInput,
             {
-              color: theme.colors.textSecondary,
+              color: theme.colors.textPrimary,
             },
           ]}
           placeholder="Your name"
@@ -69,12 +69,12 @@ const localStyles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "space-between",
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   typingContainer: {
-    paddingHorizontal: 28,
-    paddingTop: 18,
+    paddingHorizontal: 0,
+    paddingTop: 4,
   },
   title: {
     fontFamily: serifFamily,
@@ -88,17 +88,18 @@ const localStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 0,
+    paddingVertical: 8,
   },
   mascot: {
-    width: "108%",
-    maxWidth: 520,
-    height: 480,
-    marginBottom: -28,
+    width: "88%",
+    maxWidth: 340,
+    height: "100%",
+    maxHeight: 410,
   },
   inputArea: {
     alignItems: "center",
     paddingHorizontal: 4,
-    marginBottom: 30,
+    marginBottom: 8,
     width: "100%",
     gap: 10,
   },
