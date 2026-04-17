@@ -1,0 +1,338 @@
+{
+  "generatedAt": "2026-04-17T16:19:50.625Z",
+  "input": {
+    "langs": [
+      "en",
+      "tr",
+      "de",
+      "es",
+      "ar",
+      "fr",
+      "it",
+      "zh",
+      "ja",
+      "ru"
+    ]
+  },
+  "totals": {
+    "firestoreEvents": 19803,
+    "analyzedEvents": 19803,
+    "distinctDateKeys": 366,
+    "eventsMissingDate": 0,
+    "eventsMissingWikidata": 11
+  },
+  "byLanguage": [
+    {
+      "lang": "en",
+      "matchedEvents": 5760,
+      "unmatchedEvents": 14043,
+      "coverageRatio": 0.29086502045144674,
+      "coveragePct": 29.09,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "tr",
+      "matchedEvents": 1029,
+      "unmatchedEvents": 18774,
+      "coverageRatio": 0.051961823966065745,
+      "coveragePct": 5.2,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "de",
+      "matchedEvents": 337,
+      "unmatchedEvents": 19466,
+      "coverageRatio": 0.01701762359238499,
+      "coveragePct": 1.7,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "es",
+      "matchedEvents": 590,
+      "unmatchedEvents": 19213,
+      "coverageRatio": 0.02979346563651972,
+      "coveragePct": 2.98,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "ar",
+      "matchedEvents": 783,
+      "unmatchedEvents": 19020,
+      "coverageRatio": 0.039539463717618545,
+      "coveragePct": 3.95,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "fr",
+      "matchedEvents": 1091,
+      "unmatchedEvents": 18712,
+      "coverageRatio": 0.055092662727869515,
+      "coveragePct": 5.51,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "it",
+      "matchedEvents": 915,
+      "unmatchedEvents": 18888,
+      "coverageRatio": 0.04620512043629753,
+      "coveragePct": 4.62,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "zh",
+      "matchedEvents": 1190,
+      "unmatchedEvents": 18613,
+      "coverageRatio": 0.060091905266878756,
+      "coveragePct": 6.01,
+      "endpoint": {
+        "successDays": 366,
+        "unsupportedDays": 0,
+        "errorDays": 0,
+        "totalDays": 366,
+        "earlyStopped": false
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": []
+    },
+    {
+      "lang": "ja",
+      "matchedEvents": 0,
+      "unmatchedEvents": 19803,
+      "coverageRatio": 0,
+      "coveragePct": 0,
+      "endpoint": {
+        "successDays": 0,
+        "unsupportedDays": 15,
+        "errorDays": 351,
+        "totalDays": 366,
+        "earlyStopped": true
+      },
+      "sampleUnsupported": [
+        {
+          "date": "01-01",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/01\"}"
+        },
+        {
+          "date": "01-02",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/02\"}"
+        },
+        {
+          "date": "01-03",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/03\"}"
+        },
+        {
+          "date": "01-04",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/04\"}"
+        },
+        {
+          "date": "01-05",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/05\"}"
+        },
+        {
+          "date": "01-06",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/06\"}"
+        },
+        {
+          "date": "01-07",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/07\"}"
+        },
+        {
+          "date": "01-08",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/08\"}"
+        },
+        {
+          "date": "01-09",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/09\"}"
+        },
+        {
+          "date": "01-10",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/10\"}"
+        },
+        {
+          "date": "01-11",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/11\"}"
+        },
+        {
+          "date": "01-12",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/12\"}"
+        },
+        {
+          "date": "01-13",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/13\"}"
+        },
+        {
+          "date": "01-14",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/14\"}"
+        },
+        {
+          "date": "01-15",
+          "status": 404,
+          "detail": "{\"status\":404,\"type\":\"not_found\",\"title\":\"Not found\",\"detail\":\"The language you have requested is not yet supported.\",\"method\":\"GET\",\"uri\":\"/ja.wikipedia.org/v1/feed/onthisday/selected/01/15\"}"
+        }
+      ],
+      "sampleErrors": []
+    },
+    {
+      "lang": "ru",
+      "matchedEvents": 0,
+      "unmatchedEvents": 19803,
+      "coverageRatio": 0,
+      "coveragePct": 0,
+      "endpoint": {
+        "successDays": 0,
+        "unsupportedDays": 0,
+        "errorDays": 366,
+        "totalDays": 366,
+        "earlyStopped": true
+      },
+      "sampleUnsupported": [],
+      "sampleErrors": [
+        {
+          "date": "01-01",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/01\"}"
+        },
+        {
+          "date": "01-02",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/02\"}"
+        },
+        {
+          "date": "01-03",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/03\"}"
+        },
+        {
+          "date": "01-04",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/04\"}"
+        },
+        {
+          "date": "01-05",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/05\"}"
+        },
+        {
+          "date": "01-06",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/06\"}"
+        },
+        {
+          "date": "01-07",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/07\"}"
+        },
+        {
+          "date": "01-08",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/08\"}"
+        },
+        {
+          "date": "01-09",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/09\"}"
+        },
+        {
+          "date": "01-10",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/10\"}"
+        },
+        {
+          "date": "01-11",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/11\"}"
+        },
+        {
+          "date": "01-12",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/12\"}"
+        },
+        {
+          "date": "01-13",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/13\"}"
+        },
+        {
+          "date": "01-14",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/14\"}"
+        },
+        {
+          "date": "01-15",
+          "status": 500,
+          "detail": "{\"status\":500,\"type\":\"internal_error\",\"title\":\"AxiosError\",\"detail\":\"Request failed with status code 404\",\"method\":\"GET\",\"uri\":\"/ru.wikipedia.org/v1/feed/onthisday/selected/01/15\"}"
+        }
+      ]
+    }
+  ]
+}

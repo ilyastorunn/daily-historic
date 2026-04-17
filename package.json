@@ -62,6 +62,8 @@
   "name": "historiq",
   "private": true,
   "scripts": {
+    "analyze:language-coverage": "tsx scripts/analyze-language-coverage.ts",
+    "analyze:language-feed-coverage": "tsx scripts/analyze-language-feed-coverage.ts",
     "analyze:events": "tsx scripts/analyze-events.ts",
     "android": "expo run:android",
     "build:backend": "teeny build --local",
